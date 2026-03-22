@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 /* Fonts loaded via next/font/google in layout.tsx */
 
 :root {
@@ -616,9 +618,6 @@ body {
   align-items: start;
 }
 
-.about-editorial--reverse {
-  /* Same grid but content can flow differently */
-}
 
 .about-editorial-text {
   display: flex;
