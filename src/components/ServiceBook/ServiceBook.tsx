@@ -1,10 +1,12 @@
 'use client';
 
-import React, { useRef, useState, useCallback, forwardRef } from 'react';
+import React, { useRef, useState, useCallback, useEffect, forwardRef } from 'react';
 import HTMLFlipBook from 'react-pageflip';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Clock, Sparkles } from 'lucide-react';
-import Image from 'next/image';
+import { ChevronLeft, ChevronRight, Clock, Sparkles, Loader2 } from 'lucide-react';
+
+import { Service, getServiceName, getServiceDescription } from '@/types';
+import { fetchServices } from '@/data/services';
 
 // 🔧 UI CONFIGURATION
 const BOOK_WIDTH = 550;
@@ -13,71 +15,6 @@ const FLIP_DURATION = 1200; // ms
 const SHOW_SHADOW = true;
 const MOBILE_WIDTH = 340;
 const MOBILE_HEIGHT = 580;
-
-// Service data
-const SERVICES = [
-  {
-    id: 1,
-    name: 'Ear Clean Package',
-    nameVi: 'Gói Lấy Ráy Tai',
-    description: 'Ear Cleaning / Head Neck Shoulder / Foot Massage with Herbal Wash',
-    descriptionVi: 'Lấy ráy tai / Massage đầu cổ vai / Massage chân với thảo dược',
-    duration: 70,
-    priceVND: 650000,
-    priceUSD: 30,
-    image: '/images/ear-clean.png',
-    color: '#C9A348',
-  },
-  {
-    id: 2,
-    name: 'Heel Skin Shave Package',
-    nameVi: 'Gói Cạo Da Gót Chân',
-    description: 'Heel Skin Shave / Foot Massage with Herbal Wash',
-    descriptionVi: 'Cạo da gót chân / Massage chân với thảo dược',
-    duration: 70,
-    priceVND: 600000,
-    priceUSD: 27,
-    image: '/images/heel-care.png',
-    color: '#D4AF37',
-  },
-  {
-    id: 3,
-    name: 'Hair Wash Package',
-    nameVi: 'Gói Gội Đầu Dưỡng Sinh',
-    description: 'Hair Wash / Head Neck Shoulder / Body & Foot Massage',
-    descriptionVi: 'Gội đầu / Massage đầu cổ vai / Massage toàn thân & chân',
-    duration: 90,
-    priceVND: 770000,
-    priceUSD: 35,
-    image: '/images/hair-wash.png',
-    color: '#B8860B',
-  },
-  {
-    id: 4,
-    name: 'Facial Package',
-    nameVi: 'Gói Chăm Sóc Da Mặt',
-    description: 'Facial / Shave / Head Neck Shoulder / Quick Hair Wash / Body & Foot Massage',
-    descriptionVi: 'Chăm sóc da mặt / Cạo mặt / Massage đầu cổ vai / Gội nhanh / Massage toàn thân',
-    duration: 90,
-    priceVND: 800000,
-    priceUSD: 36,
-    image: '/images/facial.png',
-    color: '#DAA520',
-  },
-  {
-    id: 5,
-    name: 'Barbershop Package',
-    nameVi: 'Gói Barbershop',
-    description: 'Beard Shave / Nail Cut / Body Massage / Ear Clean / Heel Shave / Hair Wash / Face Mask',
-    descriptionVi: 'Cạo râu / Cắt móng / Massage toàn thân / Lấy ráy tai / Cạo gót / Gội đầu / Đắp mặt nạ',
-    duration: 120,
-    priceVND: 800000,
-    priceUSD: 39,
-    image: '/images/barbershop.png',
-    color: '#E8B931',
-    note: 'Available 11am - 7pm',
-  },
-];
 
 // Format price
 const formatPrice = (price: number) => {
@@ -121,8 +58,13 @@ const CoverPage = forwardRef<HTMLDivElement>((_, ref) => {
 CoverPage.displayName = 'CoverPage';
 
 // Service Page
-const ServicePage = forwardRef<HTMLDivElement, { service: typeof SERVICES[0]; index: number }>(
+const ServicePage = forwardRef<HTMLDivElement, { service: Service; index: number }>(
   ({ service, index }, ref) => {
+    const name = getServiceName(service, 'en');
+    const nameVi = getServiceName(service, 'vi');
+    const description = getServiceDescription(service, 'en');
+    const imageUrl = service.imageUrl || '/images/default-service.png';
+
     return (
       <Page ref={ref} className="service-page">
         <div className="service-content">
@@ -131,28 +73,24 @@ const ServicePage = forwardRef<HTMLDivElement, { service: typeof SERVICES[0]; in
 
           {/* Service image */}
           <div className="service-image-wrapper">
-            <Image
-              src={service.image}
-              alt={service.name}
-              width={500}
-              height={260}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={imageUrl}
+              alt={name}
               className="service-image"
-              priority
+              loading="eager"
             />
             <div className="service-image-overlay" />
-            {service.note && (
-              <div className="service-badge">{service.note}</div>
-            )}
           </div>
 
           {/* Service info */}
           <div className="service-info">
-            <h3 className="service-name">{service.name}</h3>
-            <p className="service-name-vi">{service.nameVi}</p>
+            <h3 className="service-name">{name}</h3>
+            <p className="service-name-vi">{nameVi}</p>
 
             <div className="service-divider" />
 
-            <p className="service-description">{service.description}</p>
+            <p className="service-description">{description}</p>
 
             <div className="service-details">
               <div className="service-duration">
@@ -210,6 +148,19 @@ const ServiceBook = () => {
   const bookRef = useRef<any>(null);
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
+  const [services, setServices] = useState<Service[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch services from Supabase
+  useEffect(() => {
+    const loadServices = async () => {
+      setIsLoading(true);
+      const data = await fetchServices();
+      setServices(data);
+      setIsLoading(false);
+    };
+    loadServices();
+  }, []);
 
   const onFlip = useCallback((e: any) => {
     setCurrentPage(e.data);
@@ -226,6 +177,27 @@ const ServiceBook = () => {
   const goPrev = () => {
     bookRef.current?.pageFlip()?.flipPrev();
   };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="book-container flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-10 h-10 text-[#D4AF37] animate-spin" />
+          <p className="text-white/60 font-serif italic text-lg">Loading services...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // No services found
+  if (services.length === 0) {
+    return (
+      <div className="book-container flex items-center justify-center min-h-[400px]">
+        <p className="text-white/60 font-serif italic text-lg">No services available</p>
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -264,7 +236,7 @@ const ServiceBook = () => {
           style={{}}
         >
           <CoverPage />
-          {SERVICES.map((service, index) => (
+          {services.map((service, index) => (
             <ServicePage key={service.id} service={service} index={index} />
           ))}
           <BackCover />
@@ -299,7 +271,7 @@ const ServiceBook = () => {
                 ? 'Bìa trước'
                 : currentPage >= totalPages - 1
                 ? 'Bìa sau'
-                : `Dịch vụ ${currentPage} / ${SERVICES.length}`}
+                : `Dịch vụ ${currentPage} / ${services.length}`}
             </motion.span>
           </AnimatePresence>
         </div>

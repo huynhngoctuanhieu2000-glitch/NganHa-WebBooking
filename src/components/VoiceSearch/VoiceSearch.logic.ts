@@ -136,11 +136,15 @@ export const useVoiceSearch = () => {
   const [transcript, setTranscript] = useState('');
   const [suggestions, setSuggestions] = useState<ServiceSuggestion[]>([]);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [isSupported, setIsSupported] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
 
-  // Check browser support
-  const isSupported = typeof window !== 'undefined' &&
-    ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
+  // Check browser support on client only (avoid hydration mismatch)
+  useEffect(() => {
+    const supported =
+      'SpeechRecognition' in window || 'webkitSpeechRecognition' in window;
+    setIsSupported(supported);
+  }, []);
 
   // Initialize SpeechRecognition
   const getRecognition = useCallback(() => {

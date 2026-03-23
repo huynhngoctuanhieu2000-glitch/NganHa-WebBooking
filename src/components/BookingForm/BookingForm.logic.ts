@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { SERVICES } from '@/data/services';
+import { useState, useEffect } from 'react';
+import { Service } from '@/types';
+import { fetchServices } from '@/data/services';
 import { BRANCH_LIST } from '@/data/branches';
 
 export type BookingFormData = {
@@ -17,8 +18,11 @@ export type BookingFormData = {
 };
 
 export const useBookingForm = () => {
+  const [services, setServices] = useState<Service[]>([]);
+  const [isLoadingServices, setIsLoadingServices] = useState(true);
+
   const [formData, setFormData] = useState<BookingFormData>({
-    serviceId: SERVICES[0]?.id || '',
+    serviceId: '',
     branchId: BRANCH_LIST[0]?.id || '',
     date: '',
     time: '',
@@ -33,6 +37,21 @@ export const useBookingForm = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+
+  // Fetch services from Supabase
+  useEffect(() => {
+    const loadServices = async () => {
+      setIsLoadingServices(true);
+      const data = await fetchServices();
+      setServices(data);
+      // Set default serviceId to first service
+      if (data.length > 0) {
+        setFormData(prev => ({ ...prev, serviceId: data[0].id }));
+      }
+      setIsLoadingServices(false);
+    };
+    loadServices();
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -76,6 +95,8 @@ export const useBookingForm = () => {
 
   return { 
     formData, 
+    services,
+    isLoadingServices,
     handleChange, 
     handleServiceSelect,
     updateGuests,

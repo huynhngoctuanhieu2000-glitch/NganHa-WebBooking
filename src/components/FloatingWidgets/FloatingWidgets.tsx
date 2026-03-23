@@ -1,9 +1,9 @@
-// FloatingWidgets.tsx - Fixed contact buttons (right side) + Voice Search
+// FloatingWidgets.tsx - Fixed contact buttons (right side) + AI ChatBot
 'use client';
 
-import { MapPin, Phone, MessageCircle } from 'lucide-react';
+import { MapPin, Phone } from 'lucide-react';
 import { SOCIAL_LINKS, BRANCHES } from '@/lib/constants';
-import VoiceSearch from '@/components/VoiceSearch/VoiceSearch';
+import AIChatBot from '@/components/AIChatBot/AIChatBot';
 
 // 🔧 UI CONFIGURATION
 const WIDGET_SIZE = 44; // Touch target >= 44px (mobile-first)
@@ -15,8 +15,8 @@ const FloatingWidgets = () => {
       className="floating-widgets"
       style={{ gap: `${WIDGET_GAP}px` }}
     >
-      {/* AI Voice Search */}
-      <VoiceSearch />
+      {/* AI ChatBot - text + voice chat */}
+      <AIChatBot />
 
       {/* Location - Google Maps */}
       <a
@@ -38,18 +38,6 @@ const FloatingWidgets = () => {
         style={{ width: WIDGET_SIZE, height: WIDGET_SIZE }}
       >
         <Phone size={20} />
-      </a>
-
-      {/* Chat - Zalo */}
-      <a
-        href={SOCIAL_LINKS.ZALO}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="floating-btn floating-chat"
-        aria-label="Chat on Zalo"
-        style={{ width: WIDGET_SIZE, height: WIDGET_SIZE }}
-      >
-        <MessageCircle size={20} />
       </a>
     </div>
   );

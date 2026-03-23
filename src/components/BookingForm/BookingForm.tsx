@@ -3,17 +3,17 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useBookingForm } from './BookingForm.logic';
-import { SERVICES } from '@/data/services';
+import { getServiceName } from '@/types';
 import { BRANCH_LIST } from '@/data/branches';
 import VietQRPayment from '../VietQRPayment/VietQRPayment';
 import { CalendarDays, Clock, MapPin, Users, UserCircle, CheckCircle2, ChevronDown, Check } from 'lucide-react';
 
 const BookingForm = () => {
-  const { formData, handleChange, handleServiceSelect, updateGuests, handleSubmit, isSubmitting, isSuccess } = useBookingForm();
+  const { formData, services, handleChange, handleServiceSelect, updateGuests, handleSubmit, isSubmitting, isSuccess } = useBookingForm();
   const today = new Date().toISOString().split('T')[0];
 
   if (isSuccess) {
-    const selectedService = SERVICES.find(s => s.id === formData.serviceId);
+    const selectedService = services.find(s => s.id === formData.serviceId);
     const totalPrice = selectedService ? selectedService.priceVND : 0;
     
     return (
@@ -135,7 +135,7 @@ const BookingForm = () => {
                      <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]"></span> Select Service
                   </label>
                   <div className="h-[210px] overflow-y-auto premium-scrollbar pr-2 space-y-2">
-                    {SERVICES.map(service => {
+                    {services.map(service => {
                       const isSelected = formData.serviceId === service.id;
                       return (
                         <div 
@@ -149,7 +149,7 @@ const BookingForm = () => {
                         >
                           <div className="flex flex-col gap-1 relative z-10">
                             <span className={`font-medium text-lg ${isSelected ? 'text-[#D4AF37]' : 'text-white'}`}>
-                              {service.nameVi}
+                              {getServiceName(service, 'vi')}
                             </span>
                             <span className="text-sm text-white/40">{service.duration} mins</span>
                           </div>

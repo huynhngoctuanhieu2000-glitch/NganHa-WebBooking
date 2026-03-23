@@ -2,20 +2,55 @@
 // Application Type Definitions
 // ═══════════════════════════════════════
 
+/**
+ * Service type matching Supabase "Services" table schema.
+ * Supports multilingual names and rich configuration.
+ */
 export interface Service {
   id: string;
-  name: string;
-  nameVi: string;
-  description: string;
-  descriptionVi: string;
-  duration: number; // minutes
+  code: string;
+  nameVN: string | null;
+  nameEN: string | null;
+  nameCN: string | null;
+  nameJP: string | null;
+  nameKR: string | null;
+  description: Record<string, string> | null; // JSONB - multilingual descriptions
+  hint: Record<string, string> | null; // JSONB - multilingual hints
   priceVND: number;
   priceUSD: number;
-  image: string;
-  color: string;
-  note?: string;
+  duration: number; // minutes
+  category: string | null;
+  imageUrl: string | null;
   isActive: boolean;
+  isBestChoice: boolean;
+  isBestSeller: boolean;
+  focusConfig: Record<string, unknown> | null; // JSONB
+  tags: string[] | null; // JSONB
+  procedure: string | null;
+  service_description: string | null;
 }
+
+/**
+ * Backward-compatible helper: get display name based on locale
+ */
+export const getServiceName = (service: Service, locale: Locale = 'vi'): string => {
+  const nameMap: Record<Locale, string | null> = {
+    vi: service.nameVN,
+    en: service.nameEN,
+    cn: service.nameCN,
+    jp: service.nameJP,
+    kr: service.nameKR,
+  };
+  return nameMap[locale] || service.nameEN || service.nameVN || service.code;
+};
+
+/**
+ * Get service description based on locale
+ */
+export const getServiceDescription = (service: Service, locale: Locale = 'en'): string => {
+  if (!service.description) return service.service_description || '';
+  return service.description[locale] || service.description['en'] || service.service_description || '';
+};
 
 export interface Branch {
   id: string;
