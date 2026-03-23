@@ -1,8 +1,9 @@
-// FloatingWidgets.tsx - Fixed contact buttons (right side)
+// FloatingWidgets.tsx - Fixed contact buttons (right side) + Voice Search
 'use client';
 
 import { MapPin, Phone, MessageCircle } from 'lucide-react';
 import { SOCIAL_LINKS, BRANCHES } from '@/lib/constants';
+import VoiceSearch from '@/components/VoiceSearch/VoiceSearch';
 
 // 🔧 UI CONFIGURATION
 const WIDGET_SIZE = 44; // Touch target >= 44px (mobile-first)
@@ -14,6 +15,9 @@ const FloatingWidgets = () => {
       className="floating-widgets"
       style={{ gap: `${WIDGET_GAP}px` }}
     >
+      {/* AI Voice Search */}
+      <VoiceSearch />
+
       {/* Location - Google Maps */}
       <a
         href={BRANCHES.BARBERSHOP.googleMaps}
