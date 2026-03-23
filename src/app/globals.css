@@ -1257,6 +1257,68 @@ body {
   padding-top: 8px;
 }
 
+/* ─── Category Badge ─── */
+.service-category-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(212, 175, 55, 0.2);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 6px;
+  padding: 3px 10px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: var(--gold-300);
+  text-transform: uppercase;
+  z-index: 2;
+}
+
+/* ─── Duration Selector Chips ─── */
+.duration-chips-wrapper {
+  margin: 8px 0 4px;
+  width: 100%;
+}
+
+.duration-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.duration-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  border-radius: 20px;
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  background: rgba(212, 175, 55, 0.06);
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.duration-chip:hover {
+  border-color: rgba(212, 175, 55, 0.5);
+  color: var(--gold-400);
+  background: rgba(212, 175, 55, 0.12);
+}
+
+.duration-chip--active {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.25), rgba(184, 134, 11, 0.2)) !important;
+  border-color: var(--gold-400) !important;
+  color: var(--gold-300) !important;
+  font-weight: 600;
+  box-shadow: 0 0 12px rgba(212, 175, 55, 0.15);
+}
+
 .price-vnd {
   font-family: 'Cormorant Garamond', serif;
   font-size: clamp(24px, 4vw, 32px);

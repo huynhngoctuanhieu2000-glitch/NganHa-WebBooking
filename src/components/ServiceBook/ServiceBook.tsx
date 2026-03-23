@@ -5,8 +5,10 @@ import HTMLFlipBook from 'react-pageflip';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Clock, Sparkles, Loader2 } from 'lucide-react';
 
-import { Service, getServiceName, getServiceDescription } from '@/types';
+import { Service } from '@/types';
 import { fetchServices } from '@/data/services';
+import { groupServices, GroupedService, DurationVariant } from '@/lib/groupServices';
+import { getServiceImage } from '@/data/serviceImages';
 
 // 🔧 UI CONFIGURATION
 const BOOK_WIDTH = 550;
@@ -57,13 +59,20 @@ const CoverPage = forwardRef<HTMLDivElement>((_, ref) => {
 });
 CoverPage.displayName = 'CoverPage';
 
-// Service Page
-const ServicePage = forwardRef<HTMLDivElement, { service: Service; index: number }>(
-  ({ service, index }, ref) => {
-    const name = getServiceName(service, 'en');
-    const nameVi = getServiceName(service, 'vi');
-    const description = getServiceDescription(service, 'en');
-    const imageUrl = service.imageUrl || '/images/default-service.png';
+// ═══════════════════════════════════════
+// Grouped Service Page with Duration Selector
+// ═══════════════════════════════════════
+
+const GroupedServicePage = forwardRef<HTMLDivElement, { group: GroupedService; index: number }>(
+  ({ group, index }, ref) => {
+    const [selectedIndex, setSelectedIndex] = useState(0);
+    const selectedVariant = group.variants[selectedIndex];
+    const imageUrl = group.image || '/images/services/aroma-oil.png';
+
+    // Get description (prefer EN, fallback to VN)
+    const description = group.description
+      ? group.description['en'] || group.description['vi'] || ''
+      : '';
 
     return (
       <Page ref={ref} className="service-page">
@@ -76,33 +85,65 @@ const ServicePage = forwardRef<HTMLDivElement, { service: Service; index: number
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={imageUrl}
-              alt={name}
+              alt={group.nameEN}
               className="service-image"
               loading="eager"
             />
             <div className="service-image-overlay" />
+
+            {/* Category badge */}
+            <div className="service-category-badge">
+              {group.category.toUpperCase()}
+            </div>
           </div>
 
           {/* Service info */}
           <div className="service-info">
-            <h3 className="service-name">{name}</h3>
-            <p className="service-name-vi">{nameVi}</p>
+            <h3 className="service-name">{group.nameEN}</h3>
+            <p className="service-name-vi">{group.nameVN}</p>
 
             <div className="service-divider" />
 
-            <p className="service-description">{description}</p>
+            {description && (
+              <p className="service-description">{description}</p>
+            )}
 
-            <div className="service-details">
-              <div className="service-duration">
-                <Clock size={16} />
-                <span>{service.duration} minutes</span>
+            {/* Duration Selector Chips */}
+            {group.variants.length > 1 && (
+              <div className="duration-chips-wrapper">
+                <div className="duration-chips">
+                  {group.variants.map((variant, i) => (
+                    <button
+                      key={variant.id}
+                      className={`duration-chip ${selectedIndex === i ? 'duration-chip--active' : ''}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedIndex(i);
+                      }}
+                    >
+                      <Clock size={12} />
+                      <span>{variant.duration}&apos;</span>
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
+            {/* Duration display for single variant */}
+            {group.variants.length === 1 && (
+              <div className="service-details">
+                <div className="service-duration">
+                  <Clock size={16} />
+                  <span>{selectedVariant.duration} minutes</span>
+                </div>
+              </div>
+            )}
+
+            {/* Pricing - updates based on selected duration */}
             <div className="service-pricing">
-              <div className="price-vnd">{formatPrice(service.priceVND)}₫</div>
+              <div className="price-vnd">{formatPrice(selectedVariant.priceVND)}₫</div>
               <div className="price-divider">|</div>
-              <div className="price-usd">${service.priceUSD}</div>
+              <div className="price-usd">${selectedVariant.priceUSD}</div>
             </div>
 
             <button className="book-button">
@@ -115,7 +156,7 @@ const ServicePage = forwardRef<HTMLDivElement, { service: Service; index: number
     );
   }
 );
-ServicePage.displayName = 'ServicePage';
+GroupedServicePage.displayName = 'GroupedServicePage';
 
 // Back Cover
 const BackCover = forwardRef<HTMLDivElement>((_, ref) => {
@@ -143,20 +184,33 @@ const BackCover = forwardRef<HTMLDivElement>((_, ref) => {
 });
 BackCover.displayName = 'BackCover';
 
+// ═══════════════════════════════════════
 // Main ServiceBook Component
+// ═══════════════════════════════════════
+
 const ServiceBook = () => {
   const bookRef = useRef<any>(null);
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
-  const [services, setServices] = useState<Service[]>([]);
+  const [groupedServices, setGroupedServices] = useState<GroupedService[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch services from Supabase
+  // Fetch services from Supabase and group them
   useEffect(() => {
     const loadServices = async () => {
       setIsLoading(true);
       const data = await fetchServices();
-      setServices(data);
+
+      // Group services by name + category
+      const groups = groupServices(data);
+
+      // Assign images from local mapping
+      const groupsWithImages = groups.map((g) => ({
+        ...g,
+        image: getServiceImage(g.groupKey),
+      }));
+
+      setGroupedServices(groupsWithImages);
       setIsLoading(false);
     };
     loadServices();
@@ -191,7 +245,7 @@ const ServiceBook = () => {
   }
 
   // No services found
-  if (services.length === 0) {
+  if (groupedServices.length === 0) {
     return (
       <div className="book-container flex items-center justify-center min-h-[400px]">
         <p className="text-white/60 font-serif italic text-lg">No services available</p>
@@ -236,8 +290,8 @@ const ServiceBook = () => {
           style={{}}
         >
           <CoverPage />
-          {services.map((service, index) => (
-            <ServicePage key={service.id} service={service} index={index} />
+          {groupedServices.map((group, index) => (
+            <GroupedServicePage key={group.groupKey} group={group} index={index} />
           ))}
           <BackCover />
         </HTMLFlipBook>
@@ -271,7 +325,7 @@ const ServiceBook = () => {
                 ? 'Bìa trước'
                 : currentPage >= totalPages - 1
                 ? 'Bìa sau'
-                : `Dịch vụ ${currentPage} / ${services.length}`}
+                : `Dịch vụ ${currentPage} / ${groupedServices.length}`}
             </motion.span>
           </AnimatePresence>
         </div>

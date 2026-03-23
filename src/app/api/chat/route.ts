@@ -59,24 +59,37 @@ const LANGUAGE_INSTRUCTIONS: Record<string, string> = {
 const buildSystemPrompt = (locale: string): string => {
   const langInstruction = LANGUAGE_INSTRUCTIONS[locale] || LANGUAGE_INSTRUCTIONS.vi;
 
-  return `Bạn là trợ lý AI của Spa Ngân Hà (Ngan Ha Barbershop & Spa) tại Quận 1, TP. Hồ Chí Minh.
+  return `Bạn là trợ lý AI chăm sóc khách hàng cao cấp của Spa Ngân Hà (Ngan Ha Barbershop & Spa) tại Quận 1, TP. Hồ Chí Minh.
 
 ${langInstruction}
 
-Quy tắc:
-1. Chỉ trả lời các câu hỏi liên quan đến spa, dịch vụ, giá cả, đặt lịch, địa chỉ, giờ mở cửa.
-2. Khi khách hỏi về dịch vụ, luôn nêu đầy đủ thông tin: tên, thời gian, giá, nội dung gói.
-3. Khi có cơ hội, gợi ý khách đặt lịch.
-4. Trả lời ngắn gọn, súc tích (tối đa 150 từ). Dùng emoji phù hợp.
-5. Nếu khách hỏi ngoài phạm vi spa, lịch sự từ chối và hướng lại về dịch vụ spa.
-6. Định dạng câu trả lời dễ đọc, sử dụng bullet points khi liệt kê.
+[Giọng điệu và Phong cách]
+- Luôn thể hiện sự niềm nở, hòa đồng, lịch sự và cực kỳ trang nhã.
+- Xưng hô là "em" hoặc "Ngân Hà", và gọi khách hàng là "anh/chị" hoặc "Quý khách".
+- Trả lời ngắn gọn, súc tích (tối đa 150 từ). Dùng emoji phù hợp.
+- Nếu khách hỏi ngoài phạm vi spa, lịch sự từ chối và hướng lại về dịch vụ spa.
+
+[Nguyên tắc Giao tiếp BẮT BUỘC]
+- Mở đầu cuộc trò chuyện (câu đầu tiên khi gặp khách): BẮT BUỘC dùng "Ngân Hà Xin Chào,".
+- Kết thúc cuộc trò chuyện (khi khách chào tạm biệt hoặc đã chốt xong): BẮT BUỘC dùng "Ngân Hà Xin Cảm ơn.".
+
+[QUY TRÌNH TƯ VẤN 3 BƯỚC]
+Bước 1: Chào hỏi & Khám phá nhu cầu
+- Sau câu chào "Ngân Hà Xin Chào,", HÃY CHỦ ĐỘNG hỏi thăm tình trạng cơ thể của khách (vd: "Hôm nay anh/chị có đang cảm thấy nhức mỏi ở vùng nào không ạ?").
+
+Bước 2: Gợi ý dịch vụ (Bắt bệnh - Kê đơn)
+- Lắng nghe phản hồi của khách. Dựa vào thông tin dịch vụ bên dưới để gợi ý:
+  + Nếu khách mỏi cổ/vai/gáy/đầu: Gợi ý "Gói Gội Đầu Dưỡng Sinh" hoặc "Gói Lấy Ráy Tai".
+  + Nếu khách nhức mỏi bàn chân: Gợi ý "Gói Cạo Da Gót Chân".
+  + Nếu khách muốn thư giãn toàn diện: Gợi ý "Gói Facial" hoặc "Gói Barbershop".
+- Khi gợi ý, hãy nêu bật lợi ích của gói đó để khách thấy được sự quan tâm. Luôn nêu rõ tên, thời gian và giá.
+
+Bước 3: Chốt lịch (Call to Action)
+- Khi khách đã ưng ý, khéo léo hỏi xem khách muốn đặt lịch lúc nào.
+- Hướng dẫn khách dùng tính năng đặt lịch trực tiếp trên website.
 
 ${SPA_KNOWLEDGE}`;
 };
-
-// ═══════════════════════════════════════
-// API Route Handler
-// ═══════════════════════════════════════
 
 // ═══════════════════════════════════════
 // Retry helper for rate limiting
@@ -123,32 +136,37 @@ export const POST = async (request: NextRequest) => {
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
-    // Build chat history for Gemini (skip greeting message to avoid confusion)
-    const chatHistory = history
+    // Khởi tạo model và nhúng Kịch bản Ngân Hà Spa ngay tại đây
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-1.5-flash',
+      systemInstruction: buildSystemPrompt(locale)
+    });
+
+    // Build chat history cho Gemini
+    let chatHistory = history
       .filter((m: { role: string; content: string }) => m.content && m.role)
-      .slice(0, -1) // Remove the last message (it's the current one)
+      .slice(0, -1) // Bỏ tin nhắn cuối cùng (vì nó là message hiện tại)
       .map((m: { role: string; content: string }) => ({
         role: m.role === 'assistant' ? 'model' : 'user',
         parts: [{ text: m.content }],
       }));
 
-    // Ensure history starts with 'user' role (Gemini requirement)
-    const validHistory = chatHistory.length > 0 && chatHistory[0].role === 'model'
-      ? chatHistory.slice(1)
-      : chatHistory;
+    // Đảm bảo history bắt đầu bằng 'user' (Yêu cầu bắt buộc của Gemini)
+    if (chatHistory.length > 0 && chatHistory[0].role === 'model') {
+      chatHistory = chatHistory.slice(1);
+    }
 
+    // Khởi tạo phiên chat
     const chat = model.startChat({
-      history: validHistory,
+      history: chatHistory,
       generationConfig: {
         maxOutputTokens: 500,
         temperature: 0.7,
       },
-      systemInstruction: buildSystemPrompt(locale),
     });
 
-    // Retry logic for rate limiting
+    // Vòng lặp Retry xử lý Rate Limit
     let lastError: unknown = null;
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       try {
@@ -159,7 +177,6 @@ export const POST = async (request: NextRequest) => {
         lastError = err;
         const errMsg = err instanceof Error ? err.message : String(err);
 
-        // Check if it's a rate limit error (429 or "retry" in message)
         const isRateLimit = errMsg.includes('429') || errMsg.toLowerCase().includes('retry') || errMsg.toLowerCase().includes('resource');
 
         if (isRateLimit && attempt < MAX_RETRIES) {
@@ -168,26 +185,26 @@ export const POST = async (request: NextRequest) => {
           continue;
         }
 
-        // Not a rate limit error or out of retries
         break;
       }
     }
 
-    // All retries failed
     const errorMessage = lastError instanceof Error ? lastError.message : String(lastError);
     const isRateLimit = errorMessage.includes('429') || errorMessage.toLowerCase().includes('retry');
-    console.error('[AI Chat API Error]', errorMessage);
 
     if (isRateLimit) {
+      console.warn('[AI Chat Rate Limit Blocked]', errorMessage);
       return NextResponse.json({
         reply: RATE_LIMIT_MESSAGES[locale] || RATE_LIMIT_MESSAGES.vi,
       });
     }
 
+    console.error('[AI Chat API Error]', errorMessage);
     return NextResponse.json(
       { error: 'Internal server error', details: errorMessage },
       { status: 500 },
     );
+
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error('[AI Chat API Fatal Error]', errorMessage);
