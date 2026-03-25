@@ -133,7 +133,7 @@ export const pricingCard: Variants = {
 };
 
 // ─── FAQ Accordion ───
-export const accordionContent = {
+export const accordionContent: Variants = {
   open: {
     height: 'auto',
     opacity: 1,
