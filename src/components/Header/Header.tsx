@@ -11,6 +11,7 @@ const MOBILE_MENU_DURATION = 0.25;
 
 // Navigation items matching Canva design
 const NAV_ITEMS = [
+  { label: 'Home', href: '/' },
   { label: 'Service', href: '#services' },
   { label: 'Shop', href: '#shop' },
   { label: 'Service Area', href: '#branches' },

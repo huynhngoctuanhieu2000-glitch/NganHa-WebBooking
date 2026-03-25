@@ -107,6 +107,15 @@ const Hero = () => {
       {/* Animated Gradient BG */}
       <div className="hero-gradient-bg" />
 
+      {/* Background Image (Desktop only) */}
+      <div className="hero-bg">
+        <div
+          className="hero-image"
+          style={{ backgroundImage: 'url(/images/hero-spa-bg.png)' }}
+        />
+        <div className="hero-overlay" />
+      </div>
+
       {/* Content */}
       <motion.div
         className="hero-content"
