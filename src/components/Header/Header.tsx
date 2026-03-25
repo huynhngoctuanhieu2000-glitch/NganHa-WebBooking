@@ -80,11 +80,11 @@ const Header = () => {
 
           {/* Login & Cart */}
           <a href="#login" className="header-icon-btn" aria-label="Log in">
-            <User size={18} />
+            <User size={20} />
             <span className="header-icon-label">Log in</span>
           </a>
           <a href="#cart" className="header-icon-btn" aria-label="Cart">
-            <ShoppingBag size={18} />
+            <ShoppingBag size={20} />
           </a>
 
           {/* Mobile Menu Toggle */}
@@ -93,7 +93,7 @@ const Header = () => {
             onClick={toggleMobileMenu}
             aria-label="Toggle menu"
           >
-            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            {isMobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
           </button>
         </div>
       </div>
