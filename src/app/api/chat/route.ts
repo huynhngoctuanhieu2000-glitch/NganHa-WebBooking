@@ -139,7 +139,7 @@ export const POST = async (request: NextRequest) => {
 
     // Khởi tạo model và nhúng Kịch bản Ngân Hà Spa ngay tại đây
     const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.0-flash',
       systemInstruction: buildSystemPrompt(locale)
     });
 
