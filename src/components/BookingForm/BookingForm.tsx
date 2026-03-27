@@ -3,6 +3,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useBookingForm } from './BookingForm.logic';
+import type { BookingResult } from './BookingForm.logic';
 import { t } from './BookingForm.i18n';
 import {
   stepSlideVariants,
@@ -11,11 +12,10 @@ import {
 } from './BookingForm.animation';
 import { GroupedService, DurationVariant, getGroupedServiceName } from '@/lib/groupServices';
 import { BRANCH_LIST } from '@/data/branches';
-import VietQRPayment from '../VietQRPayment/VietQRPayment';
 import {
   CalendarDays, Clock, MapPin, Users, UserCircle,
   ChevronDown, Check, ArrowRight, ArrowLeft, Sparkles,
-  Plus,
+  Plus, HeartHandshake,
 } from 'lucide-react';
 
 // 🔧 UI CONFIGURATION
@@ -497,6 +497,7 @@ const BookingForm = () => {
     formData, filteredGroups, handleChange,
     toggleService, changeVariant, isServiceSelected, getSelectedVariantId,
     updateGuests, handleSubmit, isSubmitting, isSuccess,
+    bookingResult,
     categories, activeCategory, setActiveCategory,
     currentStep, stepDirection, totalSteps, nextStep, prevStep, canProceedFromStep,
     bookingSummary,
@@ -504,13 +505,116 @@ const BookingForm = () => {
 
   const today = new Date().toISOString().split('T')[0];
 
-  // ─── Payment success ───
-  if (isSuccess) {
+  // ─── Booking Success Screen ───
+  if (isSuccess && bookingResult) {
     return (
       <section id="booking" className="py-24 px-6 bg-[#080808] min-h-[80vh] flex items-center justify-center relative overflow-hidden">
-        <div className="max-w-md w-full relative z-10">
-          <VietQRPayment amount={bookingSummary.totalPriceVND}
-            orderInfo={`Khach ${formData.name.split(' ').pop()} - SDT ${formData.phone}`} />
+        {/* Ambient glows */}
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[radial-gradient(circle,rgba(212,175,55,0.08),transparent_60%)] pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[radial-gradient(circle,rgba(212,175,55,0.04),transparent_65%)] pointer-events-none" />
+
+        <div className="max-w-lg w-full relative z-10">
+          {/* Card */}
+          <div className="relative rounded-3xl overflow-hidden">
+            <div className="absolute -inset-[1px] bg-gradient-to-b from-[#D4AF37]/30 via-[#D4AF37]/8 to-transparent rounded-3xl" />
+            <div className="relative bg-[#0C0C0C]/95 backdrop-blur-2xl rounded-3xl p-8 sm:p-10">
+
+              {/* Check icon */}
+              <div className="flex justify-center mb-6">
+                <div className="relative">
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#D4AF37]/20 to-[#D4AF37]/5 flex items-center justify-center ring-1 ring-[#D4AF37]/30 shadow-[0_0_40px_rgba(212,175,55,0.15)]">
+                    <Check className="w-9 h-9 text-[#D4AF37]" strokeWidth={2.5} />
+                  </div>
+                  <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-[#D4AF37] flex items-center justify-center shadow-[0_0_12px_rgba(212,175,55,0.4)]">
+                    <Sparkles className="w-3 h-3 text-black" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Badge + heading */}
+              <div className="text-center mb-8">
+                <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#D4AF37]/10 ring-1 ring-[#D4AF37]/25 text-[#D4AF37]/80 text-[10px] tracking-[0.3em] uppercase font-light mb-4">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]/60 animate-pulse" />
+                  {t.success.badge}
+                </span>
+                <h2 className="text-2xl sm:text-3xl font-serif text-white/90 tracking-wide">{t.success.title}</h2>
+                <p className="text-white/30 text-sm font-light mt-2 max-w-xs mx-auto leading-relaxed">{t.success.subtitle}</p>
+              </div>
+
+              {/* Booking code highlight */}
+              <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-[#D4AF37]/10 via-[#D4AF37]/5 to-transparent ring-1 ring-[#D4AF37]/20">
+                <p className="text-[#D4AF37]/50 text-[10px] tracking-[0.25em] uppercase font-light mb-1">{t.success.bookingCode}</p>
+                <p className="text-[#F5E6B8] text-xl font-mono tracking-widest font-medium">{bookingResult.billCode}</p>
+              </div>
+
+              {/* Details */}
+              <div className="space-y-3 mb-8">
+                <div className="flex justify-between items-baseline py-2.5 border-b border-white/[0.05]">
+                  <span className="text-white/30 text-xs tracking-wide font-light">{t.success.customerName}</span>
+                  <span className="text-white/75 text-sm font-light">{bookingResult.customerName}</span>
+                </div>
+                {bookingResult.customerPhone && (
+                  <div className="flex justify-between items-baseline py-2.5 border-b border-white/[0.05]">
+                    <span className="text-white/30 text-xs tracking-wide font-light">{t.success.phone}</span>
+                    <span className="text-white/75 text-sm font-light">{bookingResult.customerPhone}</span>
+                  </div>
+                )}
+                <div className="py-2.5 border-b border-white/[0.05]">
+                  <span className="text-white/30 text-xs tracking-wide font-light block mb-2">{t.success.services}</span>
+                  <div className="space-y-1">
+                    {bookingResult.services.map((svc, i) => (
+                      <div key={i} className="flex justify-between items-baseline">
+                        <span className="text-white/60 text-sm font-light truncate max-w-[60%]">{svc.name}</span>
+                        <span className="text-white/40 text-xs font-light">{svc.priceVND.toLocaleString('vi-VN')}đ</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                {(bookingResult.date || bookingResult.time) && (
+                  <div className="flex justify-between items-baseline py-2.5 border-b border-white/[0.05]">
+                    <span className="text-white/30 text-xs tracking-wide font-light">{t.success.dateTime}</span>
+                    <span className="text-white/75 text-sm font-light">
+                      {bookingResult.date} {bookingResult.time && `· ${bookingResult.time}`}
+                    </span>
+                  </div>
+                )}
+                <div className="flex justify-between items-baseline py-2.5 border-b border-white/[0.05]">
+                  <span className="text-white/30 text-xs tracking-wide font-light">{t.success.branch}</span>
+                  <span className="text-white/75 text-sm font-light">{bookingResult.branchName}</span>
+                </div>
+                <div className="flex justify-between items-baseline pt-2">
+                  <span className="text-white/50 text-xs tracking-[0.2em] uppercase font-light">{t.success.total}</span>
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#E7AA51] via-[#FFF3D4] to-[#B8860B] text-xl font-serif tracking-wide">
+                    {bookingResult.totalAmount.toLocaleString('vi-VN')}đ
+                  </span>
+                </div>
+              </div>
+
+              {/* Note */}
+              <p className="text-center text-white/20 text-xs font-light mb-6 leading-relaxed">{t.success.note}</p>
+
+              {/* CTA */}
+              <a href="/" className="block w-full relative overflow-hidden rounded-xl py-4 transition-all active:scale-[0.98] group/btn">
+                <div className="absolute inset-0 bg-gradient-to-r from-[#B8860B] via-[#D4AF37] to-[#E7AA51] group-hover/btn:opacity-90 transition-opacity duration-300" />
+                <span className="relative z-10 block text-center text-black font-medium text-sm tracking-[0.2em] uppercase">
+                  {t.success.backHome}
+                </span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Fallback khi thành công nhưng chưa có result (hiếm)
+  if (isSuccess) {
+    return (
+      <section id="booking" className="py-24 px-6 bg-[#080808] min-h-[80vh] flex items-center justify-center">
+        <div className="text-center">
+          <Check className="w-12 h-12 text-[#D4AF37] mx-auto mb-4" />
+          <h2 className="text-2xl font-serif text-white/90">{t.success.title}</h2>
+          <a href="/" className="mt-6 inline-block text-[#D4AF37]/70 text-sm underline underline-offset-4">{t.success.backHome}</a>
         </div>
       </section>
     );
@@ -611,11 +715,11 @@ const BookingForm = () => {
             </div>
           </SelectorBox>
           <SelectorBox icon={UserCircle} label={t.fields.staff}>
-            <select name="staff" value={formData.staff} onChange={handleChange}
+            <select name="staffGender" value={formData.staffGender} onChange={handleChange}
               className="bg-transparent border-none text-white/80 text-sm font-light focus:outline-none appearance-none cursor-pointer text-right">
-              <option value="NGẪU NHIÊN" className="bg-[#111]">{t.fields.staffRandom}</option>
-              <option value="Anna" className="bg-[#111]">Anna</option>
-              <option value="Mia" className="bg-[#111]">Mia</option>
+              <option value="any" className="bg-[#111]">{t.fields.staffAny}</option>
+              <option value="female" className="bg-[#111]">{t.fields.staffFemale}</option>
+              <option value="male" className="bg-[#111]">{t.fields.staffMale}</option>
             </select>
           </SelectorBox>
         </div>

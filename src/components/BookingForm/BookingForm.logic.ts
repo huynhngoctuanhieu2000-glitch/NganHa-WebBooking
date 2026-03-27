@@ -21,12 +21,15 @@ const ALL_CATEGORY = 'all';
 /** One selected service = a grouped service + chosen variant */
 export type SelectedServiceItem = {
   groupKey: string;
-  variantId: string; // id of the chosen DurationVariant
+  variantId: string; // id of the chosen DurationVariant (= Services.id in DB)
   name: string;
   duration: number;
   priceVND: number;
   priceUSD: number;
 };
+
+export type StaffGender = 'any' | 'male' | 'female';
+export type CustomerLang = 'vi' | 'en' | 'ko' | 'zh' | 'jp';
 
 export type BookingFormData = {
   selectedServices: SelectedServiceItem[];
@@ -38,7 +41,8 @@ export type BookingFormData = {
   phone: string;
   note: string;
   guests: number;
-  staff: string;
+  staffGender: StaffGender;
+  lang: CustomerLang;
   agreeTerms: boolean;
 };
 
@@ -51,7 +55,21 @@ export type BookingSummary = {
   time: string;
   branchName: string;
   guests: number;
-  staffName: string;
+  staffGender: StaffGender;
+};
+
+/** Kết quả trả về từ API sau khi đặt lịch thành công */
+export type BookingResult = {
+  bookingId: string;
+  billCode: string;
+  customerName: string;
+  customerPhone: string | null;
+  date: string;
+  time: string;
+  branchName: string;
+  services: SelectedServiceItem[];
+  totalAmount: number;
+  lang: CustomerLang;
 };
 
 export const useBookingForm = () => {
@@ -77,12 +95,15 @@ export const useBookingForm = () => {
     phone: '',
     note: '',
     guests: 1,
-    staff: 'NGẪU NHIÊN',
+    staffGender: 'any',
+    lang: 'vi',
     agreeTerms: false,
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [bookingResult, setBookingResult] = useState<BookingResult | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   // ─── Grouped Services ───
   const groupedServices = useMemo(() => groupServices(rawServices), [rawServices]);
@@ -256,7 +277,7 @@ export const useBookingForm = () => {
       time: formData.time,
       branchName: selectedBranch?.name || '',
       guests: formData.guests,
-      staffName: formData.staff === 'NGẪU NHIÊN' ? 'Random' : formData.staff,
+      staffGender: formData.staffGender,
     };
   }, [formData]);
 
@@ -274,14 +295,51 @@ export const useBookingForm = () => {
         alert('Vui lòng chọn ít nhất 1 dịch vụ.');
         return;
       }
+
       setIsSubmitting(true);
-      // TODO: Supabase integration
-      setTimeout(() => {
-        setIsSubmitting(false);
+      setSubmitError(null);
+
+      try {
+        const selectedBranch = BRANCH_LIST.find(b => b.id === formData.branchId);
+
+        const payload = {
+          name: formData.name,
+          phone: formData.phone || null,
+          email: formData.email || null,
+          note: formData.note,
+          date: formData.date,
+          time: formData.time,
+          branchId: formData.branchId,
+          branchName: selectedBranch?.name || 'Ngan Ha Spa',
+          guests: formData.guests,
+          staffGender: formData.staffGender,
+          lang: formData.lang,
+          selectedServices: formData.selectedServices,
+        };
+
+        const res = await fetch('/api/bookings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        const json = await res.json();
+
+        if (!res.ok || !json.success) {
+          throw new Error(json.error || 'Đặt lịch thất bại, vui lòng thử lại.');
+        }
+
+        setBookingResult(json.data as BookingResult);
         setIsSuccess(true);
-      }, 1500);
+      } catch (err: any) {
+        console.error('[BookingForm] Submit error:', err);
+        setSubmitError(err.message || 'Có lỗi xảy ra, vui lòng thử lại.');
+        alert(err.message || 'Có lỗi xảy ra, vui lòng thử lại.');
+      } finally {
+        setIsSubmitting(false);
+      }
     },
-    [formData.agreeTerms, formData.selectedServices.length]
+    [formData]
   );
 
   return {
@@ -300,6 +358,8 @@ export const useBookingForm = () => {
     handleSubmit,
     isSubmitting,
     isSuccess,
+    bookingResult,
+    submitError,
     // Categories
     categories,
     activeCategory,

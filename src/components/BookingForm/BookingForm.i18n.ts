@@ -32,8 +32,10 @@ export const t = {
     time: 'Time',
     timePlaceholder: 'Select time',
     branch: 'Branch',
-    staff: 'Staff',
-    staffRandom: 'Random',
+    staff: 'Therapist Preference',
+    staffAny: 'No Preference',
+    staffMale: 'Male',
+    staffFemale: 'Female',
     guests: 'Guests',
   },
 
@@ -71,5 +73,22 @@ export const t = {
     selectService: 'Please select a service to continue',
     fillRequired: 'Please fill in all required fields',
     agreeTerms: 'Please agree to the Terms & Conditions',
+  },
+
+  // Booking success screen
+  success: {
+    badge: 'Confirmed',
+    title: 'Booking Successful!',
+    subtitle: 'Thank you for choosing Ngan Ha Spa. We look forward to seeing you.',
+    bookingCode: 'Booking Code',
+    customerName: 'Name',
+    phone: 'Phone',
+    services: 'Services',
+    dateTime: 'Date & Time',
+    branch: 'Branch',
+    total: 'Total',
+    backHome: 'Back to Home',
+    bookMore: 'Book Another',
+    note: '\u2022 Please arrive 10 minutes early · Bring this booking code',
   },
 } as const;
