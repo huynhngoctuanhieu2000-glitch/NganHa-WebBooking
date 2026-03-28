@@ -25,4 +25,4 @@ _(Trống — chưa có conversation nào đang hoạt động)_
 | Thời gian | Conversation | Hành động | File |
 |-----------|-------------|-----------|------|
 | 2026-03-25 | `63e8a52e` | Khởi tạo coordination.md | — |
-| 2026-03-27 | `28a4c429` | ✅ Hoàn thành tích hợp Web Booking → Supabase | `api/bookings/route.ts` [NEW], `BookingForm.logic.ts`, `BookingForm.i18n.ts`, `BookingForm.tsx` |
+| 2026-03-28 | `89e21468` | ✅ Fix P0→P3 BookingForm UI/UX (responsive, step indicator, validation, empty state, micro-animation) | `BookingForm.tsx` |

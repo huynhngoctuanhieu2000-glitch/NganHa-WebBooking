@@ -15,7 +15,7 @@ import { BRANCH_LIST } from '@/data/branches';
 import {
   CalendarDays, Clock, MapPin, Users, UserCircle,
   ChevronDown, Check, ArrowRight, ArrowLeft, Sparkles,
-  Plus, HeartHandshake,
+  Plus, ShoppingBag, AlertCircle,
 } from 'lucide-react';
 
 // 🔧 UI CONFIGURATION
@@ -27,6 +27,9 @@ const CATEGORY_ICONS: Record<string, string> = {
   'heel skin shave': '🪒', 'manicure & pedicure': '💅',
   barber: '💈', 'ear clean': '👂', additional: '🌿',
 };
+// P2: Validation regex
+const PHONE_REGEX = /^[+]?[0-9\s\-().]{7,20}$/;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // ═══════════════════════════════════════
 // Sub-components
@@ -41,32 +44,51 @@ const GoldDivider = () => (
   </div>
 );
 
-/** Step progress for mobile */
-const StepProgress = ({ current, total }: { current: number; total: number }) => (
-  <div className="flex items-center justify-center gap-3 mb-10 lg:hidden">
+/** Step progress — shows on BOTH mobile and desktop */
+const StepProgress = ({
+  current, total, onStepClick, canClickStep,
+}: {
+  current: number; total: number;
+  onStepClick?: (step: number) => void;
+  canClickStep?: (step: number) => boolean;
+}) => (
+  <div className="flex items-center justify-center gap-3 mb-10">
     {Array.from({ length: total }, (_, i) => {
       const step = i + 1;
       const isActive = step === current;
       const isDone = step < current;
+      const isClickable = isDone || (onStepClick && canClickStep?.(step - 1));
       const labels = [t.steps.service, t.steps.details, t.steps.confirm];
       return (
         <React.Fragment key={step}>
           {i > 0 && (
-            <div className={`h-[1px] w-10 transition-all duration-500 ${isDone ? 'bg-gradient-to-r from-[#D4AF37] to-[#D4AF37]/60' : 'bg-white/8'}`} />
+            <div className={`h-[1px] w-10 sm:w-16 transition-all duration-500
+              ${isDone
+                ? 'bg-gradient-to-r from-[#D4AF37] to-[#D4AF37]/60'
+                : 'bg-white/8'
+              }`} />
           )}
-          <div className="flex flex-col items-center gap-2">
-            <div className={`
-              w-10 h-10 rounded-full flex items-center justify-center text-sm font-light transition-all duration-500
-              ${isActive
-                ? 'bg-gradient-to-br from-[#D4AF37]/25 to-[#D4AF37]/5 text-[#D4AF37] ring-1 ring-[#D4AF37]/40 shadow-[0_0_20px_rgba(212,175,55,0.15)]'
-                : isDone
-                  ? 'bg-[#D4AF37] text-black shadow-[0_0_15px_rgba(212,175,55,0.2)]'
-                  : 'bg-white/[0.03] text-white/25 ring-1 ring-white/8'
-              }
-            `}>
+          <div
+            className={`flex flex-col items-center gap-2 ${isClickable ? 'cursor-pointer' : 'cursor-default'}`}
+            onClick={() => isClickable && onStepClick?.(step)}
+          >
+            <motion.div
+              whileHover={isClickable ? { scale: 1.08 } : {}}
+              whileTap={isClickable ? { scale: 0.95 } : {}}
+              className={`
+                w-10 h-10 rounded-full flex items-center justify-center text-sm font-light transition-all duration-500
+                ${isActive
+                  ? 'bg-gradient-to-br from-[#D4AF37]/25 to-[#D4AF37]/5 text-[#D4AF37] ring-1 ring-[#D4AF37]/40 shadow-[0_0_20px_rgba(212,175,55,0.15)]'
+                  : isDone
+                    ? 'bg-[#D4AF37] text-black shadow-[0_0_15px_rgba(212,175,55,0.2)]'
+                    : 'bg-white/[0.03] text-white/25 ring-1 ring-white/8'
+                }
+              `}
+            >
               {isDone ? <Check className="w-4 h-4" strokeWidth={2.5} /> : step}
-            </div>
-            <span className={`text-[10px] tracking-[0.2em] font-light transition-colors duration-500 ${isActive ? 'text-[#D4AF37]/80' : isDone ? 'text-white/50' : 'text-white/20'}`}>
+            </motion.div>
+            <span className={`text-[10px] tracking-[0.2em] font-light transition-colors duration-500
+              ${isActive ? 'text-[#D4AF37]/80' : isDone ? 'text-white/60' : 'text-white/20'}`}>
               {labels[i]}
             </span>
           </div>
@@ -250,27 +272,59 @@ const ServiceCard = ({
   );
 };
 
-/** Elegant floating label input */
+/** P2: Elegant floating label input with real-time validation */
 const FormInput = ({
-  label, type = 'text', name, value, onChange, placeholder, required = false,
+  label, type = 'text', name, value, onChange, placeholder, required = false, validate,
 }: {
   label: string; type?: string; name: string; value: string;
-  onChange: React.ChangeEventHandler<HTMLInputElement>; placeholder: string; required?: boolean;
-}) => (
-  <div className="group/input">
-    <label className="text-[#D4AF37]/50 text-[10px] tracking-[0.2em] uppercase font-light mb-2.5 block">
-      {label}
-      {required && <span className="text-[#D4AF37]/40 ml-1">*</span>}
-    </label>
-    <input type={type} name={name} value={value} onChange={onChange}
-      placeholder={placeholder} required={required}
-      className="w-full bg-white/[0.02] ring-1 ring-white/[0.06] rounded-xl px-5 py-4 text-white/90 text-[15px] font-light
-        placeholder:text-white/15 focus:outline-none focus:ring-[#D4AF37]/30 focus:bg-white/[0.04]
-        transition-all duration-400 hover:ring-white/10" />
-  </div>
-);
+  onChange: React.ChangeEventHandler<HTMLInputElement>; placeholder: string;
+  required?: boolean;
+  validate?: (v: string) => string | null; // returns error message or null
+}) => {
+  const [touched, setTouched] = React.useState(false);
+  const error = touched && validate ? validate(value) : null;
+  const isValid = touched && !error && value.length > 0;
 
-/** Refined selector box */
+  return (
+    <div className="group/input">
+      {/* P2: Increased contrast — from /50 to /80 */}
+      <label className="text-[#D4AF37]/80 text-[10px] tracking-[0.2em] uppercase font-light mb-2.5 flex items-center gap-1.5">
+        {label}
+        {required && <span className="text-[#D4AF37]/60">*</span>}
+        {isValid && <Check className="w-3 h-3 text-emerald-400/70 ml-auto" strokeWidth={2.5} />}
+        {error && <AlertCircle className="w-3 h-3 text-rose-400/80 ml-auto" strokeWidth={2} />}
+      </label>
+      <input
+        type={type} name={name} value={value} onChange={onChange}
+        onBlur={() => setTouched(true)}
+        placeholder={placeholder} required={required}
+        className={`w-full bg-white/[0.02] ring-1 rounded-xl px-5 py-4 text-white/90 text-[15px] font-light
+          placeholder:text-white/15 focus:outline-none focus:bg-white/[0.04]
+          transition-all duration-400 hover:ring-white/10
+          ${ error
+            ? 'ring-rose-400/30 focus:ring-rose-400/50'
+            : isValid
+              ? 'ring-emerald-400/25 focus:ring-emerald-400/40'
+              : 'ring-white/[0.06] focus:ring-[#D4AF37]/30'
+          }`}
+      />
+      <AnimatePresence>
+        {error && (
+          <motion.p
+            initial={{ opacity: 0, y: -4, height: 0 }}
+            animate={{ opacity: 1, y: 0, height: 'auto' }}
+            exit={{ opacity: 0, y: -4, height: 0 }}
+            className="text-rose-400/70 text-[11px] font-light mt-1.5 pl-1"
+          >
+            {error}
+          </motion.p>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+/** Refined selector box — P2: Increased label contrast */
 const SelectorBox = ({
   icon: Icon, label, children,
 }: {
@@ -279,8 +333,9 @@ const SelectorBox = ({
   <div className="bg-white/[0.02] ring-1 ring-white/[0.06] rounded-xl px-5 py-4
     flex items-center justify-between hover:ring-white/10 transition-all duration-300 group/sel">
     <div className="flex items-center gap-3">
-      <Icon className="w-4 h-4 text-[#D4AF37]/60 group-hover/sel:text-[#D4AF37]/80 transition-colors" />
-      <span className="text-[10px] tracking-[0.2em] uppercase text-white/35 font-light">{label}</span>
+      <Icon className="w-4 h-4 text-[#D4AF37]/70 group-hover/sel:text-[#D4AF37]/90 transition-colors" />
+      {/* P2: from text-white/35 to text-white/60 for better contrast */}
+      <span className="text-[10px] tracking-[0.2em] uppercase text-white/60 font-light">{label}</span>
     </div>
     {children}
   </div>
@@ -311,14 +366,25 @@ const BookingSummaryPanel = ({
       </div>
 
       <div className="space-y-4">
-        {/* Selected services */}
+        {/* Selected services — P3: Improved empty state with onboarding hint */}
         {summary.services.length === 0 ? (
-          <div className="text-center py-6">
-            <div className="w-12 h-12 mx-auto rounded-full bg-white/[0.03] flex items-center justify-center mb-3 ring-1 ring-white/[0.05]">
-              <Sparkles className="w-5 h-5 text-white/15" />
-            </div>
-            <p className="text-white/20 text-sm font-light italic">{t.summary.noServiceSelected}</p>
-          </div>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center py-8"
+          >
+            <motion.div
+              animate={{ scale: [1, 1.08, 1] }}
+              transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+              className="w-14 h-14 mx-auto rounded-full bg-white/[0.03] flex items-center justify-center mb-4 ring-1 ring-white/[0.06]"
+            >
+              <ShoppingBag className="w-5 h-5 text-white/20" />
+            </motion.div>
+            <p className="text-white/25 text-sm font-light italic mb-2">{t.summary.noServiceSelected}</p>
+            <p className="text-white/15 text-[11px] font-light leading-relaxed">
+              👈 Choose at least 1 service<br />to get started
+            </p>
+          </motion.div>
         ) : (
           <div className="space-y-3 max-h-[180px] overflow-y-auto premium-scrollbar pr-1">
             {summary.services.map((svc) => (
@@ -500,6 +566,7 @@ const BookingForm = () => {
     bookingResult,
     categories, activeCategory, setActiveCategory,
     currentStep, stepDirection, totalSteps, nextStep, prevStep, canProceedFromStep,
+    goToStep,
     bookingSummary,
   } = useBookingForm();
 
@@ -627,29 +694,65 @@ const BookingForm = () => {
       <CategoryTabs categories={categories} active={activeCategory} onSelect={setActiveCategory}
         selectedCount={formData.selectedServices.length} />
 
-      <motion.div variants={staggerContainerVariants} initial="hidden" animate="visible"
-        key={activeCategory}
-        className="space-y-2.5 lg:grid lg:grid-cols-2 lg:gap-2.5 lg:space-y-0 overflow-y-auto premium-scrollbar max-h-[55vh] lg:max-h-[420px] pr-1">
-        {filteredGroups.map(group => (
-          <motion.div key={group.groupKey} variants={staggerItemVariants}>
-            <ServiceCard group={group} isSelected={isServiceSelected(group.groupKey)}
-              selectedVariantId={getSelectedVariantId(group.groupKey)}
-              onToggle={() => toggleService(group)}
-              onVariantChange={(v) => changeVariant(group.groupKey, v, getGroupedServiceName(group, 'vi'))} />
-          </motion.div>
-        ))}
-      </motion.div>
-
-      {formData.selectedServices.length > 0 && (
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mt-5 text-center">
-          <span className="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-[#D4AF37]/8 ring-1 ring-[#D4AF37]/20 text-[#D4AF37]/80 text-sm font-light tracking-wide">
-            <Check className="w-3.5 h-3.5" />
-            {formData.selectedServices.length} service{formData.selectedServices.length > 1 ? 's' : ''} selected
-            <span className="opacity-30">·</span>
-            <span className="text-white/50">{bookingSummary.totalPriceVND.toLocaleString('vi-VN')}đ</span>
-          </span>
+      {/* P0+P3: Responsive grid — 1 col on mobile, 2 col on sm+ */}
+      {filteredGroups.length === 0 ? (
+        // P3: Empty state when filter has no results
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col items-center justify-center py-16 text-center"
+        >
+          <div className="w-16 h-16 rounded-2xl bg-white/[0.03] flex items-center justify-center mb-4 ring-1 ring-white/[0.06]">
+            <span className="text-3xl">{CATEGORY_ICONS[activeCategory] || '🌿'}</span>
+          </div>
+          <p className="text-white/30 text-sm font-light mb-1">No services in this category</p>
+          <button
+            type="button"
+            onClick={() => setActiveCategory('all')}
+            className="mt-3 text-[#D4AF37]/60 text-xs font-light underline underline-offset-4 hover:text-[#D4AF37]/90 transition-colors"
+          >
+            View all services
+          </button>
+        </motion.div>
+      ) : (
+        <motion.div variants={staggerContainerVariants} initial="hidden" animate="visible"
+          key={activeCategory}
+          className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 overflow-y-auto premium-scrollbar max-h-[60vh] lg:max-h-[420px] pr-1">
+          {filteredGroups.map(group => (
+            <motion.div key={group.groupKey} variants={staggerItemVariants}>
+              <ServiceCard group={group} isSelected={isServiceSelected(group.groupKey)}
+                selectedVariantId={getSelectedVariantId(group.groupKey)}
+                onToggle={() => toggleService(group)}
+                onVariantChange={(v) => changeVariant(group.groupKey, v, getGroupedServiceName(group, 'vi'))} />
+            </motion.div>
+          ))}
         </motion.div>
       )}
+
+      <AnimatePresence>
+        {formData.selectedServices.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 8, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 4, scale: 0.97 }}
+            className="mt-5 text-center"
+          >
+            {/* P3: Micro-animation — bounce when count changes */}
+            <motion.span
+              key={formData.selectedServices.length}
+              initial={{ scale: 1.2 }}
+              animate={{ scale: 1 }}
+              transition={{ type: 'spring', stiffness: 600, damping: 20 }}
+              className="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-[#D4AF37]/8 ring-1 ring-[#D4AF37]/20 text-[#D4AF37]/80 text-sm font-light tracking-wide"
+            >
+              <Check className="w-3.5 h-3.5" />
+              {formData.selectedServices.length} service{formData.selectedServices.length > 1 ? 's' : ''} selected
+              <span className="opacity-30">·</span>
+              <span className="text-white/50">{bookingSummary.totalPriceVND.toLocaleString('vi-VN')}đ</span>
+            </motion.span>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 
@@ -657,13 +760,23 @@ const BookingForm = () => {
   const renderPersonalDetails = () => (
     <div>
       <SectionHeader icon={UserCircle} label={t.steps.details} subtitle="Tell us about yourself" />
+      {/* P2: Real-time validation added */}
       <div className="space-y-5 lg:grid lg:grid-cols-3 lg:gap-5 lg:space-y-0">
-        <FormInput label={t.fields.name} name="name" value={formData.name}
-          onChange={handleChange} placeholder={t.fields.namePlaceholder} required />
-        <FormInput label={t.fields.phone} type="tel" name="phone" value={formData.phone}
-          onChange={handleChange} placeholder={t.fields.phonePlaceholder} required />
-        <FormInput label={t.fields.email} type="email" name="email" value={formData.email}
-          onChange={handleChange} placeholder={t.fields.emailPlaceholder} />
+        <FormInput
+          label={t.fields.name} name="name" value={formData.name}
+          onChange={handleChange} placeholder={t.fields.namePlaceholder} required
+          validate={(v) => v.trim().length < 2 ? 'Name must be at least 2 characters' : null}
+        />
+        <FormInput
+          label={t.fields.phone} type="tel" name="phone" value={formData.phone}
+          onChange={handleChange} placeholder={t.fields.phonePlaceholder} required
+          validate={(v) => !PHONE_REGEX.test(v) ? 'Invalid phone number format' : null}
+        />
+        <FormInput
+          label={t.fields.email} type="email" name="email" value={formData.email}
+          onChange={handleChange} placeholder={t.fields.emailPlaceholder}
+          validate={(v) => v.length > 0 && !EMAIL_REGEX.test(v) ? 'Invalid email address' : null}
+        />
       </div>
     </div>
   );
@@ -681,7 +794,12 @@ const BookingForm = () => {
                   [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute
                   [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full
                   [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer" />
-              {!formData.date && <span className="text-white/15 text-sm pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 font-light">{t.fields.datePlaceholder}</span>}
+              {/* P2: Date hint — dd/mm/yyyy format for Vietnamese users */}
+              {!formData.date && (
+                <span className="text-white/20 text-xs pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 font-light tracking-wider">
+                  dd/mm/yyyy
+                </span>
+              )}
             </div>
           </SelectorBox>
           <SelectorBox icon={Clock} label={t.fields.time}>
@@ -691,7 +809,7 @@ const BookingForm = () => {
                   [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute
                   [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full
                   [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer" />
-              {!formData.time && <span className="text-white/15 text-sm pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 font-light">{t.fields.timePlaceholder}</span>}
+              {!formData.time && <span className="text-white/20 text-xs pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 font-light">--:--</span>}
             </div>
           </SelectorBox>
         </div>
@@ -784,7 +902,13 @@ const BookingForm = () => {
           </motion.p>
         </div>
 
-        <StepProgress current={currentStep} total={totalSteps} />
+        {/* P1: Step indicator — visible on both mobile and desktop, clickable for done steps */}
+        <StepProgress
+          current={currentStep}
+          total={totalSteps}
+          onStepClick={goToStep}
+          canClickStep={(step) => canProceedFromStep(step)}
+        />
 
         {/* MAIN LAYOUT */}
         <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
@@ -817,11 +941,55 @@ const BookingForm = () => {
                     serviceCount={formData.selectedServices.length} />
                 </div>
 
-                {/* DESKTOP */}
+                {/* DESKTOP — P1: Step-based rendering with locked sections */}
                 <div className="hidden lg:flex lg:flex-col lg:gap-12">
-                  {renderServiceSelection()}
-                  {renderPersonalDetails()}
-                  {renderSchedule()}
+                  {/* Step 1: Always visible */}
+                  <motion.div
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    {renderServiceSelection()}
+                  </motion.div>
+
+                  {/* Step 2: Locked until step 1 done */}
+                  <motion.div
+                    animate={{
+                      opacity: canProceedFromStep(1) ? 1 : 0.3,
+                      filter: canProceedFromStep(1) ? 'none' : 'blur(2px)',
+                    }}
+                    transition={{ duration: 0.5 }}
+                    className={canProceedFromStep(1) ? '' : 'pointer-events-none select-none'}
+                  >
+                    {!canProceedFromStep(1) && (
+                      <div className="flex items-center gap-2 mb-4 pl-1">
+                        <div className="w-2 h-2 rounded-full bg-[#D4AF37]/30 animate-pulse" />
+                        <span className="text-white/25 text-xs font-light tracking-widest uppercase">
+                          Select a service first
+                        </span>
+                      </div>
+                    )}
+                    {renderPersonalDetails()}
+                  </motion.div>
+
+                  {/* Step 3: Locked until step 2 done */}
+                  <motion.div
+                    animate={{
+                      opacity: canProceedFromStep(2) ? 1 : 0.3,
+                      filter: canProceedFromStep(2) ? 'none' : 'blur(2px)',
+                    }}
+                    transition={{ duration: 0.5 }}
+                    className={canProceedFromStep(2) ? '' : 'pointer-events-none select-none'}
+                  >
+                    {!canProceedFromStep(2) && (
+                      <div className="flex items-center gap-2 mb-4 pl-1">
+                        <div className="w-2 h-2 rounded-full bg-[#D4AF37]/30 animate-pulse" />
+                        <span className="text-white/25 text-xs font-light tracking-widest uppercase">
+                          Fill your details first
+                        </span>
+                      </div>
+                    )}
+                    {renderSchedule()}
+                  </motion.div>
                 </div>
               </form>
             </div>
