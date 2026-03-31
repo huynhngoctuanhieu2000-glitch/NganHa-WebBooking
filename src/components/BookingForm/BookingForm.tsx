@@ -1,1004 +1,775 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useBookingForm } from './BookingForm.logic';
 import type { BookingResult } from './BookingForm.logic';
 import { t } from './BookingForm.i18n';
 import {
   stepSlideVariants,
-  staggerContainerVariants,
-  staggerItemVariants,
+  intentContainerVariants,
+  intentItemVariants,
+  categoryContainerVariants,
+  categoryCardItemVariants,
+  categoryCardVariants,
+  accordionVariants,
+  serviceRowContainerVariants,
+  serviceRowVariants,
+  durationPickerVariants,
+  floatingBasketVariants,
+  countBounceTransition,
+  successCardVariants,
+  confettiItemVariants,
+  sectionFadeVariants,
 } from './BookingForm.animation';
-import { GroupedService, DurationVariant, getGroupedServiceName } from '@/lib/groupServices';
+import { GroupedService, DurationVariant, getGroupedServiceName, getGroupedServiceDescription } from '@/lib/groupServices';
+import { getCategoryDisplay, INTENT_DISPLAY, IntentKey } from '@/data/categoryImages';
 import { BRANCH_LIST } from '@/data/branches';
 import {
   CalendarDays, Clock, MapPin, Users, UserCircle,
-  ChevronDown, Check, ArrowRight, ArrowLeft, Sparkles,
-  Plus, ShoppingBag, AlertCircle,
+  Check, ArrowRight, ArrowLeft, Sparkles, Plus, Minus,
+  ShoppingBag, ChevronDown, ChevronUp, X, Star,
 } from 'lucide-react';
 
-// 🔧 UI CONFIGURATION
+// ─── UI CONFIG ───
 const GOLD = '#D4AF37';
-const GOLD_LIGHT = '#F5E6B8';
-const GOLD_DARK = '#A08520';
-const CATEGORY_ICONS: Record<string, string> = {
-  body: '💆', foot: '🦶', 'hair wash': '💇', facial: '✨',
-  'heel skin shave': '🪒', 'manicure & pedicure': '💅',
-  barber: '💈', 'ear clean': '👂', additional: '🌿',
-};
-// P2: Validation regex
-const PHONE_REGEX = /^[+]?[0-9\s\-().]{7,20}$/;
+const PHONE_REGEX = /^[+]?[0-9\s\-(). ]{7,20}$/;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const TIME_SLOTS = [
+  '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
+  '12:00', '12:30', '13:00', '13:30', '14:00', '14:30',
+  '15:00', '15:30', '16:00', '16:30', '17:00', '17:30',
+  '18:00', '18:30', '19:00', '19:30', '20:00', '20:30', '21:00',
+];
 
-// ═══════════════════════════════════════
-// Sub-components
-// ═══════════════════════════════════════
+// ════════════════════════════════════════
+// SHARED SUB-COMPONENTS
+// ════════════════════════════════════════
 
-/** Decorative gold line */
 const GoldDivider = () => (
-  <div className="flex items-center gap-4 my-2">
-    <div className="flex-1 h-[1px] bg-gradient-to-r from-transparent via-[#D4AF37]/20 to-transparent" />
+  <div className="flex items-center gap-3 my-3">
+    <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#D4AF37]/20 to-transparent" />
     <div className="w-1 h-1 rounded-full bg-[#D4AF37]/40" />
-    <div className="flex-1 h-[1px] bg-gradient-to-r from-transparent via-[#D4AF37]/20 to-transparent" />
+    <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#D4AF37]/20 to-transparent" />
   </div>
 );
 
-/** Step progress — shows on BOTH mobile and desktop */
 const StepProgress = ({
   current, total, onStepClick, canClickStep,
 }: {
   current: number; total: number;
-  onStepClick?: (step: number) => void;
-  canClickStep?: (step: number) => boolean;
-}) => (
-  <div className="flex items-center justify-center gap-3 mb-10">
-    {Array.from({ length: total }, (_, i) => {
-      const step = i + 1;
-      const isActive = step === current;
-      const isDone = step < current;
-      const isClickable = isDone || (onStepClick && canClickStep?.(step - 1));
-      const labels = [t.steps.service, t.steps.details, t.steps.confirm];
-      return (
-        <React.Fragment key={step}>
-          {i > 0 && (
-            <div className={`h-[1px] w-10 sm:w-16 transition-all duration-500
-              ${isDone
-                ? 'bg-gradient-to-r from-[#D4AF37] to-[#D4AF37]/60'
-                : 'bg-white/8'
-              }`} />
-          )}
-          <div
-            className={`flex flex-col items-center gap-2 ${isClickable ? 'cursor-pointer' : 'cursor-default'}`}
-            onClick={() => isClickable && onStepClick?.(step)}
-          >
-            <motion.div
-              whileHover={isClickable ? { scale: 1.08 } : {}}
-              whileTap={isClickable ? { scale: 0.95 } : {}}
-              className={`
-                w-10 h-10 rounded-full flex items-center justify-center text-sm font-light transition-all duration-500
-                ${isActive
-                  ? 'bg-gradient-to-br from-[#D4AF37]/25 to-[#D4AF37]/5 text-[#D4AF37] ring-1 ring-[#D4AF37]/40 shadow-[0_0_20px_rgba(212,175,55,0.15)]'
-                  : isDone
-                    ? 'bg-[#D4AF37] text-black shadow-[0_0_15px_rgba(212,175,55,0.2)]'
-                    : 'bg-white/[0.03] text-white/25 ring-1 ring-white/8'
-                }
-              `}
-            >
-              {isDone ? <Check className="w-4 h-4" strokeWidth={2.5} /> : step}
-            </motion.div>
-            <span className={`text-[10px] tracking-[0.2em] font-light transition-colors duration-500
-              ${isActive ? 'text-[#D4AF37]/80' : isDone ? 'text-white/60' : 'text-white/20'}`}>
-              {labels[i]}
-            </span>
-          </div>
-        </React.Fragment>
-      );
-    })}
-  </div>
-);
-
-/** Elegant section header */
-const SectionHeader = ({ icon: Icon, label, subtitle }: { icon: React.ElementType; label: string; subtitle?: string }) => (
-  <div className="mb-6">
-    <div className="flex items-center gap-3">
-      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#D4AF37]/15 to-[#D4AF37]/5 flex items-center justify-center ring-1 ring-[#D4AF37]/20">
-        <Icon className="w-4 h-4 text-[#D4AF37]" />
-      </div>
-      <div>
-        <h3 className="text-white/80 font-light text-sm tracking-[0.2em] uppercase">{label}</h3>
-        {subtitle && <p className="text-white/25 text-xs mt-0.5 font-light">{subtitle}</p>}
-      </div>
-    </div>
-    <div className="mt-3 h-[1px] bg-gradient-to-r from-[#D4AF37]/15 via-[#D4AF37]/8 to-transparent" />
-  </div>
-);
-
-/** Premium category tabs */
-const CategoryTabs = ({
-  categories, active, onSelect, selectedCount,
-}: {
-  categories: string[]; active: string; onSelect: (cat: string) => void; selectedCount: number;
-}) => (
-  <div className="mb-5 -mx-2">
-    <div className="flex gap-2 px-2 overflow-x-auto pb-3 scrollbar-hide" style={{ scrollbarWidth: 'none' }}>
-      <button type="button" onClick={() => onSelect('all')}
-        className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-[11px] tracking-[0.15em] uppercase whitespace-nowrap transition-all duration-400 font-light
-          ${active === 'all'
-            ? 'bg-gradient-to-r from-[#D4AF37]/20 to-[#D4AF37]/8 text-[#D4AF37] ring-1 ring-[#D4AF37]/30 shadow-[0_0_15px_rgba(212,175,55,0.08)]'
-            : 'bg-white/[0.02] text-white/35 ring-1 ring-white/[0.05] hover:bg-white/[0.04] hover:text-white/55'
-          }`}>
-        <span className="text-sm">✦</span>
-        All
-        {selectedCount > 0 && (
-          <span className="ml-1 bg-[#D4AF37] text-black text-[9px] font-medium rounded-full w-4 h-4 inline-flex items-center justify-center">{selectedCount}</span>
-        )}
-      </button>
-      {categories.map(cat => (
-        <button key={cat} type="button" onClick={() => onSelect(cat)}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-[11px] tracking-[0.15em] uppercase whitespace-nowrap transition-all duration-400 font-light
-            ${active === cat
-              ? 'bg-gradient-to-r from-[#D4AF37]/20 to-[#D4AF37]/8 text-[#D4AF37] ring-1 ring-[#D4AF37]/30 shadow-[0_0_15px_rgba(212,175,55,0.08)]'
-              : 'bg-white/[0.02] text-white/35 ring-1 ring-white/[0.05] hover:bg-white/[0.04] hover:text-white/55'
-            }`}>
-          <span className="text-sm">{CATEGORY_ICONS[cat] || '🌿'}</span>
-          {cat}
-        </button>
-      ))}
-    </div>
-  </div>
-);
-
-/** Elegant duration pills */
-const DurationPicker = ({
-  variants, selectedVariantId, onSelect,
-}: {
-  variants: DurationVariant[]; selectedVariantId: string | null; onSelect: (v: DurationVariant) => void;
+  onStepClick?: (s: number) => void;
+  canClickStep?: (s: number) => boolean;
 }) => {
-  if (variants.length <= 1) return null;
+  const labels = [t.steps.service, t.steps.details, t.steps.confirm];
   return (
-    <div className="flex flex-wrap gap-2 mt-4 pt-3 border-t border-[#D4AF37]/10">
-      {variants.map(v => {
-        const isSelected = v.id === selectedVariantId;
+    <div className="flex items-center justify-center gap-2 mb-8">
+      {Array.from({ length: total }, (_, i) => {
+        const step = i + 1;
+        const isActive = step === current;
+        const isDone = step < current;
+        const clickable = isDone && !!onStepClick;
         return (
-          <button key={v.id} type="button"
-            onClick={(e) => { e.stopPropagation(); onSelect(v); }}
-            className={`px-3.5 py-2 rounded-xl text-[11px] font-light tracking-wide transition-all duration-300
-              ${isSelected
-                ? 'bg-gradient-to-r from-[#D4AF37]/25 to-[#D4AF37]/10 text-[#F5E6B8] ring-1 ring-[#D4AF37]/40 shadow-[0_0_10px_rgba(212,175,55,0.1)]'
-                : 'bg-white/[0.02] text-white/35 ring-1 ring-white/[0.05] hover:ring-white/10 hover:text-white/55'
-              }`}>
-            <span className="font-medium">{v.duration}</span>
-            <span className="opacity-60">min</span>
-            <span className="mx-1.5 opacity-20">·</span>
-            <span>{v.priceVND.toLocaleString('vi-VN')}đ</span>
-          </button>
+          <React.Fragment key={step}>
+            {i > 0 && (
+              <div className={`h-px w-10 sm:w-16 transition-all duration-500 ${isDone ? 'bg-[#D4AF37]/60' : 'bg-white/10'}`} />
+            )}
+            <div
+              className={`flex flex-col items-center gap-1.5 ${clickable ? 'cursor-pointer' : 'cursor-default'}`}
+              onClick={() => clickable && onStepClick?.(step)}
+            >
+              <motion.div
+                whileHover={clickable ? { scale: 1.08 } : {}}
+                className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-light transition-all duration-500 ${isActive
+                    ? 'bg-[#D4AF37]/20 text-[#D4AF37] ring-1 ring-[#D4AF37]/40 shadow-[0_0_16px_rgba(212,175,55,0.2)]'
+                    : isDone
+                      ? 'bg-[#D4AF37] text-black'
+                      : 'bg-white/[0.03] text-white/25 ring-1 ring-white/10'
+                  }`}
+              >
+                {isDone ? <Check className="w-3.5 h-3.5" strokeWidth={2.5} /> : step}
+              </motion.div>
+              <span className={`text-[10px] tracking-[0.15em] font-light transition-colors duration-300 ${isActive ? 'text-[#D4AF37]/80' : isDone ? 'text-white/50' : 'text-white/20'}`}>
+                {labels[i]}
+              </span>
+            </div>
+          </React.Fragment>
         );
       })}
     </div>
   );
 };
 
-/** Premium service card */
-const ServiceCard = ({
+const FormInput = ({
+  label, type = 'text', name, value, onChange, placeholder, required = false, validate,
+}: {
+  label: string; type?: string; name: string; value: string;
+  onChange: React.ChangeEventHandler<HTMLInputElement>;
+  placeholder: string; required?: boolean;
+  validate?: (v: string) => string | null;
+}) => {
+  const [touched, setTouched] = React.useState(false);
+  const error = touched && validate ? validate(value) : null;
+  const isValid = touched && !error && value.length > 0;
+  return (
+    <div>
+      <label className="text-[#D4AF37]/70 text-[10px] tracking-[0.2em] uppercase font-light mb-2 flex items-center gap-1.5">
+        {label}
+        {required && <span className="text-[#D4AF37]/50">*</span>}
+        {isValid && <Check className="w-3 h-3 text-emerald-400/70 ml-auto" strokeWidth={2.5} />}
+        {error && <span className="text-rose-400/70 text-[10px] ml-auto font-normal normal-case tracking-normal">{error}</span>}
+      </label>
+      <input
+        type={type} name={name} value={value} onChange={onChange}
+        onBlur={() => setTouched(true)} placeholder={placeholder} required={required}
+        className={`w-full bg-white/[0.03] ring-1 rounded-xl px-4 py-3.5 text-white/85 text-sm font-light
+          placeholder:text-white/15 focus:outline-none focus:bg-white/[0.05] transition-all duration-300
+          ${error ? 'ring-rose-400/30 focus:ring-rose-400/50'
+            : isValid ? 'ring-emerald-400/20 focus:ring-emerald-400/35'
+              : 'ring-white/[0.07] focus:ring-[#D4AF37]/30'}`}
+      />
+    </div>
+  );
+};
+
+// ════════════════════════════════════════
+// INTENT QUIZ (Curator B — Step 0)
+// ════════════════════════════════════════
+
+const IntentQuizSection = ({
+  onSelect, onSkip,
+}: {
+  onSelect: (key: IntentKey) => void;
+  onSkip: () => void;
+}) => {
+  const intents = Object.entries(INTENT_DISPLAY) as [IntentKey, typeof INTENT_DISPLAY[IntentKey]][];
+  return (
+    <motion.div
+      variants={sectionFadeVariants}
+      initial="hidden"
+      animate="visible"
+      className="flex flex-col items-center justify-center min-h-[60vh] py-12 px-4 text-center"
+    >
+      {/* Badge */}
+      <motion.div custom={0} variants={sectionFadeVariants} className="mb-6">
+        <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#D4AF37]/10 ring-1 ring-[#D4AF37]/25 text-[#D4AF37]/70 text-[10px] tracking-[0.3em] uppercase font-light">
+          <Sparkles className="w-3 h-3" />
+          {t.badge}
+        </span>
+      </motion.div>
+
+      <motion.h2
+        custom={1}
+        variants={sectionFadeVariants}
+        className="text-3xl sm:text-4xl font-serif text-white/90 tracking-wide mb-3"
+      >
+        {t.intent.heading}
+      </motion.h2>
+      <motion.p custom={2} variants={sectionFadeVariants} className="text-white/35 font-light text-sm mb-10 max-w-sm">
+        {t.intent.subheading}
+      </motion.p>
+
+      {/* Intent Pills Grid */}
+      <motion.div
+        variants={intentContainerVariants}
+        initial="hidden"
+        animate="visible"
+        className="grid grid-cols-2 gap-3 w-full max-w-sm mb-8"
+      >
+        {intents.map(([key, info]) => (
+          <motion.button
+            key={key}
+            variants={intentItemVariants}
+            whileHover={{ scale: 1.03, y: -2 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => onSelect(key)}
+            className="group relative overflow-hidden rounded-2xl p-5 text-left transition-all duration-300
+              bg-white/[0.03] ring-1 ring-white/[0.08] hover:ring-[#D4AF37]/40 hover:bg-[#D4AF37]/[0.06]"
+          >
+            <span className="text-3xl mb-2 block">{info.emoji}</span>
+            <p className="text-white/80 font-medium text-sm tracking-wide mb-1">{info.labelVi}</p>
+            <p className="text-white/30 font-light text-[11px] leading-relaxed">{info.description}</p>
+            <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-[#D4AF37]/0 ring-1 ring-white/15 flex items-center justify-center transition-all duration-300 group-hover:bg-[#D4AF37] group-hover:ring-[#D4AF37]">
+              <ArrowRight className="w-2.5 h-2.5 text-white/0 group-hover:text-black transition-colors duration-300" />
+            </div>
+          </motion.button>
+        ))}
+      </motion.div>
+
+      {/* Skip */}
+      <motion.button
+        custom={3}
+        variants={sectionFadeVariants}
+        onClick={onSkip}
+        className="text-white/30 text-sm font-light hover:text-white/60 transition-colors duration-300 flex items-center gap-2"
+      >
+        {t.intent.showAll}
+        <ArrowRight className="w-3.5 h-3.5" />
+      </motion.button>
+    </motion.div>
+  );
+};
+
+// ════════════════════════════════════════
+// CATEGORY IMAGE CARD
+// ════════════════════════════════════════
+
+const CategoryImageCard = ({
+  category, count, isActive, onClick,
+}: {
+  category: string; count: number; isActive: boolean; onClick: () => void;
+}) => {
+  const info = getCategoryDisplay(category);
+  return (
+    <motion.button
+      variants={categoryCardVariants}
+      whileHover="hover"
+      whileTap="tap"
+      onClick={onClick}
+      className={`relative flex-shrink-0 overflow-hidden rounded-2xl transition-all duration-400 text-left
+        w-[130px] sm:w-[150px] h-[180px] sm:h-[200px]
+        ${isActive
+          ? 'ring-2 ring-[#D4AF37] shadow-[0_0_24px_rgba(212,175,55,0.2)]'
+          : 'ring-1 ring-white/10 opacity-70 hover:opacity-100 hover:ring-white/20'
+        }`}
+    >
+      {/* Background Image */}
+      <Image
+        src={info.image}
+        alt={info.label}
+        fill
+        className="object-cover transition-transform duration-500 group-hover:scale-105"
+        sizes="150px"
+      />
+
+      {/* Dark gradient overlay */}
+      <div className={`absolute inset-0 bg-gradient-to-t ${info.gradient}`} />
+
+      {/* Active gold shimmer */}
+      {isActive && (
+        <div className="absolute inset-0 bg-gradient-to-br from-[#D4AF37]/15 via-transparent to-transparent" />
+      )}
+
+      {/* Text Content */}
+      <div className="absolute bottom-0 left-0 right-0 p-3">
+        <p className={`text-xs font-medium tracking-wide mb-0.5 transition-colors ${isActive ? 'text-[#F5E6B8]' : 'text-white/80'}`}>
+          {info.labelVi}
+        </p>
+        <p className="text-white/40 text-[10px] font-light">{count} dịch vụ</p>
+      </div>
+
+      {/* Active check badge */}
+      {isActive && (
+        <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-[#D4AF37] flex items-center justify-center shadow-lg">
+          <Check className="w-2.5 h-2.5 text-black" strokeWidth={3} />
+        </div>
+      )}
+    </motion.button>
+  );
+};
+
+// ════════════════════════════════════════
+// DURATION PICKER
+// ════════════════════════════════════════
+
+const DurationPicker = ({
+  variants, selectedVariantId, onSelect,
+}: {
+  variants: DurationVariant[]; selectedVariantId: string | null;
+  onSelect: (v: DurationVariant) => void;
+}) => {
+  if (variants.length <= 1) return null;
+  return (
+    <motion.div
+      variants={durationPickerVariants}
+      initial="hidden"
+      animate="visible"
+      className="flex flex-wrap gap-1.5 mt-2.5 pt-2.5 border-t border-[#D4AF37]/10"
+    >
+      {variants.map(v => {
+        const sel = v.id === selectedVariantId;
+        return (
+          <button key={v.id} type="button" onClick={e => { e.stopPropagation(); onSelect(v); }}
+            className={`px-3 py-1.5 rounded-lg text-[11px] font-light tracking-wide transition-all duration-200 ${sel
+                ? 'bg-[#D4AF37]/20 text-[#F5E6B8] ring-1 ring-[#D4AF37]/40'
+                : 'bg-white/[0.03] text-white/35 ring-1 ring-white/[0.06] hover:ring-white/15 hover:text-white/55'
+              }`}
+          >
+            <span className="font-medium">{v.duration}</span>
+            <span className="opacity-60">ph</span>
+            <span className="mx-1 opacity-20">·</span>
+            {v.priceVND.toLocaleString('vi-VN')}đ
+          </button>
+        );
+      })}
+    </motion.div>
+  );
+};
+
+// ════════════════════════════════════════
+// SERVICE ROW (inside accordion)
+// ════════════════════════════════════════
+
+const ServiceRow = ({
   group, isSelected, selectedVariantId, onToggle, onVariantChange,
 }: {
   group: GroupedService; isSelected: boolean; selectedVariantId: string | null;
   onToggle: () => void; onVariantChange: (v: DurationVariant) => void;
 }) => {
-  const displayName = getGroupedServiceName(group, 'vi');
-  const currentVariant = isSelected
-    ? group.variants.find(v => v.id === selectedVariantId) || group.variants[0]
-    : group.variants[0];
-  const hasDurations = group.variants.length > 1;
+  const name = getGroupedServiceName(group, 'vi');
+  const desc = getGroupedServiceDescription(group, 'vi');
+  const currentVariant = group.variants.find(v => v.id === selectedVariantId) || group.variants[0];
+  const hasVariants = group.variants.length > 1;
   const minDur = group.variants[0].duration;
   const maxDur = group.variants[group.variants.length - 1].duration;
+  const categoryInfo = getCategoryDisplay(group.category);
 
   return (
-    <motion.div
-      whileTap={{ scale: 0.985 }}
-      onClick={onToggle}
-      className={`
-        relative rounded-2xl cursor-pointer transition-all duration-400 overflow-hidden group/card
-        ${isSelected
-          ? 'ring-1 ring-[#D4AF37]/40 shadow-[0_0_25px_rgba(212,175,55,0.06)]'
-          : 'ring-1 ring-white/[0.05] hover:ring-white/10'
-        }
-      `}
-    >
-      {/* Background layers */}
-      <div className={`absolute inset-0 transition-all duration-500
-        ${isSelected
-          ? 'bg-gradient-to-br from-[#D4AF37]/12 via-[#D4AF37]/4 to-transparent'
-          : 'bg-gradient-to-br from-white/[0.03] to-white/[0.01] group-hover/card:from-white/[0.05] group-hover/card:to-white/[0.02]'
-        }`}
-      />
+    <motion.div variants={serviceRowVariants} className={`relative rounded-xl overflow-hidden transition-all duration-300 ${isSelected ? 'ring-1 ring-[#D4AF37]/40 shadow-[0_0_16px_rgba(212,175,55,0.06)]' : 'ring-1 ring-white/[0.06] hover:ring-white/[0.12]'
+      }`}>
+      <div className={`absolute inset-0 transition-all duration-400 ${isSelected
+          ? 'bg-gradient-to-r from-[#D4AF37]/10 via-[#D4AF37]/[0.04] to-transparent'
+          : 'bg-gradient-to-r from-white/[0.025] to-white/[0.01]'
+        }`} />
 
-      <div className="relative z-10 p-5">
-        {/* Top row: name + action */}
-        <div className="flex justify-between items-start gap-3">
-          <div className="flex-1 min-w-0">
-            <p className={`text-[15px] leading-relaxed transition-colors duration-400 ${isSelected ? 'text-[#F5E6B8] font-medium' : 'text-white/80 font-light'}`}>
-              {displayName}
-            </p>
-            {!isSelected && (
-              <p className="text-white/25 text-xs mt-1.5 flex items-center gap-1.5 font-light">
-                <Clock className="w-3 h-3 opacity-60" />
-                {hasDurations ? `${minDur} – ${maxDur} min` : `${minDur} min`}
-              </p>
-            )}
-          </div>
-
-          <div className="flex items-center gap-3 flex-shrink-0">
-            {!isSelected && (
-              <span className="text-white/40 text-sm font-light tracking-wide group-hover/card:text-white/60 transition-colors">
-                {hasDurations ? `from ${currentVariant.priceVND.toLocaleString('vi-VN')}` : currentVariant.priceVND.toLocaleString('vi-VN')}
-                <span className="text-[10px] ml-0.5 opacity-50">đ</span>
-              </span>
-            )}
-            <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-300
-              ${isSelected
-                ? 'bg-[#D4AF37] shadow-[0_0_12px_rgba(212,175,55,0.3)]'
-                : 'ring-1 ring-white/15 group-hover/card:ring-white/25'
-              }`}>
-              {isSelected
-                ? <Check className="w-3.5 h-3.5 text-black" strokeWidth={2.5} />
-                : <Plus className="w-3.5 h-3.5 text-white/30 group-hover/card:text-white/50" />
-              }
-            </div>
-          </div>
+      <div className="relative z-10 flex gap-3 p-3.5">
+        {/* Service thumbnail */}
+        <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 relative">
+          <Image
+            src={group.image || categoryInfo.image}
+            alt={name}
+            fill
+            className="object-cover"
+            sizes="56px"
+          />
+          <div className="absolute inset-0 bg-black/20" />
         </div>
 
-        {/* Expanded: duration picker + selected info */}
-        {isSelected && (
-          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} transition={{ duration: 0.3 }}>
-            {hasDurations && (
-              <DurationPicker variants={group.variants} selectedVariantId={selectedVariantId} onSelect={onVariantChange} />
-            )}
-            <div className="flex items-center justify-between mt-3 pt-3 border-t border-[#D4AF37]/10">
-              <span className="text-white/30 text-xs flex items-center gap-1.5 font-light">
-                <Clock className="w-3 h-3 opacity-50" />
-                {currentVariant.duration} min
-              </span>
-              <span className="font-serif text-[#D4AF37] text-base tracking-wide">
-                {currentVariant.priceVND.toLocaleString('vi-VN')}
-                <span className="text-xs ml-0.5 opacity-60">đ</span>
-              </span>
+        {/* Info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <p className={`text-sm font-light leading-snug truncate transition-colors ${isSelected ? 'text-[#F5E6B8]' : 'text-white/80'}`}>
+                  {name}
+                </p>
+                {group.isBestSeller && (
+                  <span className="flex-shrink-0 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-[#D4AF37]/15 text-[#D4AF37]/80 text-[9px] tracking-wide font-medium">
+                    <Star className="w-2 h-2" fill="currentColor" /> Bán chạy
+                  </span>
+                )}
+              </div>
+              <p className="text-white/30 text-[11px] font-light mt-0.5 flex items-center gap-1">
+                <Clock className="w-2.5 h-2.5 opacity-60" />
+                {hasVariants ? `${minDur}–${maxDur} phút` : `${minDur} phút`}
+              </p>
+              {desc && !isSelected && (
+                <p className="text-white/25 text-[11px] font-light mt-1 line-clamp-1">{desc}</p>
+              )}
             </div>
-          </motion.div>
-        )}
+
+            <div className="flex items-center gap-2.5 flex-shrink-0">
+              {!isSelected && (
+                <span className="text-white/45 text-sm font-light">
+                  {hasVariants ? `từ ` : ''}{currentVariant.priceVND.toLocaleString('vi-VN')}
+                  <span className="text-[10px] opacity-60">đ</span>
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={onToggle}
+                className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-300 ${isSelected
+                    ? 'bg-[#D4AF37] shadow-[0_0_10px_rgba(212,175,55,0.3)]'
+                    : 'ring-1 ring-white/20 hover:ring-[#D4AF37]/50 hover:bg-[#D4AF37]/10'
+                  }`}
+              >
+                {isSelected
+                  ? <Check className="w-3.5 h-3.5 text-black" strokeWidth={2.5} />
+                  : <Plus className="w-3.5 h-3.5 text-white/40" />
+                }
+              </button>
+            </div>
+          </div>
+
+          {isSelected && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.25 }}>
+              <div className="flex items-center justify-between mt-2 pt-2 border-t border-[#D4AF37]/10">
+                <span className="text-white/30 text-[11px] font-light flex items-center gap-1">
+                  <Clock className="w-2.5 h-2.5" /> {currentVariant.duration} phút
+                </span>
+                <span className="text-[#D4AF37] text-sm font-light tracking-wide">
+                  {currentVariant.priceVND.toLocaleString('vi-VN')}đ
+                </span>
+              </div>
+              {hasVariants && (
+                <DurationPicker variants={group.variants} selectedVariantId={selectedVariantId} onSelect={onVariantChange} />
+              )}
+            </motion.div>
+          )}
+        </div>
       </div>
     </motion.div>
   );
 };
 
-/** P2: Elegant floating label input with real-time validation */
-const FormInput = ({
-  label, type = 'text', name, value, onChange, placeholder, required = false, validate,
+// ════════════════════════════════════════
+// SERVICE ACCORDION
+// ════════════════════════════════════════
+
+const ServiceAccordionSection = ({
+  category, services, isOpen, onToggle,
+  isServiceSelected, getSelectedVariantId, onToggleService, onVariantChange,
 }: {
-  label: string; type?: string; name: string; value: string;
-  onChange: React.ChangeEventHandler<HTMLInputElement>; placeholder: string;
-  required?: boolean;
-  validate?: (v: string) => string | null; // returns error message or null
+  category: string; services: GroupedService[]; isOpen: boolean; onToggle: () => void;
+  isServiceSelected: (k: string) => boolean;
+  getSelectedVariantId: (k: string) => string | null;
+  onToggleService: (g: GroupedService) => void;
+  onVariantChange: (k: string, v: DurationVariant, name: string) => void;
 }) => {
-  const [touched, setTouched] = React.useState(false);
-  const error = touched && validate ? validate(value) : null;
-  const isValid = touched && !error && value.length > 0;
+  const info = getCategoryDisplay(category);
+  const selectedInCat = services.filter(s => isServiceSelected(s.groupKey)).length;
 
   return (
-    <div className="group/input">
-      {/* P2: Increased contrast — from /50 to /80 */}
-      <label className="text-[#D4AF37]/80 text-[10px] tracking-[0.2em] uppercase font-light mb-2.5 flex items-center gap-1.5">
-        {label}
-        {required && <span className="text-[#D4AF37]/60">*</span>}
-        {isValid && <Check className="w-3 h-3 text-emerald-400/70 ml-auto" strokeWidth={2.5} />}
-        {error && <AlertCircle className="w-3 h-3 text-rose-400/80 ml-auto" strokeWidth={2} />}
-      </label>
-      <input
-        type={type} name={name} value={value} onChange={onChange}
-        onBlur={() => setTouched(true)}
-        placeholder={placeholder} required={required}
-        className={`w-full bg-white/[0.02] ring-1 rounded-xl px-5 py-4 text-white/90 text-[15px] font-light
-          placeholder:text-white/15 focus:outline-none focus:bg-white/[0.04]
-          transition-all duration-400 hover:ring-white/10
-          ${ error
-            ? 'ring-rose-400/30 focus:ring-rose-400/50'
-            : isValid
-              ? 'ring-emerald-400/25 focus:ring-emerald-400/40'
-              : 'ring-white/[0.06] focus:ring-[#D4AF37]/30'
+    <div className={`rounded-2xl overflow-hidden transition-all duration-300 ${isOpen ? 'ring-1 ring-[#D4AF37]/25' : 'ring-1 ring-white/[0.06]'
+      }`}>
+      {/* Header */}
+      <button
+        type="button"
+        onClick={onToggle}
+        className={`w-full flex items-center justify-between p-4 transition-all duration-300 ${isOpen ? 'bg-[#D4AF37]/[0.06]' : 'bg-white/[0.02] hover:bg-white/[0.04]'
           }`}
-      />
-      <AnimatePresence>
-        {error && (
-          <motion.p
-            initial={{ opacity: 0, y: -4, height: 0 }}
-            animate={{ opacity: 1, y: 0, height: 'auto' }}
-            exit={{ opacity: 0, y: -4, height: 0 }}
-            className="text-rose-400/70 text-[11px] font-light mt-1.5 pl-1"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl overflow-hidden relative flex-shrink-0">
+            <Image src={info.image} alt={info.label} fill className="object-cover" sizes="36px" />
+            <div className="absolute inset-0 bg-black/30" />
+          </div>
+          <div className="text-left">
+            <p className={`text-sm font-medium tracking-wide transition-colors ${isOpen ? 'text-[#F5E6B8]' : 'text-white/70'}`}>
+              {info.labelVi}
+            </p>
+            <p className="text-white/30 text-[11px] font-light">{services.length} dịch vụ</p>
+          </div>
+          {selectedInCat > 0 && (
+            <span className="ml-2 bg-[#D4AF37] text-black text-[9px] font-bold rounded-full w-4.5 h-4.5 w-5 h-5 flex items-center justify-center shadow-lg">
+              {selectedInCat}
+            </span>
+          )}
+        </div>
+        <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-all duration-300 ${isOpen ? 'bg-[#D4AF37]/20 text-[#D4AF37]' : 'bg-white/[0.03] text-white/30'
+          }`}>
+          {isOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+        </div>
+      </button>
+
+      {/* Accordion Content */}
+      <AnimatePresence initial={false}>
+        {isOpen && (
+          <motion.div
+            key="content"
+            variants={accordionVariants}
+            initial="hidden"
+            animate="visible"
+            exit="hidden"
+            style={{ overflow: 'hidden' }}
           >
-            {error}
-          </motion.p>
+            <motion.div
+              variants={serviceRowContainerVariants}
+              initial="hidden"
+              animate="visible"
+              className="p-3 space-y-2"
+            >
+              {services.map(group => (
+                <ServiceRow
+                  key={group.groupKey}
+                  group={group}
+                  isSelected={isServiceSelected(group.groupKey)}
+                  selectedVariantId={getSelectedVariantId(group.groupKey)}
+                  onToggle={() => onToggleService(group)}
+                  onVariantChange={v => onVariantChange(group.groupKey, v, getGroupedServiceName(group, 'vi'))}
+                />
+              ))}
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
   );
 };
 
-/** Refined selector box — P2: Increased label contrast */
-const SelectorBox = ({
-  icon: Icon, label, children,
+// ════════════════════════════════════════
+// FLOATING BASKET
+// ════════════════════════════════════════
+
+const FloatingBasket = ({
+  serviceCount, totalDuration, totalPrice, onContinue, canContinue,
 }: {
-  icon: React.ElementType; label: string; children: React.ReactNode;
+  serviceCount: number; totalDuration: number; totalPrice: number;
+  onContinue: () => void; canContinue: boolean;
 }) => (
-  <div className="bg-white/[0.02] ring-1 ring-white/[0.06] rounded-xl px-5 py-4
-    flex items-center justify-between hover:ring-white/10 transition-all duration-300 group/sel">
-    <div className="flex items-center gap-3">
-      <Icon className="w-4 h-4 text-[#D4AF37]/70 group-hover/sel:text-[#D4AF37]/90 transition-colors" />
-      {/* P2: from text-white/35 to text-white/60 for better contrast */}
-      <span className="text-[10px] tracking-[0.2em] uppercase text-white/60 font-light">{label}</span>
-    </div>
-    {children}
-  </div>
+  <AnimatePresence>
+    {serviceCount > 0 && (
+      <motion.div
+        variants={floatingBasketVariants}
+        initial="hidden"
+        animate="visible"
+        exit="hidden"
+        className="fixed bottom-0 left-0 right-0 z-50 lg:hidden"
+      >
+        <div className="bg-[#0D0D0D]/95 backdrop-blur-xl border-t border-[#D4AF37]/20 px-4 py-3 flex items-center gap-3">
+          {/* Count badge */}
+          <motion.div
+            key={serviceCount}
+            initial={{ scale: 1.3 }}
+            animate={{ scale: 1 }}
+            transition={countBounceTransition}
+            className="w-9 h-9 rounded-full bg-[#D4AF37] flex items-center justify-center flex-shrink-0 shadow-[0_0_12px_rgba(212,175,55,0.4)]"
+          >
+            <span className="text-black font-bold text-sm">{serviceCount}</span>
+          </motion.div>
+
+          {/* Info */}
+          <div className="flex-1 min-w-0">
+            <p className="text-white/75 text-sm font-light truncate">
+              {serviceCount} {t.basket.services}
+              <span className="text-white/30 mx-1.5">·</span>
+              {totalDuration} {t.basket.minutes}
+            </p>
+            <motion.p
+              key={totalPrice}
+              initial={{ y: -4, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.2 }}
+              className="text-[#D4AF37] text-sm font-medium"
+            >
+              {totalPrice.toLocaleString('vi-VN')}đ
+            </motion.p>
+          </div>
+
+          {/* CTA */}
+          <button
+            type="button"
+            onClick={onContinue}
+            disabled={!canContinue}
+            className="flex-shrink-0 relative overflow-hidden rounded-xl px-5 py-3 transition-all duration-300 disabled:opacity-40 active:scale-[0.98]"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-[#B8860B] via-[#D4AF37] to-[#E7AA51]" />
+            <span className="relative z-10 text-black font-medium text-sm flex items-center gap-1.5">
+              {t.basket.continue} <ArrowRight className="w-3.5 h-3.5" />
+            </span>
+          </button>
+        </div>
+      </motion.div>
+    )}
+  </AnimatePresence>
 );
 
-// ═══════════════════════════════════════
-// Booking Summary — Floating Glass Card
-// ═══════════════════════════════════════
+// ════════════════════════════════════════
+// DESKTOP BOOKING SUMMARY PANEL
+// ════════════════════════════════════════
 
 const BookingSummaryPanel = ({
   summary, agreeTerms, onTermsChange, onSubmit, isSubmitting,
 }: {
   summary: ReturnType<typeof useBookingForm>['bookingSummary'];
-  agreeTerms: boolean; onTermsChange: React.ChangeEventHandler<HTMLInputElement>;
-  onSubmit: (e: React.FormEvent) => void; isSubmitting: boolean;
+  agreeTerms: boolean;
+  onTermsChange: React.ChangeEventHandler<HTMLInputElement>;
+  onSubmit: (e: React.FormEvent) => void;
+  isSubmitting: boolean;
 }) => (
-  <div className="relative rounded-3xl overflow-hidden">
-    {/* Outer glow */}
-    <div className="absolute -inset-[1px] bg-gradient-to-b from-[#D4AF37]/20 via-[#D4AF37]/5 to-transparent rounded-3xl" />
-
-    <div className="relative bg-[#0C0C0C]/90 backdrop-blur-2xl rounded-3xl p-7">
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#D4AF37]/20 to-[#D4AF37]/5 flex items-center justify-center">
+  <div className="relative rounded-2xl overflow-hidden">
+    <div className="absolute -inset-px bg-gradient-to-b from-[#D4AF37]/20 via-[#D4AF37]/5 to-transparent rounded-2xl" />
+    <div className="relative bg-[#0C0C0C]/90 backdrop-blur-xl rounded-2xl p-6">
+      <div className="flex items-center gap-2.5 mb-5">
+        <div className="w-7 h-7 rounded-lg bg-[#D4AF37]/15 flex items-center justify-center">
           <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" />
         </div>
-        <h3 className="text-white/80 font-serif text-lg tracking-wide">{t.summary.title}</h3>
+        <h3 className="text-white/80 font-serif text-base tracking-wide">{t.summary.title}</h3>
       </div>
 
-      <div className="space-y-4">
-        {/* Selected services — P3: Improved empty state with onboarding hint */}
-        {summary.services.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-center py-8"
-          >
-            <motion.div
-              animate={{ scale: [1, 1.08, 1] }}
-              transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
-              className="w-14 h-14 mx-auto rounded-full bg-white/[0.03] flex items-center justify-center mb-4 ring-1 ring-white/[0.06]"
-            >
-              <ShoppingBag className="w-5 h-5 text-white/20" />
-            </motion.div>
-            <p className="text-white/25 text-sm font-light italic mb-2">{t.summary.noServiceSelected}</p>
-            <p className="text-white/15 text-[11px] font-light leading-relaxed">
-              👈 Choose at least 1 service<br />to get started
-            </p>
+      {summary.services.length === 0 ? (
+        <div className="text-center py-6">
+          <motion.div animate={{ scale: [1, 1.08, 1] }} transition={{ duration: 2.5, repeat: Infinity }}>
+            <ShoppingBag className="w-8 h-8 text-white/15 mx-auto mb-3" />
           </motion.div>
-        ) : (
-          <div className="space-y-3 max-h-[180px] overflow-y-auto premium-scrollbar pr-1">
-            {summary.services.map((svc) => (
-              <div key={svc.groupKey} className="flex justify-between items-start gap-3 py-2 border-b border-white/[0.04] last:border-0">
-                <div className="flex-1 min-w-0">
-                  <p className="text-white/70 text-sm font-light truncate">{svc.name}</p>
-                  <p className="text-white/20 text-xs font-light mt-0.5">{svc.duration} min</p>
-                </div>
-                <span className="text-white/50 text-sm font-light flex-shrink-0">{svc.priceVND.toLocaleString('vi-VN')}đ</span>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Schedule info */}
-        {(summary.date || summary.time || summary.branchName) && (
-          <>
-            <GoldDivider />
-            <div className="space-y-2.5">
-              {(summary.date || summary.time) && (
-                <div className="flex justify-between text-sm font-light">
-                  <span className="text-white/25 flex items-center gap-2"><CalendarDays className="w-3 h-3" />{t.summary.date}</span>
-                  <span className="text-white/55">{summary.date || '—'} {summary.time && `· ${summary.time}`}</span>
-                </div>
-              )}
-              {summary.branchName && (
-                <div className="flex justify-between text-sm font-light">
-                  <span className="text-white/25 flex items-center gap-2"><MapPin className="w-3 h-3" />{t.summary.branch}</span>
-                  <span className="text-white/55">{summary.branchName}</span>
-                </div>
-              )}
-              {summary.guests > 1 && (
-                <div className="flex justify-between text-sm font-light">
-                  <span className="text-white/25 flex items-center gap-2"><Users className="w-3 h-3" />{t.summary.guests}</span>
-                  <span className="text-white/55">{summary.guests}</span>
-                </div>
-              )}
-            </div>
-          </>
-        )}
-
-        {/* Total */}
-        <GoldDivider />
-        <div className="flex justify-between items-end pt-1">
-          <div>
-            <span className="text-white/40 text-xs tracking-[0.2em] uppercase font-light">{t.summary.total}</span>
-            {summary.totalDuration > 0 && (
-              <p className="text-white/20 text-[11px] font-light mt-0.5">{summary.totalDuration} min total</p>
-            )}
-          </div>
-          <div className="text-right">
-            <p className="text-3xl font-serif tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-[#E7AA51] via-[#FFF3D4] to-[#B8860B]">
-              {summary.totalPriceVND > 0 ? `${summary.totalPriceVND.toLocaleString('vi-VN')}đ` : '—'}
-            </p>
-            {summary.totalPriceUSD > 0 && (
-              <p className="text-white/20 text-xs font-light mt-0.5">${summary.totalPriceUSD}</p>
-            )}
-          </div>
+          <p className="text-white/25 text-sm font-light">{t.summary.noServiceSelected}</p>
+          <p className="text-white/15 text-xs mt-1 font-light leading-relaxed">{t.summary.hint}</p>
         </div>
+      ) : (
+        <div className="space-y-2 max-h-[180px] overflow-y-auto pr-1 mb-4">
+          {summary.services.map(svc => (
+            <div key={svc.groupKey} className="flex justify-between gap-2 py-2 border-b border-white/[0.04] last:border-0">
+              <div className="flex-1 min-w-0">
+                <p className="text-white/70 text-xs font-light truncate">{svc.name}</p>
+                <p className="text-white/25 text-[10px] mt-0.5">{svc.duration} phút</p>
+              </div>
+              <span className="text-white/50 text-xs font-light flex-shrink-0">{svc.priceVND.toLocaleString('vi-VN')}đ</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {(summary.date || summary.branchName) && (
+        <>
+          <GoldDivider />
+          <div className="space-y-2 text-xs font-light">
+            {(summary.date || summary.time) && (
+              <div className="flex justify-between">
+                <span className="text-white/30 flex items-center gap-1.5"><CalendarDays className="w-3 h-3" />{t.fields.date}</span>
+                <span className="text-white/55">{summary.date}{summary.time && ` · ${summary.time}`}</span>
+              </div>
+            )}
+            {summary.branchName && (
+              <div className="flex justify-between">
+                <span className="text-white/30 flex items-center gap-1.5"><MapPin className="w-3 h-3" />{t.fields.branch}</span>
+                <span className="text-white/55">{summary.branchName}</span>
+              </div>
+            )}
+            {summary.guests > 1 && (
+              <div className="flex justify-between">
+                <span className="text-white/30 flex items-center gap-1.5"><Users className="w-3 h-3" />{t.fields.guests}</span>
+                <span className="text-white/55">{summary.guests}</span>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
+      <GoldDivider />
+      <div className="flex justify-between items-end mb-5">
+        <div>
+          <span className="text-white/35 text-[10px] tracking-[0.2em] uppercase font-light">{t.summary.total}</span>
+          {summary.totalDuration > 0 && (
+            <p className="text-white/20 text-[10px] mt-0.5">{summary.totalDuration} phút</p>
+          )}
+        </div>
+        <p className="text-2xl font-serif tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-[#E7AA51] via-[#FFF3D4] to-[#B8860B]">
+          {summary.totalPriceVND > 0 ? `${summary.totalPriceVND.toLocaleString('vi-VN')}đ` : '—'}
+        </p>
       </div>
 
-      {/* Terms + Submit — desktop */}
-      <div className="mt-7 space-y-5 hidden lg:block">
-        <div className="flex items-center gap-3">
-          <div className="relative cursor-pointer">
-            <div className={`w-5 h-5 rounded-md transition-all duration-300 flex items-center justify-center
-              ${agreeTerms
-                ? 'bg-[#D4AF37] shadow-[0_0_10px_rgba(212,175,55,0.2)]'
-                : 'ring-1 ring-white/20 bg-transparent'
-              }`}>
-              <input type="checkbox" name="agreeTerms" id="agreeTermsDesktop"
-                checked={agreeTerms} onChange={onTermsChange}
+      {/* Terms + Submit */}
+      <div className="space-y-4">
+        <label className="flex items-start gap-3 cursor-pointer group">
+          <div className="relative mt-0.5">
+            <div className={`w-4 h-4 rounded transition-all duration-300 flex items-center justify-center ${agreeTerms ? 'bg-[#D4AF37]' : 'ring-1 ring-white/20'}`}>
+              <input type="checkbox" name="agreeTerms" checked={agreeTerms} onChange={onTermsChange}
                 className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
-              <Check className={`w-3 h-3 text-black transition-transform ${agreeTerms ? 'scale-100' : 'scale-0'}`} />
+              <Check className={`w-2.5 h-2.5 text-black transition-transform ${agreeTerms ? 'scale-100' : 'scale-0'}`} />
             </div>
           </div>
-          <label htmlFor="agreeTermsDesktop" className="text-white/40 cursor-pointer text-xs font-light hover:text-white/60 transition-colors">
+          <span className="text-white/35 text-[11px] font-light group-hover:text-white/55 transition-colors">
             {t.terms.agree}{' '}
-            <span className="text-[#D4AF37]/70 underline underline-offset-2 decoration-[#D4AF37]/20 hover:decoration-[#D4AF37]/50 transition-colors">{t.terms.link}</span>
-          </label>
-        </div>
+            <span className="text-[#D4AF37]/60 underline underline-offset-2">{t.terms.link}</span>
+          </span>
+        </label>
 
         <button type="submit" onClick={onSubmit}
           disabled={isSubmitting || !agreeTerms || summary.services.length === 0}
-          className="w-full relative overflow-hidden rounded-xl py-4 transition-all duration-500
-            disabled:opacity-30 disabled:cursor-not-allowed group/btn active:scale-[0.98]">
-          {/* Button gradient background */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#B8860B] via-[#D4AF37] to-[#E7AA51] group-hover/btn:from-[#E7AA51] group-hover/btn:via-[#FFF3D4] group-hover/btn:to-[#D4AF37] transition-all duration-700" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent" />
-          <span className="relative z-10 text-black font-medium text-sm tracking-[0.2em] uppercase">
-            {isSubmitting ? t.buttons.processing : t.buttons.confirm}
-            {summary.services.length > 0 && ` (${summary.services.length})`}
-          </span>
-        </button>
-      </div>
-    </div>
-  </div>
-);
-
-// ═══════════════════════════════════════
-// Mobile Navigation
-// ═══════════════════════════════════════
-
-const MobileNavigation = ({
-  currentStep, totalSteps, onNext, onPrev, canProceed,
-  agreeTerms, onTermsChange, onSubmit, isSubmitting, serviceCount,
-}: {
-  currentStep: number; totalSteps: number;
-  onNext: () => void; onPrev: () => void; canProceed: boolean;
-  agreeTerms: boolean; onTermsChange: React.ChangeEventHandler<HTMLInputElement>;
-  onSubmit: (e: React.FormEvent) => void; isSubmitting: boolean; serviceCount: number;
-}) => (
-  <div className="mt-10 space-y-6 lg:hidden">
-    {currentStep === totalSteps && (
-      <div className="flex items-center gap-3 justify-center">
-        <div className="relative cursor-pointer">
-          <div className={`w-6 h-6 rounded-md transition-all duration-300 flex items-center justify-center
-            ${agreeTerms ? 'bg-[#D4AF37] shadow-[0_0_10px_rgba(212,175,55,0.2)]' : 'ring-1 ring-white/20 bg-transparent'}`}>
-            <input type="checkbox" name="agreeTerms" id="agreeTermsMobile"
-              checked={agreeTerms} onChange={onTermsChange}
-              className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
-            <Check className={`w-3.5 h-3.5 text-black transition-transform ${agreeTerms ? 'scale-100' : 'scale-0'}`} />
-          </div>
-        </div>
-        <label htmlFor="agreeTermsMobile" className="text-white/40 cursor-pointer text-sm font-light hover:text-white/60 transition-colors">
-          {t.terms.agree}{' '}
-          <span className="text-[#D4AF37]/70 underline underline-offset-2">{t.terms.link}</span>
-        </label>
-      </div>
-    )}
-
-    <div className="flex items-center gap-3">
-      {currentStep > 1 && (
-        <button type="button" onClick={onPrev}
-          className="flex-shrink-0 w-13 h-13 rounded-xl ring-1 ring-white/10 text-white/40
-            flex items-center justify-center hover:bg-white/[0.03] hover:text-white/60 transition-all">
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-      )}
-
-      {currentStep < totalSteps ? (
-        <button type="button" onClick={onNext} disabled={!canProceed}
-          className="flex-1 relative overflow-hidden rounded-xl py-4
-            ring-1 ring-white/10 transition-all disabled:opacity-25 disabled:cursor-not-allowed
-            hover:ring-white/20 active:scale-[0.98] group/btn">
-          <div className="absolute inset-0 bg-gradient-to-r from-white/[0.03] to-white/[0.06] group-hover/btn:from-white/[0.05] group-hover/btn:to-white/[0.08] transition-all" />
-          <span className="relative z-10 flex items-center justify-center gap-2 text-white/70 text-sm tracking-[0.15em] uppercase font-light">
-            {t.buttons.next}
-            {currentStep === 1 && serviceCount > 0 && (
-              <span className="text-[#D4AF37]">({serviceCount})</span>
-            )}
-            <ArrowRight className="w-4 h-4" />
-          </span>
-        </button>
-      ) : (
-        <button type="submit" onClick={onSubmit} disabled={isSubmitting || !agreeTerms}
-          className="flex-1 relative overflow-hidden rounded-xl py-4 transition-all
-            disabled:opacity-30 disabled:cursor-not-allowed active:scale-[0.98] group/btn">
-          <div className="absolute inset-0 bg-gradient-to-r from-[#B8860B] via-[#D4AF37] to-[#E7AA51] group-hover/btn:from-[#E7AA51] group-hover/btn:via-[#FFF3D4] group-hover/btn:to-[#D4AF37] transition-all duration-700" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent" />
-          <span className="relative z-10 text-black font-medium text-sm tracking-[0.2em] uppercase">
-            {isSubmitting ? t.buttons.processing : t.buttons.confirm}
-          </span>
-        </button>
-      )}
-    </div>
-  </div>
-);
-
-// ═══════════════════════════════════════
-// Main BookingForm Component
-// ═══════════════════════════════════════
-
-const BookingForm = () => {
-  const {
-    formData, filteredGroups, handleChange,
-    toggleService, changeVariant, isServiceSelected, getSelectedVariantId,
-    updateGuests, handleSubmit, isSubmitting, isSuccess,
-    bookingResult,
-    categories, activeCategory, setActiveCategory,
-    currentStep, stepDirection, totalSteps, nextStep, prevStep, canProceedFromStep,
-    goToStep,
-    bookingSummary,
-  } = useBookingForm();
-
-  const today = new Date().toISOString().split('T')[0];
-
-  // ─── Booking Success Screen ───
-  if (isSuccess && bookingResult) {
-    return (
-      <section id="booking" className="py-24 px-6 bg-[#080808] min-h-[80vh] flex items-center justify-center relative overflow-hidden">
-        {/* Ambient glows */}
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[radial-gradient(circle,rgba(212,175,55,0.08),transparent_60%)] pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[radial-gradient(circle,rgba(212,175,55,0.04),transparent_65%)] pointer-events-none" />
-
-        <div className="max-w-lg w-full relative z-10">
-          {/* Card */}
-          <div className="relative rounded-3xl overflow-hidden">
-            <div className="absolute -inset-[1px] bg-gradient-to-b from-[#D4AF37]/30 via-[#D4AF37]/8 to-transparent rounded-3xl" />
-            <div className="relative bg-[#0C0C0C]/95 backdrop-blur-2xl rounded-3xl p-8 sm:p-10">
-
-              {/* Check icon */}
-              <div className="flex justify-center mb-6">
-                <div className="relative">
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#D4AF37]/20 to-[#D4AF37]/5 flex items-center justify-center ring-1 ring-[#D4AF37]/30 shadow-[0_0_40px_rgba(212,175,55,0.15)]">
-                    <Check className="w-9 h-9 text-[#D4AF37]" strokeWidth={2.5} />
-                  </div>
-                  <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-[#D4AF37] flex items-center justify-center shadow-[0_0_12px_rgba(212,175,55,0.4)]">
-                    <Sparkles className="w-3 h-3 text-black" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Badge + heading */}
-              <div className="text-center mb-8">
-                <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#D4AF37]/10 ring-1 ring-[#D4AF37]/25 text-[#D4AF37]/80 text-[10px] tracking-[0.3em] uppercase font-light mb-4">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]/60 animate-pulse" />
-                  {t.success.badge}
-                </span>
-                <h2 className="text-2xl sm:text-3xl font-serif text-white/90 tracking-wide">{t.success.title}</h2>
-                <p className="text-white/30 text-sm font-light mt-2 max-w-xs mx-auto leading-relaxed">{t.success.subtitle}</p>
-              </div>
-
-              {/* Booking code highlight */}
-              <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-[#D4AF37]/10 via-[#D4AF37]/5 to-transparent ring-1 ring-[#D4AF37]/20">
-                <p className="text-[#D4AF37]/50 text-[10px] tracking-[0.25em] uppercase font-light mb-1">{t.success.bookingCode}</p>
-                <p className="text-[#F5E6B8] text-xl font-mono tracking-widest font-medium">{bookingResult.billCode}</p>
-              </div>
-
-              {/* Details */}
-              <div className="space-y-3 mb-8">
-                <div className="flex justify-between items-baseline py-2.5 border-b border-white/[0.05]">
-                  <span className="text-white/30 text-xs tracking-wide font-light">{t.success.customerName}</span>
-                  <span className="text-white/75 text-sm font-light">{bookingResult.customerName}</span>
-                </div>
-                {bookingResult.customerPhone && (
-                  <div className="flex justify-between items-baseline py-2.5 border-b border-white/[0.05]">
-                    <span className="text-white/30 text-xs tracking-wide font-light">{t.success.phone}</span>
-                    <span className="text-white/75 text-sm font-light">{bookingResult.customerPhone}</span>
-                  </div>
-                )}
-                <div className="py-2.5 border-b border-white/[0.05]">
-                  <span className="text-white/30 text-xs tracking-wide font-light block mb-2">{t.success.services}</span>
-                  <div className="space-y-1">
-                    {bookingResult.services.map((svc, i) => (
-                      <div key={i} className="flex justify-between items-baseline">
-                        <span className="text-white/60 text-sm font-light truncate max-w-[60%]">{svc.name}</span>
-                        <span className="text-white/40 text-xs font-light">{svc.priceVND.toLocaleString('vi-VN')}đ</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                {(bookingResult.date || bookingResult.time) && (
-                  <div className="flex justify-between items-baseline py-2.5 border-b border-white/[0.05]">
-                    <span className="text-white/30 text-xs tracking-wide font-light">{t.success.dateTime}</span>
-                    <span className="text-white/75 text-sm font-light">
-                      {bookingResult.date} {bookingResult.time && `· ${bookingResult.time}`}
-                    </span>
-                  </div>
-                )}
-                <div className="flex justify-between items-baseline py-2.5 border-b border-white/[0.05]">
-                  <span className="text-white/30 text-xs tracking-wide font-light">{t.success.branch}</span>
-                  <span className="text-white/75 text-sm font-light">{bookingResult.branchName}</span>
-                </div>
-                <div className="flex justify-between items-baseline pt-2">
-                  <span className="text-white/50 text-xs tracking-[0.2em] uppercase font-light">{t.success.total}</span>
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#E7AA51] via-[#FFF3D4] to-[#B8860B] text-xl font-serif tracking-wide">
-                    {bookingResult.totalAmount.toLocaleString('vi-VN')}đ
-                  </span>
-                </div>
-              </div>
-
-              {/* Note */}
-              <p className="text-center text-white/20 text-xs font-light mb-6 leading-relaxed">{t.success.note}</p>
-
-              {/* CTA */}
-              <a href="/" className="block w-full relative overflow-hidden rounded-xl py-4 transition-all active:scale-[0.98] group/btn">
-                <div className="absolute inset-0 bg-gradient-to-r from-[#B8860B] via-[#D4AF37] to-[#E7AA51] group-hover/btn:opacity-90 transition-opacity duration-300" />
-                <span className="relative z-10 block text-center text-black font-medium text-sm tracking-[0.2em] uppercase">
-                  {t.success.backHome}
-                </span>
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
-    );
-  }
-
-  // Fallback khi thành công nhưng chưa có result (hiếm)
-  if (isSuccess) {
-    return (
-      <section id="booking" className="py-24 px-6 bg-[#080808] min-h-[80vh] flex items-center justify-center">
-        <div className="text-center">
-          <Check className="w-12 h-12 text-[#D4AF37] mx-auto mb-4" />
-          <h2 className="text-2xl font-serif text-white/90">{t.success.title}</h2>
-          <a href="/" className="mt-6 inline-block text-[#D4AF37]/70 text-sm underline underline-offset-4">{t.success.backHome}</a>
-        </div>
-      </section>
-    );
-  }
-
-  // ─── Service Selection ───
-  const renderServiceSelection = () => (
-    <div>
-      <SectionHeader icon={Sparkles} label={t.steps.service} subtitle="Choose one or more services" />
-      <CategoryTabs categories={categories} active={activeCategory} onSelect={setActiveCategory}
-        selectedCount={formData.selectedServices.length} />
-
-      {/* P0+P3: Responsive grid — 1 col on mobile, 2 col on sm+ */}
-      {filteredGroups.length === 0 ? (
-        // P3: Empty state when filter has no results
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col items-center justify-center py-16 text-center"
+          className="w-full relative overflow-hidden rounded-xl py-3.5 transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed active:scale-[0.98]"
         >
-          <div className="w-16 h-16 rounded-2xl bg-white/[0.03] flex items-center justify-center mb-4 ring-1 ring-white/[0.06]">
-            <span className="text-3xl">{CATEGORY_ICONS[activeCategory] || '🌿'}</span>
-          </div>
-          <p className="text-white/30 text-sm font-light mb-1">No services in this category</p>
-          <button
-            type="button"
-            onClick={() => setActiveCategory('all')}
-            className="mt-3 text-[#D4AF37]/60 text-xs font-light underline underline-offset-4 hover:text-[#D4AF37]/90 transition-colors"
-          >
-            View all services
-          </button>
-        </motion.div>
-      ) : (
-        <motion.div variants={staggerContainerVariants} initial="hidden" animate="visible"
-          key={activeCategory}
-          className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 overflow-y-auto premium-scrollbar max-h-[60vh] lg:max-h-[420px] pr-1">
-          {filteredGroups.map(group => (
-            <motion.div key={group.groupKey} variants={staggerItemVariants}>
-              <ServiceCard group={group} isSelected={isServiceSelected(group.groupKey)}
-                selectedVariantId={getSelectedVariantId(group.groupKey)}
-                onToggle={() => toggleService(group)}
-                onVariantChange={(v) => changeVariant(group.groupKey, v, getGroupedServiceName(group, 'vi'))} />
-            </motion.div>
-          ))}
-        </motion.div>
-      )}
-
-      <AnimatePresence>
-        {formData.selectedServices.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 8, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 4, scale: 0.97 }}
-            className="mt-5 text-center"
-          >
-            {/* P3: Micro-animation — bounce when count changes */}
-            <motion.span
-              key={formData.selectedServices.length}
-              initial={{ scale: 1.2 }}
-              animate={{ scale: 1 }}
-              transition={{ type: 'spring', stiffness: 600, damping: 20 }}
-              className="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-[#D4AF37]/8 ring-1 ring-[#D4AF37]/20 text-[#D4AF37]/80 text-sm font-light tracking-wide"
-            >
-              <Check className="w-3.5 h-3.5" />
-              {formData.selectedServices.length} service{formData.selectedServices.length > 1 ? 's' : ''} selected
-              <span className="opacity-30">·</span>
-              <span className="text-white/50">{bookingSummary.totalPriceVND.toLocaleString('vi-VN')}đ</span>
-            </motion.span>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-
-  // ─── Personal Details ───
-  const renderPersonalDetails = () => (
-    <div>
-      <SectionHeader icon={UserCircle} label={t.steps.details} subtitle="Tell us about yourself" />
-      {/* P2: Real-time validation added */}
-      <div className="space-y-5 lg:grid lg:grid-cols-3 lg:gap-5 lg:space-y-0">
-        <FormInput
-          label={t.fields.name} name="name" value={formData.name}
-          onChange={handleChange} placeholder={t.fields.namePlaceholder} required
-          validate={(v) => v.trim().length < 2 ? 'Name must be at least 2 characters' : null}
-        />
-        <FormInput
-          label={t.fields.phone} type="tel" name="phone" value={formData.phone}
-          onChange={handleChange} placeholder={t.fields.phonePlaceholder} required
-          validate={(v) => !PHONE_REGEX.test(v) ? 'Invalid phone number format' : null}
-        />
-        <FormInput
-          label={t.fields.email} type="email" name="email" value={formData.email}
-          onChange={handleChange} placeholder={t.fields.emailPlaceholder}
-          validate={(v) => v.length > 0 && !EMAIL_REGEX.test(v) ? 'Invalid email address' : null}
-        />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#B8860B] via-[#D4AF37] to-[#E7AA51]" />
+          <span className="relative z-10 text-black font-medium text-sm tracking-[0.15em] uppercase">
+            {isSubmitting ? t.buttons.processing : `${t.buttons.confirm}${summary.services.length > 0 ? ` (${summary.services.length})` : ''}`}
+          </span>
+        </button>
       </div>
     </div>
-  );
+  </div>
+);
 
-  // ─── Schedule ───
-  const renderSchedule = () => (
-    <div>
-      <SectionHeader icon={CalendarDays} label={t.steps.confirm} subtitle="Pick your preferred date & time" />
-      <div className="space-y-3">
-        <div className="grid grid-cols-2 gap-3">
-          <SelectorBox icon={CalendarDays} label={t.fields.date}>
-            <div className="relative">
-              <input type="date" name="date" value={formData.date} onChange={handleChange} min={today} required
-                className="bg-transparent border-none text-white/80 text-sm font-light focus:outline-none cursor-pointer
-                  [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute
-                  [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full
-                  [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer" />
-              {/* P2: Date hint — dd/mm/yyyy format for Vietnamese users */}
-              {!formData.date && (
-                <span className="text-white/20 text-xs pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 font-light tracking-wider">
-                  dd/mm/yyyy
-                </span>
-              )}
-            </div>
-          </SelectorBox>
-          <SelectorBox icon={Clock} label={t.fields.time}>
-            <div className="relative">
-              <input type="time" name="time" value={formData.time} onChange={handleChange} required
-                className="bg-transparent border-none text-white/80 text-sm font-light focus:outline-none cursor-pointer
-                  [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute
-                  [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full
-                  [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer" />
-              {!formData.time && <span className="text-white/20 text-xs pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 font-light">--:--</span>}
-            </div>
-          </SelectorBox>
-        </div>
+// ════════════════════════════════════════
+// SUCCESS SCREEN
+// ════════════════════════════════════════
 
-        <SelectorBox icon={MapPin} label={t.fields.branch}>
-          <select name="branchId" value={formData.branchId} onChange={handleChange} required
-            className="bg-transparent border-none text-white/80 text-sm font-light focus:outline-none appearance-none cursor-pointer text-right pr-5">
-            {BRANCH_LIST.map(b => <option key={b.id} value={b.id} className="bg-[#111]">{b.name}</option>)}
-          </select>
-          <ChevronDown className="w-3.5 h-3.5 text-[#D4AF37]/50 -ml-4 pointer-events-none" />
-        </SelectorBox>
-
-        <div className="grid grid-cols-2 gap-3">
-          <SelectorBox icon={Users} label={t.fields.guests}>
-            <div className="flex items-center gap-3 bg-black/30 rounded-full px-2.5 py-1 ring-1 ring-white/[0.06]">
-              <button type="button" onClick={() => updateGuests(-1)}
-                className="w-6 h-6 rounded-full text-white/30 hover:text-white/60 hover:bg-white/[0.05] flex items-center justify-center transition-colors text-sm font-light">–</button>
-              <span className="text-white/70 font-light w-4 text-center text-sm">{formData.guests}</span>
-              <button type="button" onClick={() => updateGuests(1)}
-                className="w-6 h-6 rounded-full text-white/30 hover:text-white/60 hover:bg-white/[0.05] flex items-center justify-center transition-colors text-sm font-light">+</button>
-            </div>
-          </SelectorBox>
-          <SelectorBox icon={UserCircle} label={t.fields.staff}>
-            <select name="staffGender" value={formData.staffGender} onChange={handleChange}
-              className="bg-transparent border-none text-white/80 text-sm font-light focus:outline-none appearance-none cursor-pointer text-right">
-              <option value="any" className="bg-[#111]">{t.fields.staffAny}</option>
-              <option value="female" className="bg-[#111]">{t.fields.staffFemale}</option>
-              <option value="male" className="bg-[#111]">{t.fields.staffMale}</option>
-            </select>
-          </SelectorBox>
-        </div>
-
-        <div className="mt-3">
-          <label className="text-[#D4AF37]/40 text-[10px] tracking-[0.2em] uppercase font-light mb-2.5 block">{t.fields.note}</label>
-          <textarea name="note" value={formData.note} onChange={handleChange} rows={2}
-            placeholder={t.fields.notePlaceholder}
-            className="w-full bg-white/[0.02] ring-1 ring-white/[0.06] rounded-xl focus:outline-none
-              focus:ring-[#D4AF37]/25 focus:bg-white/[0.03] transition-all p-5 text-white/80 text-sm font-light resize-none
-              placeholder:text-white/12" />
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderMobileSummary = () => (
-    <div className="lg:hidden mt-8">
-      <BookingSummaryPanel summary={bookingSummary} agreeTerms={formData.agreeTerms}
-        onTermsChange={handleChange} onSubmit={handleSubmit} isSubmitting={isSubmitting} />
-    </div>
-  );
-
+const SuccessScreen = ({ result }: { result: BookingResult }) => {
+  const confettiCount = 12;
   return (
-    <section id="booking" className="min-h-[100dvh] py-20 px-4 sm:px-6 relative overflow-hidden flex flex-col items-center justify-center"
-      style={{ background: 'linear-gradient(180deg, #060606 0%, #0A0808 30%, #080606 70%, #050505 100%)' }}>
+    <section id="booking" className="py-20 px-4 bg-[#080808] min-h-[80vh] flex items-center justify-center relative overflow-hidden">
+      {/* Ambient */}
+      <div className="absolute top-0 right-0 w-96 h-96 bg-[radial-gradient(circle,rgba(212,175,55,0.08),transparent_60%)] pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-72 h-72 bg-[radial-gradient(circle,rgba(212,175,55,0.04),transparent_65%)] pointer-events-none" />
 
-      {/* Ambient glow effects */}
-      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[radial-gradient(circle,rgba(212,175,55,0.06),transparent_60%)] pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-[radial-gradient(circle,rgba(212,175,55,0.03),transparent_65%)] pointer-events-none" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] bg-[radial-gradient(ellipse,rgba(139,90,43,0.04),transparent_70%)] pointer-events-none" />
-
-      <style>{`
-        .premium-scrollbar::-webkit-scrollbar{width:4px}
-        .premium-scrollbar::-webkit-scrollbar-track{background:transparent}
-        .premium-scrollbar::-webkit-scrollbar-thumb{background:rgba(212,175,55,0.12);border-radius:10px}
-        .premium-scrollbar::-webkit-scrollbar-thumb:hover{background:rgba(212,175,55,0.3)}
-        .scrollbar-hide::-webkit-scrollbar{display:none}
-        .scrollbar-hide{-ms-overflow-style:none;scrollbar-width:none}
-      `}</style>
-
-      <div className="max-w-[1200px] w-full mx-auto relative z-10">
-        {/* Title */}
-        <div className="text-center mb-14 lg:mb-16">
-          <motion.div initial={{ opacity: 0, y: 15 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-            className="inline-flex items-center justify-center gap-3 px-6 py-2 rounded-full ring-1 ring-[#D4AF37]/20 bg-[#D4AF37]/[0.05] mb-6">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]/60 animate-pulse" />
-            <span className="tracking-[0.35em] text-[#D4AF37]/70 text-[10px] font-light uppercase">{t.badge}</span>
-          </motion.div>
-          <motion.h2 initial={{ opacity: 0, y: 15 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
-            className="text-4xl sm:text-5xl lg:text-[3.5rem] font-serif text-white/90 tracking-wide leading-tight">
-            {t.heading}{' '}
-            <span className="italic text-transparent bg-clip-text bg-gradient-to-r from-[#E7AA51] via-[#FFF3D4] to-[#B8860B]">
-              {t.headingHighlight}
-            </span>
-          </motion.h2>
-          <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
-            className="mt-4 text-white/20 text-sm font-light tracking-wide max-w-md mx-auto">
-            Indulge in our premium treatments · Trải nghiệm dịch vụ cao cấp
-          </motion.p>
+      <div className="max-w-md w-full relative z-10">
+        {/* Confetti */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {Array.from({ length: confettiCount }).map((_, i) => (
+            <motion.div
+              key={i}
+              custom={i}
+              variants={confettiItemVariants}
+              initial="hidden"
+              animate="animate"
+              className="absolute top-1/4 left-1/2"
+              style={{
+                width: 8 + (i % 3) * 4,
+                height: 8 + (i % 3) * 4,
+                borderRadius: i % 2 === 0 ? '50%' : '2px',
+                backgroundColor: i % 3 === 0 ? '#D4AF37' : i % 3 === 1 ? '#F5E6B8' : '#E7AA51',
+                marginLeft: `${(i % 7 - 3) * 20}px`,
+              }}
+            />
+          ))}
         </div>
 
-        {/* P1: Step indicator — visible on both mobile and desktop, clickable for done steps */}
-        <StepProgress
-          current={currentStep}
-          total={totalSteps}
-          onStepClick={goToStep}
-          canClickStep={(step) => canProceedFromStep(step)}
-        />
-
-        {/* MAIN LAYOUT */}
-        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-          transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
-          className="flex flex-col lg:flex-row lg:gap-8 lg:items-start">
-
-          {/* LEFT: Form */}
-          <div className="flex-1 relative rounded-[28px] overflow-hidden">
-            {/* Card border gradient */}
-            <div className="absolute -inset-[1px] bg-gradient-to-b from-white/[0.08] via-white/[0.03] to-transparent rounded-[28px] pointer-events-none" />
-
-            <div className="relative bg-[#0A0A0A]/80 backdrop-blur-2xl rounded-[28px] p-6 sm:p-8 lg:p-10
-              shadow-[0_25px_80px_rgba(0,0,0,0.6)]">
-
-              <form onSubmit={handleSubmit}>
-                {/* MOBILE */}
-                <div className="lg:hidden">
-                  <AnimatePresence mode="wait" custom={stepDirection}>
-                    <motion.div key={currentStep} custom={stepDirection}
-                      variants={stepSlideVariants} initial="enter" animate="center" exit="exit">
-                      {currentStep === 1 && renderServiceSelection()}
-                      {currentStep === 2 && renderPersonalDetails()}
-                      {currentStep === 3 && (<>{renderSchedule()}{renderMobileSummary()}</>)}
-                    </motion.div>
-                  </AnimatePresence>
-                  <MobileNavigation currentStep={currentStep} totalSteps={totalSteps}
-                    onNext={nextStep} onPrev={prevStep} canProceed={canProceedFromStep(currentStep)}
-                    agreeTerms={formData.agreeTerms} onTermsChange={handleChange}
-                    onSubmit={handleSubmit} isSubmitting={isSubmitting}
-                    serviceCount={formData.selectedServices.length} />
+        <motion.div variants={successCardVariants} initial="hidden" animate="visible" className="relative rounded-3xl overflow-hidden">
+          <div className="absolute -inset-px bg-gradient-to-b from-[#D4AF37]/30 via-[#D4AF37]/8 to-transparent rounded-3xl" />
+          <div className="relative bg-[#0C0C0C]/95 backdrop-blur-2xl rounded-3xl p-8">
+            {/* Check icon */}
+            <div className="flex justify-center mb-6">
+              <div className="relative">
+                <div className="w-16 h-16 rounded-full bg-[#D4AF37]/15 flex items-center justify-center ring-1 ring-[#D4AF37]/30 shadow-[0_0_30px_rgba(212,175,55,0.15)]">
+                  <Check className="w-7 h-7 text-[#D4AF37]" strokeWidth={2.5} />
                 </div>
-
-                {/* DESKTOP — P1: Step-based rendering with locked sections */}
-                <div className="hidden lg:flex lg:flex-col lg:gap-12">
-                  {/* Step 1: Always visible */}
-                  <motion.div
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    {renderServiceSelection()}
-                  </motion.div>
-
-                  {/* Step 2: Locked until step 1 done */}
-                  <motion.div
-                    animate={{
-                      opacity: canProceedFromStep(1) ? 1 : 0.3,
-                      filter: canProceedFromStep(1) ? 'none' : 'blur(2px)',
-                    }}
-                    transition={{ duration: 0.5 }}
-                    className={canProceedFromStep(1) ? '' : 'pointer-events-none select-none'}
-                  >
-                    {!canProceedFromStep(1) && (
-                      <div className="flex items-center gap-2 mb-4 pl-1">
-                        <div className="w-2 h-2 rounded-full bg-[#D4AF37]/30 animate-pulse" />
-                        <span className="text-white/25 text-xs font-light tracking-widest uppercase">
-                          Select a service first
-                        </span>
-                      </div>
-                    )}
-                    {renderPersonalDetails()}
-                  </motion.div>
-
-                  {/* Step 3: Locked until step 2 done */}
-                  <motion.div
-                    animate={{
-                      opacity: canProceedFromStep(2) ? 1 : 0.3,
-                      filter: canProceedFromStep(2) ? 'none' : 'blur(2px)',
-                    }}
-                    transition={{ duration: 0.5 }}
-                    className={canProceedFromStep(2) ? '' : 'pointer-events-none select-none'}
-                  >
-                    {!canProceedFromStep(2) && (
-                      <div className="flex items-center gap-2 mb-4 pl-1">
-                        <div className="w-2 h-2 rounded-full bg-[#D4AF37]/30 animate-pulse" />
-                        <span className="text-white/25 text-xs font-light tracking-widest uppercase">
-                          Fill your details first
-                        </span>
-                      </div>
-                    )}
-                    {renderSchedule()}
-                  </motion.div>
+                <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#D4AF37] flex items-center justify-center">
+                  <Sparkles className="w-2.5 h-2.5 text-black" />
                 </div>
-              </form>
+              </div>
             </div>
-          </div>
 
-          {/* RIGHT: Sticky Summary */}
-          <div className="hidden lg:block lg:w-[350px] lg:flex-shrink-0 lg:sticky lg:top-24">
-            <BookingSummaryPanel summary={bookingSummary} agreeTerms={formData.agreeTerms}
-              onTermsChange={handleChange} onSubmit={handleSubmit} isSubmitting={isSubmitting} />
+            <div className="text-center mb-6">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#D4AF37]/10 ring-1 ring-[#D4AF37]/25 text-[#D4AF37]/70 text-[10px] tracking-[0.25em] uppercase font-light mb-4">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]/60 animate-pulse" />
+                {t.success.badge}
+              </span>
+              <h2 className="text-2xl font-serif text-white/90 tracking-wide">{t.success.title}</h2>
+              <p className="text-white/30 text-sm font-light mt-2 max-w-xs mx-auto leading-relaxed">{t.success.subtitle}</p>
+            </div>
+
+            {/* Booking Code */}
+            <div className="mb-5 p-3.5 rounded-xl bg-[#D4AF37]/10 ring-1 ring-[#D4AF37]/20">
+              <p className="text-[#D4AF37]/50 text-[10px] tracking-[0.25em] uppercase font-light mb-1">{t.success.bookingCode}</p>
+              <p className="text-[#F5E6B8] text-lg font-mono tracking-widest font-medium">{result.billCode}</p>
+            </div>
+
+            {/* Details */}
+            <div className="space-y-2.5 mb-6 text-sm">
+              {[
+                { label: t.success.customerName, value: result.customerName },
+                ...(result.customerPhone ? [{ label: t.success.phone, value: result.customerPhone }] : []),
+                { label: t.success.dateTime, value: `${result.date}${result.time ? ` · ${result.time}` : ''}` },
+                { label: t.success.branch, value: result.branchName },
+              ].map(item => (
+                <div key={item.label} className="flex justify-between py-2 border-b border-white/[0.05]">
+                  <span className="text-white/30 font-light">{item.label}</span>
+                  <span className="text-white/70 font-light">{item.value}</span>
+                </div>
+              ))}
+              <div className="flex justify-between py-2">
+                <span className="text-white/40 text-xs tracking-[0.15em] uppercase font-light">{t.success.total}</span>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#E7AA51] via-[#FFF3D4] to-[#B8860B] text-lg font-serif">
+                  {result.totalAmount.toLocaleString('vi-VN')}đ
+                </span>
+              </div>
+            </div>
+
+            <p className="text-center text-white/20 text-[11px] font-light mb-5 leading-relaxed">{t.success.note}</p>
+
+            <a href="/" className="block w-full relative overflow-hidden rounded-xl py-3.5 transition-all active:scale-[0.98] group/btn">
+              <div className="absolute inset-0 bg-gradient-to-r from-[#B8860B] via-[#D4AF37] to-[#E7AA51] group-hover/btn:opacity-90 transition-opacity" />
+              <span className="relative z-10 block text-center text-black font-medium text-sm tracking-[0.15em] uppercase">{t.success.backHome}</span>
+            </a>
           </div>
         </motion.div>
       </div>
@@ -1006,4 +777,454 @@ const BookingForm = () => {
   );
 };
 
+// ════════════════════════════════════════
+// MAIN BOOKING FORM COMPONENT
+// ════════════════════════════════════════
+
+const BookingForm = () => {
+  const {
+    groupedByCategory, isLoadingServices, visibleCategories, categories,
+    intentFilter, hasPassedIntentScreen, setIntent, skipIntent,
+    openCategoryKey, toggleCategory,
+    formData, handleChange,
+    toggleService, changeVariant, isServiceSelected, getSelectedVariantId,
+    updateGuests, handleSubmit, isSubmitting, isSuccess, bookingResult,
+    currentStep, stepDirection, totalSteps, nextStep, prevStep, goToStep,
+    canProceedFromStep, bookingSummary,
+  } = useBookingForm();
+
+  const today = new Date().toISOString().split('T')[0];
+
+  // ─ Success Screen ─
+  if (isSuccess && bookingResult) return <SuccessScreen result={bookingResult} />;
+  if (isSuccess) return (
+    <section id="booking" className="py-20 px-4 bg-[#080808] min-h-[60vh] flex items-center justify-center">
+      <div className="text-center">
+        <Check className="w-10 h-10 text-[#D4AF37] mx-auto mb-4" />
+        <h2 className="text-2xl font-serif text-white/90">{t.success.title}</h2>
+        <a href="/" className="mt-4 inline-block text-[#D4AF37]/70 text-sm underline underline-offset-4">{t.success.backHome}</a>
+      </div>
+    </section>
+  );
+
+  // ─ Step 1: Service Selection ─
+  const renderServiceSelection = () => (
+    <div>
+      {/* Category image cards */}
+      <div className="mb-5">
+        <p className="text-white/35 text-[10px] tracking-[0.2em] uppercase font-light mb-3">Danh mục dịch vụ</p>
+        <motion.div
+          variants={categoryContainerVariants}
+          initial="hidden"
+          animate="visible"
+          className="flex gap-3 overflow-x-auto pb-3"
+          style={{ scrollbarWidth: 'none' }}
+        >
+          {visibleCategories.map(cat => (
+            <motion.div key={cat} variants={categoryCardItemVariants} className="flex-shrink-0">
+              <CategoryImageCard
+                category={cat}
+                count={groupedByCategory[cat]?.length ?? 0}
+                isActive={openCategoryKey === cat}
+                onClick={() => toggleCategory(cat)}
+              />
+            </motion.div>
+          ))}
+        </motion.div>
+      </div>
+
+      {/* Intent context badge */}
+      {intentFilter && (
+        <div className="flex items-center gap-2 mb-4">
+          <span className="text-[#D4AF37]/60 text-[11px] font-light">
+            {INTENT_DISPLAY[intentFilter].emoji} Gợi ý cho "{INTENT_DISPLAY[intentFilter].labelVi}"
+          </span>
+          <button type="button" onClick={skipIntent} className="text-white/25 hover:text-white/50 transition-colors">
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
+      {/* Service accordions */}
+      {isLoadingServices ? (
+        <div className="space-y-3">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="h-16 rounded-2xl bg-white/[0.03] animate-pulse" />
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-2.5">
+          {visibleCategories.map(cat => (
+            <ServiceAccordionSection
+              key={cat}
+              category={cat}
+              services={groupedByCategory[cat] ?? []}
+              isOpen={openCategoryKey === cat}
+              onToggle={() => toggleCategory(cat)}
+              isServiceSelected={isServiceSelected}
+              getSelectedVariantId={getSelectedVariantId}
+              onToggleService={toggleService}
+              onVariantChange={changeVariant}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Selected count badge */}
+      <AnimatePresence>
+        {formData.selectedServices.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+            className="mt-5 text-center pb-24 lg:pb-0"
+          >
+            <motion.span
+              key={formData.selectedServices.length}
+              initial={{ scale: 1.2 }} animate={{ scale: 1 }}
+              transition={countBounceTransition}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#D4AF37]/8 ring-1 ring-[#D4AF37]/20 text-[#D4AF37]/80 text-sm font-light"
+            >
+              <Check className="w-3 h-3" />
+              {formData.selectedServices.length} dịch vụ đã chọn
+              <span className="opacity-30">·</span>
+              <span className="text-white/40">{bookingSummary.totalPriceVND.toLocaleString('vi-VN')}đ</span>
+            </motion.span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+
+  // ─ Step 2: Personal Details ─
+  const renderPersonalDetails = () => (
+    <div className="space-y-5">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-8 h-8 rounded-xl bg-[#D4AF37]/15 flex items-center justify-center ring-1 ring-[#D4AF37]/20">
+          <UserCircle className="w-4 h-4 text-[#D4AF37]" />
+        </div>
+        <div>
+          <h3 className="text-white/80 text-sm tracking-[0.15em] uppercase font-light">{t.steps.details}</h3>
+          <p className="text-white/25 text-xs font-light mt-0.5">Điền thông tin của bạn</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <FormInput label={t.fields.name} name="name" value={formData.name}
+          onChange={handleChange} placeholder={t.fields.namePlaceholder} required
+          validate={v => v.trim().length < 2 ? t.validation.nameMin : null} />
+        <FormInput label={t.fields.phone} type="tel" name="phone" value={formData.phone}
+          onChange={handleChange} placeholder={t.fields.phonePlaceholder} required
+          validate={v => !PHONE_REGEX.test(v) ? t.validation.phoneInvalid : null} />
+        <FormInput label={t.fields.email} type="email" name="email" value={formData.email}
+          onChange={handleChange} placeholder={t.fields.emailPlaceholder}
+          validate={v => v.length > 0 && !EMAIL_REGEX.test(v) ? t.validation.emailInvalid : null} />
+      </div>
+
+      {/* Guests */}
+      <div>
+        <label className="text-[#D4AF37]/70 text-[10px] tracking-[0.2em] uppercase font-light mb-2 flex items-center gap-1.5">
+          <Users className="w-3 h-3" /> {t.fields.guests}
+        </label>
+        <div className="flex items-center gap-4 bg-white/[0.03] ring-1 ring-white/[0.07] rounded-xl px-4 py-3 w-fit">
+          <button type="button" onClick={() => updateGuests(-1)}
+            className="w-7 h-7 rounded-full ring-1 ring-white/15 flex items-center justify-center text-white/50 hover:ring-white/30 hover:text-white/80 transition-all">
+            <Minus className="w-3 h-3" />
+          </button>
+          <motion.span key={formData.guests} initial={{ scale: 1.2 }} animate={{ scale: 1 }} transition={countBounceTransition}
+            className="text-white/80 text-base font-light w-5 text-center">{formData.guests}</motion.span>
+          <button type="button" onClick={() => updateGuests(1)}
+            className="w-7 h-7 rounded-full ring-1 ring-white/15 flex items-center justify-center text-white/50 hover:ring-white/30 hover:text-white/80 transition-all">
+            <Plus className="w-3 h-3" />
+          </button>
+        </div>
+      </div>
+
+      {/* Staff gender */}
+      <div>
+        <label className="text-[#D4AF37]/70 text-[10px] tracking-[0.2em] uppercase font-light mb-2 block">{t.fields.staff}</label>
+        <div className="flex gap-2">
+          {(['any', 'male', 'female'] as const).map(g => (
+            <button key={g} type="button"
+              onClick={() => handleChange({ target: { name: 'staffGender', value: g, type: 'text' } } as any)}
+              className={`px-4 py-2 rounded-xl text-xs font-light tracking-wide transition-all duration-200 ${formData.staffGender === g
+                  ? 'bg-[#D4AF37]/20 text-[#D4AF37] ring-1 ring-[#D4AF37]/40'
+                  : 'bg-white/[0.03] text-white/40 ring-1 ring-white/[0.07] hover:ring-white/15'
+                }`}
+            >
+              {g === 'any' ? t.fields.staffAny : g === 'male' ? t.fields.staffMale : t.fields.staffFemale}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Note */}
+      <div>
+        <label className="text-[#D4AF37]/70 text-[10px] tracking-[0.2em] uppercase font-light mb-2 block">{t.fields.note}</label>
+        <textarea name="note" value={formData.note}
+          onChange={e => handleChange(e as any)} placeholder={t.fields.notePlaceholder} rows={3}
+          className="w-full bg-white/[0.03] ring-1 ring-white/[0.07] rounded-xl px-4 py-3 text-white/80 text-sm font-light
+            placeholder:text-white/15 focus:outline-none focus:ring-[#D4AF37]/30 transition-all duration-300 resize-none" />
+      </div>
+    </div>
+  );
+
+  // ─ Step 3: Schedule + Confirm ─
+  const renderScheduleConfirm = () => (
+    <div className="space-y-5">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-8 h-8 rounded-xl bg-[#D4AF37]/15 flex items-center justify-center ring-1 ring-[#D4AF37]/20">
+          <CalendarDays className="w-4 h-4 text-[#D4AF37]" />
+        </div>
+        <div>
+          <h3 className="text-white/80 text-sm tracking-[0.15em] uppercase font-light">{t.steps.confirm}</h3>
+          <p className="text-white/25 text-xs font-light mt-0.5">Chọn ngày giờ phù hợp</p>
+        </div>
+      </div>
+
+      {/* Date */}
+      <div>
+        <label className="text-[#D4AF37]/70 text-[10px] tracking-[0.2em] uppercase font-light mb-2 flex items-center gap-1.5">
+          <CalendarDays className="w-3 h-3" /> {t.fields.date} *
+        </label>
+        <input type="date" name="date" value={formData.date} onChange={handleChange} min={today} required
+          className="w-full bg-white/[0.03] ring-1 ring-white/[0.07] rounded-xl px-4 py-3.5 text-white/80 text-sm font-light
+            focus:outline-none focus:ring-[#D4AF37]/30 transition-all [color-scheme:dark]" />
+      </div>
+
+      {/* Time Slots */}
+      <div>
+        <label className="text-[#D4AF37]/70 text-[10px] tracking-[0.2em] uppercase font-light mb-3 flex items-center gap-1.5">
+          <Clock className="w-3 h-3" /> {t.fields.time} *
+        </label>
+        <div className="grid grid-cols-5 sm:grid-cols-6 gap-2">
+          {TIME_SLOTS.map(slot => (
+            <button key={slot} type="button"
+              onClick={() => handleChange({ target: { name: 'time', value: slot, type: 'text' } } as any)}
+              className={`py-2 rounded-xl text-[11px] font-light tracking-wide transition-all duration-200 ${formData.time === slot
+                  ? 'bg-[#D4AF37]/20 text-[#D4AF37] ring-1 ring-[#D4AF37]/40'
+                  : 'bg-white/[0.03] text-white/40 ring-1 ring-white/[0.06] hover:ring-white/15 hover:text-white/65'
+                }`}
+            >{slot}</button>
+          ))}
+        </div>
+      </div>
+
+      {/* Branch */}
+      <div>
+        <label className="text-[#D4AF37]/70 text-[10px] tracking-[0.2em] uppercase font-light mb-2 flex items-center gap-1.5">
+          <MapPin className="w-3 h-3" /> {t.fields.branch}
+        </label>
+        <div className="space-y-2">
+          {BRANCH_LIST.map(branch => (
+            <button key={branch.id} type="button"
+              onClick={() => handleChange({ target: { name: 'branchId', value: branch.id, type: 'text' } } as any)}
+              className={`w-full flex items-start gap-3 p-4 rounded-xl text-left transition-all duration-200 ${formData.branchId === branch.id
+                  ? 'bg-[#D4AF37]/10 ring-1 ring-[#D4AF37]/40'
+                  : 'bg-white/[0.02] ring-1 ring-white/[0.06] hover:ring-white/12'
+                }`}
+            >
+              <MapPin className={`w-4 h-4 mt-0.5 flex-shrink-0 ${formData.branchId === branch.id ? 'text-[#D4AF37]' : 'text-white/30'}`} />
+              <div>
+                <p className={`text-sm font-light ${formData.branchId === branch.id ? 'text-[#F5E6B8]' : 'text-white/70'}`}>{branch.name}</p>
+                <p className="text-white/30 text-xs font-light mt-0.5">{branch.address}</p>
+                <p className="text-white/25 text-[11px] font-light mt-0.5">{branch.hours}</p>
+              </div>
+              {formData.branchId === branch.id && (
+                <div className="ml-auto flex-shrink-0">
+                  <div className="w-4 h-4 rounded-full bg-[#D4AF37] flex items-center justify-center">
+                    <Check className="w-2.5 h-2.5 text-black" strokeWidth={3} />
+                  </div>
+                </div>
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Review summary on mobile */}
+      {bookingSummary.services.length > 0 && (
+        <div className="lg:hidden bg-white/[0.02] ring-1 ring-white/[0.06] rounded-xl p-4">
+          <p className="text-white/35 text-[10px] tracking-[0.2em] uppercase font-light mb-3">Tóm tắt đơn</p>
+          <div className="space-y-1.5">
+            {bookingSummary.services.map(svc => (
+              <div key={svc.groupKey} className="flex justify-between text-xs font-light">
+                <span className="text-white/55 truncate flex-1">{svc.name}</span>
+                <span className="text-white/35 ml-2 flex-shrink-0">{svc.priceVND.toLocaleString('vi-VN')}đ</span>
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-between mt-3 pt-3 border-t border-white/[0.05]">
+            <span className="text-white/40 text-xs font-light">{bookingSummary.totalDuration} phút</span>
+            <span className="text-[#D4AF37] font-light">{bookingSummary.totalPriceVND.toLocaleString('vi-VN')}đ</span>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile Terms + Submit */}
+      <div className="space-y-4 lg:hidden">
+        <label className="flex items-start gap-3 cursor-pointer">
+          <div className="relative mt-0.5">
+            <div className={`w-5 h-5 rounded transition-all flex items-center justify-center ${formData.agreeTerms ? 'bg-[#D4AF37]' : 'ring-1 ring-white/20'}`}>
+              <input type="checkbox" name="agreeTerms" checked={formData.agreeTerms} onChange={handleChange}
+                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
+              <Check className={`w-3 h-3 text-black transition-transform ${formData.agreeTerms ? 'scale-100' : 'scale-0'}`} />
+            </div>
+          </div>
+          <span className="text-white/35 text-xs font-light">
+            {t.terms.agree}{' '}
+            <span className="text-[#D4AF37]/60 underline underline-offset-2">{t.terms.link}</span>
+          </span>
+        </label>
+
+        <button type="submit" onClick={handleSubmit}
+          disabled={isSubmitting || !formData.agreeTerms || bookingSummary.services.length === 0}
+          className="w-full relative overflow-hidden rounded-xl py-4 transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-[0.98]"
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-[#B8860B] via-[#D4AF37] to-[#E7AA51]" />
+          <span className="relative z-10 text-black font-medium text-sm tracking-[0.15em] uppercase">
+            {isSubmitting ? t.buttons.processing : t.buttons.confirm}
+          </span>
+        </button>
+      </div>
+    </div>
+  );
+
+  // ════════════════════════════════════════
+  // RENDER
+  // ════════════════════════════════════════
+
+  return (
+    <section id="booking" className="py-20 px-4 sm:px-6 bg-[#080808] min-h-screen relative overflow-hidden">
+      {/* Ambient glows */}
+      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[radial-gradient(circle,rgba(212,175,55,0.06),transparent_60%)] pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[radial-gradient(circle,rgba(212,175,55,0.03),transparent_65%)] pointer-events-none" />
+
+      <div className="max-w-6xl mx-auto relative z-10">
+        {/* ─ INTENT QUIZ (Pre-step) ─ */}
+        <AnimatePresence mode="wait">
+          {!hasPassedIntentScreen && (
+            <motion.div key="intent" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.3 }}>
+              <IntentQuizSection onSelect={setIntent} onSkip={skipIntent} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* ─ MAIN BOOKING FORM ─ */}
+        <AnimatePresence>
+          {hasPassedIntentScreen && (
+            <motion.div key="form" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+              {/* Section heading */}
+              <div className="text-center mb-8">
+                <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#D4AF37]/10 ring-1 ring-[#D4AF37]/25 text-[#D4AF37]/70 text-[10px] tracking-[0.3em] uppercase font-light mb-4">
+                  <Sparkles className="w-3 h-3" /> {t.badge}
+                </span>
+                <h2 className="text-3xl sm:text-4xl font-serif text-white/90 tracking-wide">
+                  {t.heading} <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#E7AA51] to-[#D4AF37]">{t.headingHighlight}</span>
+                </h2>
+              </div>
+
+              {/* Step progress */}
+              <StepProgress
+                current={currentStep}
+                total={totalSteps}
+                onStepClick={goToStep}
+                canClickStep={step => step < currentStep}
+              />
+
+              {/* Layout */}
+              <div className="lg:grid lg:grid-cols-[1fr_320px] lg:gap-8 xl:gap-12">
+                {/* Left: Steps */}
+                <div className="relative overflow-hidden">
+                  <AnimatePresence mode="wait" custom={stepDirection}>
+                    <motion.div
+                      key={currentStep}
+                      custom={stepDirection}
+                      variants={stepSlideVariants}
+                      initial="enter"
+                      animate="center"
+                      exit="exit"
+                    >
+                      {currentStep === 1 && renderServiceSelection()}
+                      {currentStep === 2 && renderPersonalDetails()}
+                      {currentStep === 3 && renderScheduleConfirm()}
+                    </motion.div>
+                  </AnimatePresence>
+
+                  {/* Step navigation */}
+                  <div className="flex items-center gap-3 mt-8 lg:block">
+                    {currentStep > 1 && (
+                      <button type="button" onClick={prevStep}
+                        className="flex items-center gap-2 text-white/35 text-sm font-light hover:text-white/60 transition-colors py-2">
+                        <ArrowLeft className="w-4 h-4" />
+                        {t.buttons.back}
+                      </button>
+                    )}
+
+                    {currentStep < totalSteps && (
+                      <button type="button" onClick={nextStep}
+                        disabled={!canProceedFromStep(currentStep)}
+                        className="hidden lg:flex ml-auto items-center gap-2 relative overflow-hidden rounded-xl px-6 py-3 transition-all disabled:opacity-25 disabled:cursor-not-allowed active:scale-[0.98]"
+                      >
+                        <div className="absolute inset-0 bg-white/[0.06] hover:bg-white/[0.09] transition-colors" />
+                        <span className="relative z-10 text-white/70 text-sm font-light flex items-center gap-2">
+                          {t.buttons.next}
+                          {currentStep === 1 && formData.selectedServices.length > 0 && (
+                            <span className="text-[#D4AF37]">({formData.selectedServices.length})</span>
+                          )}
+                          <ArrowRight className="w-4 h-4" />
+                        </span>
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Mobile Next button (non-submit steps) */}
+                  {currentStep < totalSteps && (
+                    <div className="lg:hidden mt-4">
+                      <button type="button" onClick={nextStep}
+                        disabled={!canProceedFromStep(currentStep)}
+                        className="w-full relative overflow-hidden rounded-xl py-3.5 transition-all disabled:opacity-25 disabled:cursor-not-allowed active:scale-[0.98] ring-1 ring-white/15"
+                      >
+                        <div className="absolute inset-0 bg-white/[0.04]" />
+                        <span className="relative z-10 flex items-center justify-center gap-2 text-white/65 text-sm font-light">
+                          {t.buttons.next}
+                          {currentStep === 1 && formData.selectedServices.length > 0 && <span className="text-[#D4AF37]">({formData.selectedServices.length})</span>}
+                          <ArrowRight className="w-4 h-4" />
+                        </span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Right: Desktop Booking Summary Panel */}
+                <div className="hidden lg:block">
+                  <div className="sticky top-8">
+                    <BookingSummaryPanel
+                      summary={bookingSummary}
+                      agreeTerms={formData.agreeTerms}
+                      onTermsChange={handleChange}
+                      onSubmit={handleSubmit}
+                      isSubmitting={isSubmitting}
+                    />
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Floating Basket (mobile only) */}
+      {hasPassedIntentScreen && currentStep === 1 && (
+        <FloatingBasket
+          serviceCount={bookingSummary.services.length}
+          totalDuration={bookingSummary.totalDuration}
+          totalPrice={bookingSummary.totalPriceVND}
+          onContinue={nextStep}
+          canContinue={canProceedFromStep(1)}
+        />
+      )}
+    </section>
+  );
+};
+
 export default BookingForm;
+

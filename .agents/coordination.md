@@ -26,3 +26,4 @@ _(Trống — chưa có conversation nào đang hoạt động)_
 |-----------|-------------|-----------|------|
 | 2026-03-25 | `63e8a52e` | Khởi tạo coordination.md | — |
 | 2026-03-28 | `89e21468` | ✅ Fix P0→P3 BookingForm UI/UX (responsive, step indicator, validation, empty state, micro-animation) | `BookingForm.tsx` |
+| 2026-03-31 | `891abe64` | ✅ Full BookingForm Redesign (Hybrid A+B Curator) — Intent Quiz, Visual Category Cards, Accordion, Floating Basket | `BookingForm.tsx`, `BookingForm.logic.ts`, `BookingForm.animation.ts`, `BookingForm.i18n.ts`, `categoryImages.ts` |

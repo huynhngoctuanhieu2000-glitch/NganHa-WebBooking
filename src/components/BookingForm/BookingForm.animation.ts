@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════
-// BookingForm Animation Variants
-// Framer Motion animation definitions
+// BookingForm Animation Variants — v2
+// Framer Motion definitions for Curator redesign
 // ═══════════════════════════════════════
 
 import { Variants } from 'framer-motion';
@@ -8,13 +8,11 @@ import { Variants } from 'framer-motion';
 // 🔧 ANIMATION CONFIGURATION
 const STEP_DURATION = 0.4;
 const STEP_OFFSET = 60;
-const CARD_SCALE_HOVER = 1.02;
-const SUMMARY_FLOAT_Y = 6;
+const INTENT_STAGGER = 0.08;
+const CARD_HOVER_SCALE = 1.03;
+const BASKET_SLIDE_Y = 80;
 
-/**
- * Step slide transition for mobile wizard
- * Direction: 1 = forward (slide left), -1 = backward (slide right)
- */
+// ─── Step Transitions ───
 export const stepSlideVariants: Variants = {
   enter: (direction: number) => ({
     x: direction > 0 ? STEP_OFFSET : -STEP_OFFSET,
@@ -32,15 +30,134 @@ export const stepSlideVariants: Variants = {
     x: direction > 0 ? -STEP_OFFSET : STEP_OFFSET,
     opacity: 0,
     transition: {
-      duration: STEP_DURATION * 0.8,
+      duration: STEP_DURATION * 0.75,
       ease: [0.25, 0.1, 0.25, 1],
     },
   }),
 };
 
-/**
- * Fade in for desktop sections
- */
+// ─── Intent Quiz ───
+export const intentContainerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: INTENT_STAGGER,
+      delayChildren: 0.1,
+    },
+  },
+};
+
+export const intentItemVariants: Variants = {
+  hidden: { opacity: 0, y: 16, scale: 0.94 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { duration: 0.4, ease: [0.25, 0.1, 0.25, 1] },
+  },
+};
+
+// ─── Category Image Cards ───
+export const categoryCardVariants: Variants = {
+  idle: { scale: 1 },
+  hover: {
+    scale: CARD_HOVER_SCALE,
+    transition: { duration: 0.25, ease: 'easeOut' },
+  },
+  tap: {
+    scale: 0.97,
+    transition: { duration: 0.1 },
+  },
+};
+
+export const categoryContainerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.06,
+      delayChildren: 0.05,
+    },
+  },
+};
+
+export const categoryCardItemVariants: Variants = {
+  hidden: { opacity: 0, x: 20 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: { duration: 0.35, ease: 'easeOut' },
+  },
+};
+
+// ─── Service Accordion ───
+export const accordionVariants: Variants = {
+  hidden: {
+    height: 0,
+    opacity: 0,
+    transition: { duration: 0.3, ease: [0.4, 0, 0.2, 1] },
+  },
+  visible: {
+    height: 'auto',
+    opacity: 1,
+    transition: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] },
+  },
+};
+
+// ─── Service Rows (stagger within accordion) ───
+export const serviceRowContainerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.05,
+      delayChildren: 0.05,
+    },
+  },
+};
+
+export const serviceRowVariants: Variants = {
+  hidden: { opacity: 0, y: 8 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.3, ease: 'easeOut' },
+  },
+};
+
+// ─── Duration Variant Picker ───
+export const durationPickerVariants: Variants = {
+  hidden: { height: 0, opacity: 0 },
+  visible: {
+    height: 'auto',
+    opacity: 1,
+    transition: { duration: 0.25, ease: 'easeOut' },
+  },
+};
+
+// ─── Floating Basket ───
+export const floatingBasketVariants: Variants = {
+  hidden: {
+    y: BASKET_SLIDE_Y,
+    opacity: 0,
+    transition: { duration: 0.3, ease: [0.4, 0, 1, 1] },
+  },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: { duration: 0.4, ease: [0, 0, 0.2, 1] },
+  },
+};
+
+// ─── Count/Price Spring ───
+export const countBounceTransition = {
+  type: 'spring' as const,
+  stiffness: 600,
+  damping: 15,
+};
+
+// ─── General Section Fade ───
 export const sectionFadeVariants: Variants = {
   hidden: { opacity: 0, y: 20 },
   visible: (delay: number = 0) => ({
@@ -54,56 +171,15 @@ export const sectionFadeVariants: Variants = {
   }),
 };
 
-/**
- * Service card hover effect
- */
-export const serviceCardVariants: Variants = {
-  idle: { scale: 1 },
-  hover: {
-    scale: CARD_SCALE_HOVER,
-    transition: { duration: 0.2, ease: 'easeOut' },
-  },
-  tap: {
-    scale: 0.98,
-    transition: { duration: 0.1 },
-  },
-  selected: {
-    scale: 1,
-    transition: { duration: 0.2 },
-  },
-};
-
-/**
- * Summary sidebar subtle floating animation
- */
-export const summaryFloatVariants: Variants = {
-  animate: {
-    y: [0, -SUMMARY_FLOAT_Y, 0],
-    transition: {
-      duration: 4,
-      repeat: Infinity,
-      ease: 'easeInOut',
-    },
-  },
-};
-
-/**
- * Stagger children container
- */
+// ─── Stagger Containers (legacy compat) ───
 export const staggerContainerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: {
-      staggerChildren: 0.06,
-      delayChildren: 0.1,
-    },
+    transition: { staggerChildren: 0.06, delayChildren: 0.1 },
   },
 };
 
-/**
- * Stagger item
- */
 export const staggerItemVariants: Variants = {
   hidden: { opacity: 0, y: 12 },
   visible: {
@@ -113,9 +189,33 @@ export const staggerItemVariants: Variants = {
   },
 };
 
-/**
- * Progress bar fill
- */
+// ─── Success Screen ───
+export const successCardVariants: Variants = {
+  hidden: { scale: 0.9, opacity: 0 },
+  visible: {
+    scale: 1,
+    opacity: 1,
+    transition: { duration: 0.5, ease: [0, 0, 0.2, 1] },
+  },
+};
+
+export const confettiItemVariants: Variants = {
+  hidden: { y: 0, opacity: 1, scale: 1 },
+  animate: (i: number) => ({
+    y: [0, -60 - (i % 3) * 20, 120],
+    x: [0, (i % 5 - 2) * 40],
+    opacity: [1, 1, 0],
+    scale: [1, 0.8, 0.4],
+    rotate: [0, (i % 2 === 0 ? 1 : -1) * 180],
+    transition: {
+      duration: 1.2 + (i % 4) * 0.2,
+      delay: i * 0.06,
+      ease: 'easeOut',
+    },
+  }),
+};
+
+// ─── Progress Bar ───
 export const progressBarVariants: Variants = {
   initial: { scaleX: 0 },
   animate: (progress: number) => ({

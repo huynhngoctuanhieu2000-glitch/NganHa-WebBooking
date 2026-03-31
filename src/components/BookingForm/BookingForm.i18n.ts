@@ -1,94 +1,155 @@
 // ═══════════════════════════════════════
-// BookingForm i18n Text Dictionary
+// BookingForm i18n — v2 (Curator Redesign)
+// Text dictionary with intent & category labels
 // ═══════════════════════════════════════
 
 export const t = {
   // Section badge
-  badge: 'Reservation',
+  badge: 'Đặt Lịch',
 
   // Main heading
-  heading: 'Book Your',
-  headingHighlight: 'Experience',
+  heading: 'Trải Nghiệm',
+  headingHighlight: 'Của Bạn',
+  subheading: 'Hãy để chúng tôi chăm sóc bạn',
 
-  // Step labels
+  // ─── Intent Quiz (Step 0 / Curator B) ───
+  intent: {
+    heading: 'Hôm nay bạn muốn gì?',
+    subheading: 'Chọn để chúng tôi gợi ý dịch vụ phù hợp nhất',
+    relaxation: 'Thư giãn',
+    beauty: 'Làm đẹp',
+    recovery: 'Phục hồi',
+    grooming: 'Cắt tóc & Râu',
+    showAll: 'Xem tất cả dịch vụ',
+    skip: 'Bỏ qua',
+  },
+
+  // ─── Step labels ───
   steps: {
-    service: 'Select Service',
-    details: 'Your Details',
-    confirm: 'Confirm',
+    service: 'Chọn Dịch Vụ',
+    details: 'Thông Tin',
+    confirm: 'Xác Nhận',
   },
 
-  // Field labels
+  // ─── Category labels (fallback if not in CATEGORY_DISPLAY) ───
+  category: {
+    body: 'Trị Liệu Cơ Thể',
+    facial: 'Chăm Sóc Da',
+    'hair wash': 'Gội Đầu',
+    barber: 'Cắt Tóc',
+    'ear clean': 'Lấy Ráy Tai',
+    foot: 'Chăm Sóc Chân',
+    'heel skin shave': 'Chăm Sóc Gót',
+    additional: 'Dịch Vụ Khác',
+    all: 'Tất Cả',
+  },
+
+  // ─── Field labels ───
   fields: {
-    name: 'Full Name',
-    namePlaceholder: 'Enter your full name',
-    email: 'Email Address',
+    name: 'Họ và tên',
+    namePlaceholder: 'Nhập họ và tên đầy đủ',
+    email: 'Email',
     emailPlaceholder: 'example@email.com',
-    phone: 'Phone Number',
+    phone: 'Số điện thoại',
     phonePlaceholder: '+84 90 123 4567',
-    note: 'Additional Note',
-    notePlaceholder: 'Any special requests or details we should know about?',
-    date: 'Date',
-    datePlaceholder: 'Select date',
-    time: 'Time',
-    timePlaceholder: 'Select time',
-    branch: 'Branch',
-    staff: 'Therapist Preference',
-    staffAny: 'No Preference',
-    staffMale: 'Male',
-    staffFemale: 'Female',
-    guests: 'Guests',
+    note: 'Ghi chú thêm',
+    notePlaceholder: 'Yêu cầu đặc biệt hoặc thông tin cần biết...',
+    date: 'Ngày',
+    datePlaceholder: 'Chọn ngày',
+    time: 'Giờ',
+    timePlaceholder: 'Chọn giờ',
+    branch: 'Chi Nhánh',
+    staff: 'Sở thích KTV',
+    staffAny: 'Không có sở thích',
+    staffMale: 'Nam',
+    staffFemale: 'Nữ',
+    guests: 'Số khách',
   },
 
-  // Summary
+  // ─── Service card ───
+  service: {
+    from: 'từ',
+    min: 'phút',
+    add: 'Thêm',
+    added: 'Đã chọn',
+    bestSeller: 'Bán chạy',
+    bestChoice: 'Lựa chọn tốt',
+    durationLabel: 'Chọn thời gian',
+    noServices: 'Không có dịch vụ nào',
+    viewAll: 'Xem tất cả dịch vụ',
+  },
+
+  // ─── Floating Basket ───
+  basket: {
+    services: 'dịch vụ',
+    minutes: 'phút',
+    continue: 'Tiếp tục',
+    empty: 'Chưa chọn dịch vụ',
+    emptyHint: 'Nhấn + để thêm dịch vụ',
+  },
+
+  // ─── Booking Summary ───
   summary: {
-    title: 'Booking Summary',
-    service: 'Service',
-    duration: 'Duration',
-    durationUnit: 'min',
-    date: 'Date',
-    time: 'Time',
-    branch: 'Branch',
-    guests: 'Guests',
-    staff: 'Staff',
-    total: 'Total',
-    noServiceSelected: 'No service selected',
+    title: 'Tổng đơn hàng',
+    service: 'Dịch vụ',
+    duration: 'Thời gian',
+    durationUnit: 'phút',
+    date: 'Ngày',
+    time: 'Giờ',
+    branch: 'Chi nhánh',
+    guests: 'Số khách',
+    staff: 'KTV',
+    total: 'Tổng cộng',
+    noServiceSelected: 'Chưa chọn dịch vụ',
+    hint: '👈 Chọn ít nhất 1 dịch vụ để bắt đầu',
   },
 
-  // Buttons
+  // ─── Buttons ───
   buttons: {
-    next: 'Continue',
-    back: 'Back',
-    confirm: 'Confirm Booking',
-    processing: 'Processing...',
+    next: 'Tiếp tục',
+    back: 'Quay lại',
+    confirm: 'Xác Nhận Đặt Lịch',
+    processing: 'Đang xử lý...',
+    backToServices: 'Quay lại chọn dịch vụ',
   },
 
-  // Terms
+  // ─── Terms ───
   terms: {
-    agree: 'I agree to the',
-    link: 'Terms & Conditions',
+    agree: 'Tôi đồng ý với',
+    link: 'Điều khoản & Dịch vụ',
   },
 
-  // Validation
+  // ─── Validation ───
   validation: {
-    selectService: 'Please select a service to continue',
-    fillRequired: 'Please fill in all required fields',
-    agreeTerms: 'Please agree to the Terms & Conditions',
+    selectService: 'Vui lòng chọn ít nhất 1 dịch vụ',
+    fillRequired: 'Vui lòng điền đầy đủ thông tin bắt buộc',
+    agreeTerms: 'Vui lòng đồng ý với Điều khoản & Dịch vụ',
+    nameMin: 'Tên phải có ít nhất 2 ký tự',
+    phoneInvalid: 'Số điện thoại không hợp lệ',
+    emailInvalid: 'Email không hợp lệ',
   },
 
-  // Booking success screen
+  // ─── Empty States ───
+  empty: {
+    noServices: 'Không có dịch vụ trong danh mục này',
+    viewAll: 'Xem tất cả dịch vụ',
+    loading: 'Đang tải dịch vụ...',
+  },
+
+  // ─── Success screen ───
   success: {
-    badge: 'Confirmed',
-    title: 'Booking Successful!',
-    subtitle: 'Thank you for choosing Ngan Ha Spa. We look forward to seeing you.',
-    bookingCode: 'Booking Code',
-    customerName: 'Name',
-    phone: 'Phone',
-    services: 'Services',
-    dateTime: 'Date & Time',
-    branch: 'Branch',
-    total: 'Total',
-    backHome: 'Back to Home',
-    bookMore: 'Book Another',
-    note: '\u2022 Please arrive 10 minutes early · Bring this booking code',
+    badge: 'Đã xác nhận',
+    title: 'Đặt lịch thành công!',
+    subtitle: 'Cảm ơn bạn đã chọn Ngân Hà Spa. Chúng tôi rất mong được phục vụ bạn.',
+    bookingCode: 'Mã đặt lịch',
+    customerName: 'Họ tên',
+    phone: 'Điện thoại',
+    services: 'Dịch vụ',
+    dateTime: 'Ngày & Giờ',
+    branch: 'Chi nhánh',
+    total: 'Tổng cộng',
+    backHome: 'Về trang chủ',
+    bookMore: 'Đặt thêm',
+    note: '• Vui lòng đến trước 10 phút · Mang theo mã đặt lịch này',
   },
 } as const;

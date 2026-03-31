@@ -1,27 +1,30 @@
 // ═══════════════════════════════════════
-// BookingForm Logic Hook
-// Multi-service selection with grouped services
+// BookingForm Logic Hook — v2 (Curator Redesign)
+// Intent filter + Accordion + Multi-service selection
 // ═══════════════════════════════════════
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { Service } from '@/types';
 import { fetchServices } from '@/data/services';
 import { BRANCH_LIST } from '@/data/branches';
 import {
-  GroupedService, DurationVariant,
-  groupServices, getGroupedServiceName,
+  GroupedService,
+  DurationVariant,
+  groupServices,
+  getGroupedServiceName,
 } from '@/lib/groupServices';
+import { INTENT_FILTERS, IntentKey } from '@/data/categoryImages';
 
 // 🔧 CONFIGURATION
 const MAX_GUESTS = 10;
 const MIN_GUESTS = 1;
-const TOTAL_STEPS = 3;
+const TOTAL_STEPS = 3; // Step 1 = Services, Step 2 = Details, Step 3 = Confirm
 const ALL_CATEGORY = 'all';
 
-/** One selected service = a grouped service + chosen variant */
+/** One selected service = grouped service + chosen variant */
 export type SelectedServiceItem = {
   groupKey: string;
-  variantId: string; // id of the chosen DurationVariant (= Services.id in DB)
+  variantId: string;
   name: string;
   duration: number;
   priceVND: number;
@@ -58,7 +61,6 @@ export type BookingSummary = {
   staffGender: StaffGender;
 };
 
-/** Kết quả trả về từ API sau khi đặt lịch thành công */
 export type BookingResult = {
   bookingId: string;
   billCode: string;
@@ -77,10 +79,14 @@ export const useBookingForm = () => {
   const [rawServices, setRawServices] = useState<Service[]>([]);
   const [isLoadingServices, setIsLoadingServices] = useState(true);
 
-  // ─── Category Filter ───
-  const [activeCategory, setActiveCategory] = useState<string>(ALL_CATEGORY);
+  // ─── Intent Filter (Curator concept - B) ───
+  const [intentFilter, setIntentFilterState] = useState<IntentKey | null>(null);
+  const [hasPassedIntentScreen, setHasPassedIntentScreen] = useState(false);
 
-  // ─── Step State (for mobile wizard) ───
+  // ─── Accordion: only 1 category open at a time ───
+  const [openCategoryKey, setOpenCategoryKey] = useState<string | null>(null);
+
+  // ─── Step State ───
   const [currentStep, setCurrentStep] = useState(1);
   const [stepDirection, setStepDirection] = useState(1);
 
@@ -108,17 +114,30 @@ export const useBookingForm = () => {
   // ─── Grouped Services ───
   const groupedServices = useMemo(() => groupServices(rawServices), [rawServices]);
 
-  // ─── Categories ───
+  // ─── All Categories ───
   const categories = useMemo(() => {
     const cats = [...new Set(groupedServices.map(g => g.category))];
     return cats.sort();
   }, [groupedServices]);
 
-  // ─── Filtered Services ───
-  const filteredGroups = useMemo(() => {
-    if (activeCategory === ALL_CATEGORY) return groupedServices;
-    return groupedServices.filter(g => g.category === activeCategory);
-  }, [groupedServices, activeCategory]);
+  // ─── Intent-filtered categories ───
+  const visibleCategories = useMemo(() => {
+    if (!intentFilter) return categories;
+    const allowedCats = INTENT_FILTERS[intentFilter] as readonly string[];
+    // Filter categories that exist in our data
+    const filtered = categories.filter(c => allowedCats.includes(c));
+    // If intent doesn't match any existing categories, fallback to all
+    return filtered.length > 0 ? filtered : categories;
+  }, [categories, intentFilter]);
+
+  // ─── Services grouped by category (for accordion) ───
+  const groupedByCategory = useMemo(() => {
+    const result: Record<string, GroupedService[]> = {};
+    for (const cat of visibleCategories) {
+      result[cat] = groupedServices.filter(g => g.category === cat);
+    }
+    return result;
+  }, [groupedServices, visibleCategories]);
 
   // ─── Fetch Services ───
   useEffect(() => {
@@ -131,7 +150,32 @@ export const useBookingForm = () => {
     loadServices();
   }, []);
 
-  // ─── Handlers ───
+  // Auto-open first visible category when categories change
+  useEffect(() => {
+    if (visibleCategories.length > 0 && !openCategoryKey) {
+      setOpenCategoryKey(visibleCategories[0]);
+    }
+  }, [visibleCategories]);
+
+  // ─── Intent Handlers ───
+  const setIntent = useCallback((key: IntentKey | null) => {
+    setIntentFilterState(key);
+    setHasPassedIntentScreen(true);
+    setOpenCategoryKey(null); // Reset accordion — will auto-open first visible
+  }, []);
+
+  const skipIntent = useCallback(() => {
+    setIntentFilterState(null);
+    setHasPassedIntentScreen(true);
+    setOpenCategoryKey(null);
+  }, []);
+
+  // ─── Accordion Handler ───
+  const toggleCategory = useCallback((cat: string) => {
+    setOpenCategoryKey(prev => (prev === cat ? null : cat));
+  }, []);
+
+  // ─── Form Handlers ───
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
       const { name, value, type } = e.target;
@@ -147,19 +191,17 @@ export const useBookingForm = () => {
 
   /**
    * Toggle a service: add/remove from selected list.
-   * When adding, picks default variant (first / cheapest).
+   * When adding, picks default variant (first / shortest duration).
    */
   const toggleService = useCallback((group: GroupedService) => {
     setFormData(prev => {
       const exists = prev.selectedServices.find(s => s.groupKey === group.groupKey);
       if (exists) {
-        // Remove
         return {
           ...prev,
           selectedServices: prev.selectedServices.filter(s => s.groupKey !== group.groupKey),
         };
       } else {
-        // Add with default variant (first one = shortest duration)
         const defaultVariant = group.variants[0];
         const newItem: SelectedServiceItem = {
           groupKey: group.groupKey,
@@ -198,13 +240,11 @@ export const useBookingForm = () => {
     }));
   }, []);
 
-  /** Check if a grouped service is selected */
   const isServiceSelected = useCallback(
     (groupKey: string) => formData.selectedServices.some(s => s.groupKey === groupKey),
     [formData.selectedServices]
   );
 
-  /** Get selected variant ID for a grouped service */
   const getSelectedVariantId = useCallback(
     (groupKey: string) => formData.selectedServices.find(s => s.groupKey === groupKey)?.variantId || null,
     [formData.selectedServices]
@@ -267,7 +307,6 @@ export const useBookingForm = () => {
     const totalDuration = formData.selectedServices.reduce((sum, s) => sum + s.duration, 0);
     const totalPriceVND = formData.selectedServices.reduce((sum, s) => sum + s.priceVND, 0);
     const totalPriceUSD = formData.selectedServices.reduce((sum, s) => sum + s.priceUSD, 0);
-
     return {
       services: formData.selectedServices,
       totalDuration,
@@ -301,7 +340,6 @@ export const useBookingForm = () => {
 
       try {
         const selectedBranch = BRANCH_LIST.find(b => b.id === formData.branchId);
-
         const payload = {
           name: formData.name,
           phone: formData.phone || null,
@@ -324,7 +362,6 @@ export const useBookingForm = () => {
         });
 
         const json = await res.json();
-
         if (!res.ok || !json.success) {
           throw new Error(json.error || 'Đặt lịch thất bại, vui lòng thử lại.');
         }
@@ -343,12 +380,23 @@ export const useBookingForm = () => {
   );
 
   return {
-    // Form
-    formData,
+    // Services & categories
     rawServices,
     groupedServices,
-    filteredGroups,
+    groupedByCategory,
     isLoadingServices,
+    categories,
+    visibleCategories,
+    // Intent (Curator B)
+    intentFilter,
+    hasPassedIntentScreen,
+    setIntent,
+    skipIntent,
+    // Accordion
+    openCategoryKey,
+    toggleCategory,
+    // Form
+    formData,
     handleChange,
     toggleService,
     changeVariant,
@@ -360,10 +408,6 @@ export const useBookingForm = () => {
     isSuccess,
     bookingResult,
     submitError,
-    // Categories
-    categories,
-    activeCategory,
-    setActiveCategory,
     // Steps
     currentStep,
     stepDirection,
