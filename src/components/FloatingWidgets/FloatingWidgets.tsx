@@ -11,10 +11,7 @@ const WIDGET_GAP = 12;
 
 const FloatingWidgets = () => {
   return (
-    <div
-      className="floating-widgets"
-      style={{ gap: `${WIDGET_GAP}px` }}
-    >
+    <div className="floating-widgets">
       {/* AI ChatBot - text + voice chat */}
       <AIChatBot />
 

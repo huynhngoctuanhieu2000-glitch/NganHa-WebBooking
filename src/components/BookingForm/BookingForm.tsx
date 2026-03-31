@@ -795,6 +795,21 @@ const BookingForm = () => {
 
   const today = new Date().toISOString().split('T')[0];
 
+  // ─ Handle body class for mobile footer overlap ─
+  React.useEffect(() => {
+    const serviceCount = bookingSummary.services.length;
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
+    const shouldHideWidgets = hasPassedIntentScreen && currentStep === 1 && serviceCount > 0 && isMobile;
+
+    if (shouldHideWidgets) {
+      document.body.classList.add('has-floating-basket');
+    } else {
+      document.body.classList.remove('has-floating-basket');
+    }
+
+    return () => document.body.classList.remove('has-floating-basket');
+  }, [bookingSummary.services.length, hasPassedIntentScreen, currentStep]);
+
   // ─ Success Screen ─
   if (isSuccess && bookingResult) return <SuccessScreen result={bookingResult} />;
   if (isSuccess) return (
