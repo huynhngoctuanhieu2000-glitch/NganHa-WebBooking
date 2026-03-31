@@ -124,7 +124,7 @@ export const CATEGORY_DISPLAY: Record<string, CategoryDisplayInfo> = {
   'manicure & pedicure': {
     label: 'Nail Care',
     labelVi: 'Chăm Sóc Móng',
-    image: '/images/facial.png',
+    image: '/images/nail-care-full.png',
     gradient: 'from-pink-900/80 to-stone-900/90',
     description: 'Beautiful nails',
     descriptionVi: 'Làm đẹp móng tay chân',
@@ -133,11 +133,20 @@ export const CATEGORY_DISPLAY: Record<string, CategoryDisplayInfo> = {
   additional: {
     label: 'Additional',
     labelVi: 'Dịch Vụ Khác',
-    image: '/images/about-spa.png',
+    image: '/images/service-other.png',
     gradient: 'from-violet-900/80 to-stone-900/90',
     description: 'Special treatments',
     descriptionVi: 'Các liệu trình đặc biệt',
     icon: 'PlusCircle',
+  },
+  premium: {
+    label: 'Premium',
+    labelVi: 'PREMIUM',
+    image: '/images/additional-premium.png',
+    gradient: 'from-[#D4AF37]/80 to-stone-900/90',
+    description: 'Elite experience',
+    descriptionVi: 'Dịch vụ 2 KTV phục vụ',
+    icon: 'Sparkles',
   },
 };
 
