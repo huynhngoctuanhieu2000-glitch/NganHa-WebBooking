@@ -30,6 +30,7 @@ import {
   CalendarDays, Clock, MapPin, Users, UserCircle,
   Check, ArrowRight, ArrowLeft, Sparkles, Plus, Minus,
   ShoppingBag, ChevronDown, ChevronUp, X, Star,
+  Waves, Scissors, Zap, Wind, Footprints, Hand, PlusCircle,
 } from 'lucide-react';
 
 // ─── UI CONFIG ───
@@ -48,11 +49,7 @@ const TIME_SLOTS = [
 // ════════════════════════════════════════
 
 const GoldDivider = () => (
-  <div className="flex items-center gap-3 my-3">
-    <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#D4AF37]/20 to-transparent" />
-    <div className="w-1 h-1 rounded-full bg-[#D4AF37]/40" />
-    <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#D4AF37]/20 to-transparent" />
-  </div>
+  <div className="h-px w-full bg-gradient-to-r from-transparent via-[#D4AF37]/20 to-transparent my-4" />
 );
 
 const StepProgress = ({
@@ -215,6 +212,22 @@ const IntentQuizSection = ({
 // CATEGORY IMAGE CARD
 // ════════════════════════════════════════
 
+// Icon mapping for categories
+const CategoryIcon = ({ name, className }: { name: string; className?: string }) => {
+  switch (name) {
+    case 'Sparkles': return <Sparkles className={className} />;
+    case 'UserCircle': return <UserCircle className={className} />;
+    case 'Waves': return <Waves className={className} />;
+    case 'Scissors': return <Scissors className={className} />;
+    case 'Zap': return <Zap className={className} />;
+    case 'Wind': return <Wind className={className} />;
+    case 'Footprints': return <Footprints className={className} />;
+    case 'Hand': return <Hand className={className} />;
+    case 'PlusCircle': return <PlusCircle className={className} />;
+    default: return <Star className={className} />;
+  }
+};
+
 const CategoryImageCard = ({
   category, count, isActive, onClick,
 }: {
@@ -223,48 +236,39 @@ const CategoryImageCard = ({
   const info = getCategoryDisplay(category);
   return (
     <motion.button
-      variants={categoryCardVariants}
-      whileHover="hover"
-      whileTap="tap"
+      type="button"
       onClick={onClick}
-      className={`relative flex-shrink-0 overflow-hidden rounded-2xl transition-all duration-400 text-left
-        w-[130px] sm:w-[150px] h-[180px] sm:h-[200px]
-        ${isActive
-          ? 'ring-2 ring-[#D4AF37] shadow-[0_0_24px_rgba(212,175,55,0.2)]'
-          : 'ring-1 ring-white/10 opacity-70 hover:opacity-100 hover:ring-white/20'
+      className={`relative flex-shrink-0 w-[150px] h-[190px] rounded-2xl overflow-hidden transition-all duration-500 group 
+        ${isActive 
+          ? 'ring-2 ring-[#D4AF37] ring-offset-2 ring-offset-black scale-95 shadow-[0_0_20px_rgba(212,175,55,0.25)]' 
+          : 'ring-1 ring-white/10 hover:ring-white/20'
         }`}
     >
-      {/* Background Image */}
-      <Image
-        src={info.image}
-        alt={info.label}
-        fill
-        className="object-cover transition-transform duration-500 group-hover:scale-105"
+      <Image 
+        src={info.image} 
+        alt={info.labelVi} 
+        fill 
+        className={`object-cover transition-transform duration-700 ${isActive ? 'scale-110 blur-[1px]' : 'group-hover:scale-110'}`} 
         sizes="150px"
       />
+      <div className={`absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent transition-opacity duration-500 ${isActive ? 'opacity-90' : 'opacity-70 group-hover:opacity-50'}`} />
 
-      {/* Dark gradient overlay */}
-      <div className={`absolute inset-0 bg-gradient-to-t ${info.gradient}`} />
-
-      {/* Active gold shimmer */}
-      {isActive && (
-        <div className="absolute inset-0 bg-gradient-to-br from-[#D4AF37]/15 via-transparent to-transparent" />
-      )}
-
-      {/* Text Content */}
-      <div className="absolute bottom-0 left-0 right-0 p-3">
-        <p className={`text-xs font-medium tracking-wide mb-0.5 transition-colors ${isActive ? 'text-[#F5E6B8]' : 'text-white/80'}`}>
-          {info.labelVi}
-        </p>
-        <p className="text-white/40 text-[10px] font-light">{count} dịch vụ</p>
+      {/* Selected Indicator / Category Icon */}
+      <div className={`absolute top-3 right-3 w-7 h-7 rounded-full flex items-center justify-center transition-all duration-500 
+        ${isActive ? 'bg-[#D4AF37] text-black scale-100 rotate-0' : 'bg-black/40 text-[#D4AF37] scale-90 -rotate-12 opacity-0 group-hover:opacity-100'}`}>
+        {isActive ? <Check className="w-3.5 h-3.5" strokeWidth={3} /> : <CategoryIcon name={info.icon} className="w-3.5 h-3.5" />}
       </div>
 
-      {/* Active check badge */}
-      {isActive && (
-        <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-[#D4AF37] flex items-center justify-center shadow-lg">
-          <Check className="w-2.5 h-2.5 text-black" strokeWidth={3} />
+      {/* Content */}
+      <div className="absolute inset-x-0 bottom-0 p-3.5 text-left trans">
+        <div className="flex items-center gap-2 mb-0.5">
+          {!isActive && <CategoryIcon name={info.icon} className="w-3 h-3 text-[#D4AF37]/60" />}
+          <p className={`text-xs font-semibold tracking-wide uppercase transition-colors ${isActive ? 'text-[#F5E6B8]' : 'text-white/90'}`}>
+            {info.labelVi}
+          </p>
         </div>
-      )}
+        <p className="text-[10px] text-white/40 font-light tracking-wide">{count} dịch vụ</p>
+      </div>
     </motion.button>
   );
 };

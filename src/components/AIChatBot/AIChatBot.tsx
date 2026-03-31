@@ -60,7 +60,7 @@ const AIChatBot = ({ locale = 'vi' }: AIChatBotProps) => {
     <>
       {/* ═══ TRIGGER BUTTON ═══ */}
       <motion.button
-        className={`ai-chat-trigger floating-btn ${isOpen ? 'ai-chat-trigger--active' : ''}`}
+        className={`ai-chat-trigger floating-btn ${isOpen ? 'ai-chat-trigger--active opacity-0 pointer-events-none lg:opacity-100 lg:pointer-events-auto' : ''}`}
         onClick={toggleChat}
         variants={triggerPulseVariants}
         animate={isOpen ? 'idle' : 'pulse'}

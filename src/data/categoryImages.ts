@@ -50,6 +50,7 @@ export interface CategoryDisplayInfo {
   gradient: string;     // Tailwind gradient classes (fallback)
   description: string;  // Short tagline
   descriptionVi: string;
+  icon: string;         // Lucide icon name
 }
 
 /**
@@ -60,10 +61,11 @@ export const CATEGORY_DISPLAY: Record<string, CategoryDisplayInfo> = {
   body: {
     label: 'Body Treatment',
     labelVi: 'Trị Liệu Cơ Thể',
-    image: '/images/about-treatment.png',
+    image: '/images/body-treatment-full.png',
     gradient: 'from-amber-900/80 to-stone-900/90',
     description: 'Deep muscle relaxation',
     descriptionVi: 'Thư giãn cơ sâu',
+    icon: 'Sparkles',
   },
   facial: {
     label: 'Facial Care',
@@ -72,6 +74,7 @@ export const CATEGORY_DISPLAY: Record<string, CategoryDisplayInfo> = {
     gradient: 'from-rose-900/80 to-stone-900/90',
     description: 'Radiant skin refresh',
     descriptionVi: 'Làn da rạng rỡ',
+    icon: 'UserCircle',
   },
   'hair wash': {
     label: 'Hair Wash',
@@ -80,6 +83,7 @@ export const CATEGORY_DISPLAY: Record<string, CategoryDisplayInfo> = {
     gradient: 'from-indigo-900/80 to-stone-900/90',
     description: 'Cleanse & nourish',
     descriptionVi: 'Làm sạch & dưỡng tóc',
+    icon: 'Waves',
   },
   barber: {
     label: 'Barber',
@@ -88,6 +92,7 @@ export const CATEGORY_DISPLAY: Record<string, CategoryDisplayInfo> = {
     gradient: 'from-zinc-800/80 to-stone-900/90',
     description: "Sharp & refined gentleman's cut",
     descriptionVi: 'Phong cách nam tính',
+    icon: 'Scissors',
   },
   'ear clean': {
     label: 'Ear Clean',
@@ -96,6 +101,7 @@ export const CATEGORY_DISPLAY: Record<string, CategoryDisplayInfo> = {
     gradient: 'from-teal-900/80 to-stone-900/90',
     description: 'Deep ear cleansing',
     descriptionVi: 'Vệ sinh tai sâu',
+    icon: 'Zap',
   },
   foot: {
     label: 'Foot Care',
@@ -104,6 +110,7 @@ export const CATEGORY_DISPLAY: Record<string, CategoryDisplayInfo> = {
     gradient: 'from-emerald-900/80 to-stone-900/90',
     description: 'Soothing foot relief',
     descriptionVi: 'Thư giãn đôi chân',
+    icon: 'Wind',
   },
   'heel skin shave': {
     label: 'Heel Care',
@@ -112,6 +119,7 @@ export const CATEGORY_DISPLAY: Record<string, CategoryDisplayInfo> = {
     gradient: 'from-emerald-900/80 to-stone-900/90',
     description: 'Smooth & restore',
     descriptionVi: 'Làm đẹp gót chân',
+    icon: 'Footprints',
   },
   'manicure & pedicure': {
     label: 'Nail Care',
@@ -120,6 +128,7 @@ export const CATEGORY_DISPLAY: Record<string, CategoryDisplayInfo> = {
     gradient: 'from-pink-900/80 to-stone-900/90',
     description: 'Beautiful nails',
     descriptionVi: 'Làm đẹp móng tay chân',
+    icon: 'Hand',
   },
   additional: {
     label: 'Additional',
@@ -128,6 +137,7 @@ export const CATEGORY_DISPLAY: Record<string, CategoryDisplayInfo> = {
     gradient: 'from-violet-900/80 to-stone-900/90',
     description: 'Special treatments',
     descriptionVi: 'Các liệu trình đặc biệt',
+    icon: 'PlusCircle',
   },
 };
 
