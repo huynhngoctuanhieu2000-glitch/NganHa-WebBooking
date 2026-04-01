@@ -22,6 +22,11 @@
 
 ---
 
+## 📐 UI/UX Design Rules (Bổ sung mới)
+- **Nút bấm chính (Call to Action/Footer Action)**: Kích thước bắt buộc phải dùng **chiều cao cố định** (ví dụ: `h-[72px]`, `h-20`), KHÔNG DÙNG padding dọc (`py-4`, `py-6`) để tránh nút bị co giãn sai lệch khi text/phiên dịch thay đổi kích thước. Kích thước này phải móc vào `CONFIG.BUTTON_HEIGHT`.
+
+---
+
 ## 📋 Lịch sử (Log)
 
 | Thời gian | Conversation | Hành động | File |

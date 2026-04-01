@@ -58,41 +58,25 @@ const GoldDivider = () => (
 );
 
 const StepProgress = ({
-  current, total, onStepClick, canClickStep,
+  current, total,
 }: {
   current: number; total: number;
-  onStepClick?: (s: number) => void;
-  canClickStep?: (s: number) => boolean;
 }) => {
-  const labels = [t.steps.service, t.steps.details, t.steps.confirm];
+  const labels = ["Chọn Dịch Vụ", "Thông Tin", "Xác Nhận"];
   return (
-    <div className="flex items-center justify-center gap-2 mb-8">
+    <div className="flex items-center justify-center gap-1.5 mb-8 opacity-90 px-2 lg:px-0">
       {Array.from({ length: total }, (_, i) => {
         const step = i + 1;
         const isActive = step === current;
         const isDone = step < current;
-        const clickable = isDone && !!onStepClick;
         return (
           <React.Fragment key={step}>
-            {i > 0 && (
-              <div className={`h-px w-10 sm:w-16 transition-all duration-500 ${isDone ? 'bg-[#D4AF37]/60' : 'bg-white/10'}`} />
-            )}
-            <div
-              className={`flex flex-col items-center gap-1.5 ${clickable ? 'cursor-pointer' : 'cursor-default'}`}
-              onClick={() => clickable && onStepClick?.(step)}
-            >
-              <motion.div
-                whileHover={clickable ? { scale: 1.08 } : {}}
-                className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-light transition-all duration-500 ${isActive
-                    ? 'bg-[#D4AF37]/20 text-[#D4AF37] ring-1 ring-[#D4AF37]/40 shadow-[0_0_16px_rgba(212,175,55,0.2)]'
-                    : isDone
-                      ? 'bg-[#D4AF37] text-black'
-                      : 'bg-white/[0.03] text-white/25 ring-1 ring-white/10'
-                  }`}
-              >
-                {isDone ? <Check className="w-3.5 h-3.5" strokeWidth={2.5} /> : step}
-              </motion.div>
-              <span className={`text-[10px] tracking-[0.15em] font-light transition-colors duration-300 ${isActive ? 'text-[#D4AF37]/80' : isDone ? 'text-white/50' : 'text-white/20'}`}>
+            {i > 0 && <div className="h-px w-6 sm:w-16 border-t-[1.5px] border-dotted border-[#eab308]/40 mx-0.5" />}
+            <div className={`flex items-center gap-2 ${isDone || isActive ? 'text-[#eab308]' : 'text-white/20'}`}>
+              <div className={`w-5 h-5 rounded flex items-center justify-center text-[10px] font-bold ${isDone || isActive ? 'bg-[#eab308]/10 border border-[#eab308]' : 'border border-white/20'}`}>
+                {isDone ? <Check className="w-3 h-3" strokeWidth={3} /> : step}
+              </div>
+              <span className={`text-[10px] tracking-wider uppercase font-semibold ${isActive ? 'text-[#eab308]' : isDone ? 'text-white/80' : 'text-white/40'} hidden sm:inline-block`}>
                 {labels[i]}
               </span>
             </div>
@@ -816,24 +800,22 @@ const FloatingBasket = ({
         exit="hidden"
         className="fixed bottom-0 left-0 right-0 z-50 lg:hidden"
       >
-        <div className="bg-[#0D0D0D]/95 backdrop-blur-xl border-t border-[#D4AF37]/20 px-4 py-3 flex items-center gap-3">
+        <div className="bg-[#1A1A1A] border-t border-[#D4AF37]/30 px-4 py-3 flex items-center gap-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           {/* Count badge */}
           <motion.div
             key={serviceCount}
             initial={{ scale: 1.3 }}
             animate={{ scale: 1 }}
             transition={countBounceTransition}
-            className="w-9 h-9 rounded-full bg-[#D4AF37] flex items-center justify-center flex-shrink-0 shadow-[0_0_12px_rgba(212,175,55,0.4)]"
+            className="w-10 h-10 rounded-full bg-[#eab308] flex items-center justify-center flex-shrink-0"
           >
-            <span className="text-black font-bold text-sm">{serviceCount}</span>
+            <span className="text-black font-semibold text-base">{serviceCount}</span>
           </motion.div>
 
           {/* Info */}
-          <div className="flex-1 min-w-0">
-            <p className="text-white/75 text-sm font-light truncate">
-              {serviceCount} {t.basket.services}
-              <span className="text-white/30 mx-1.5">·</span>
-              {totalDuration} {t.basket.minutes}
+          <div className="flex-1 min-w-0 flex flex-col justify-center">
+            <p className="text-white/90 text-[15px] tracking-wide truncate mb-0.5">
+              {serviceCount} {t.basket.services} {totalDuration} {t.basket.minutes}
             </p>
             <div className="flex items-center gap-2">
               <motion.p
@@ -841,17 +823,17 @@ const FloatingBasket = ({
                 initial={{ y: -4, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.2 }}
-                className="text-[#D4AF37] text-sm font-medium"
+                className="text-[#eab308] text-[15px] font-bold"
               >
                 {totalPriceVND.toLocaleString('vi-VN')}đ
               </motion.p>
-              <div className="w-[1px] h-3 bg-white/10" />
+              <div className="w-[1px] h-3.5 bg-white/20" />
               <motion.p
                 key={totalPriceUSD}
                 initial={{ y: -4, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.2 }}
-                className="text-[#FF3B30] text-[11px] font-bold"
+                className="text-[#FF3B30] text-[13px] font-bold"
               >
                 {totalPriceUSD} USD
               </motion.p>
@@ -863,12 +845,12 @@ const FloatingBasket = ({
             type="button"
             onClick={onContinue}
             disabled={!canContinue}
-            className="flex-shrink-0 relative overflow-hidden rounded-xl px-5 py-3 transition-all duration-300 disabled:opacity-40 active:scale-[0.98]"
+            className="flex-shrink-0 rounded-full bg-[#eab308] px-5 py-2 transition-all duration-300 disabled:opacity-40 active:scale-[0.96] flex items-center gap-1.5"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-[#B8860B] via-[#D4AF37] to-[#E7AA51]" />
-            <span className="relative z-10 text-black font-medium text-sm flex items-center gap-1.5">
-              {t.basket.continue} <ArrowRight className="w-3.5 h-3.5" />
+            <span className="text-black font-medium text-[15px]">
+              {t.basket.continue}
             </span>
+            <ArrowRight className="w-4 h-4 text-black" />
           </button>
         </div>
       </motion.div>
@@ -1005,62 +987,62 @@ const SuccessScreen = ({ result }: { result: BookingResult }) => {
           ))}
         </div>
 
-        <motion.div variants={successCardVariants} initial="hidden" animate="visible" className="relative rounded-3xl overflow-hidden">
-          <div className="absolute -inset-px bg-gradient-to-b from-[#D4AF37]/30 via-[#D4AF37]/8 to-transparent rounded-3xl" />
-          <div className="relative bg-[#0C0C0C]/95 backdrop-blur-2xl rounded-3xl p-8">
+        <motion.div variants={successCardVariants} initial="hidden" animate="visible" className="relative rounded-3xl overflow-hidden shadow-2xl shadow-[#D4AF37]/5">
+          <div className="absolute -inset-px bg-gradient-to-b from-[#eab308]/20 via-[#eab308]/5 to-transparent rounded-3xl" />
+          <div className="relative bg-[#0C0C0C]/95 backdrop-blur-2xl rounded-3xl p-8 border border-white/5">
             {/* Check icon */}
             <div className="flex justify-center mb-6">
               <div className="relative">
-                <div className="w-16 h-16 rounded-full bg-[#D4AF37]/15 flex items-center justify-center ring-1 ring-[#D4AF37]/30 shadow-[0_0_30px_rgba(212,175,55,0.15)]">
-                  <Check className="w-7 h-7 text-[#D4AF37]" strokeWidth={2.5} />
+                <div className="w-16 h-16 rounded-full bg-[#eab308] flex items-center justify-center shadow-[0_0_30px_rgba(234,179,8,0.3)]">
+                  <Check className="w-8 h-8 text-black" strokeWidth={3} />
                 </div>
-                <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#D4AF37] flex items-center justify-center">
-                  <Sparkles className="w-2.5 h-2.5 text-black" />
+                <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-[#1A1A1A] flex items-center justify-center ring-2 ring-[#0C0C0C]">
+                  <Sparkles className="w-3.5 h-3.5 text-[#eab308]" />
                 </div>
               </div>
             </div>
 
-            <div className="text-center mb-6">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#D4AF37]/10 ring-1 ring-[#D4AF37]/25 text-[#D4AF37]/70 text-[10px] tracking-[0.25em] uppercase font-light mb-4">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]/60 animate-pulse" />
-                {t.success.badge}
+            <div className="text-center mb-8">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#eab308]/10 text-[#eab308] text-[10px] tracking-widest uppercase font-medium mb-4">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#eab308] animate-pulse" />
+                ĐÃ XÁC NHẬN
               </span>
               <h2 className="text-2xl font-serif text-white/90 tracking-wide">{t.success.title}</h2>
-              <p className="text-white/30 text-sm font-light mt-2 max-w-xs mx-auto leading-relaxed">{t.success.subtitle}</p>
+              <p className="text-white/40 text-sm font-light mt-2.5 max-w-[280px] mx-auto leading-relaxed">{t.success.subtitle}</p>
             </div>
 
             {/* Booking Code */}
-            <div className="mb-5 p-3.5 rounded-xl bg-[#D4AF37]/10 ring-1 ring-[#D4AF37]/20">
-              <p className="text-[#D4AF37]/50 text-[10px] tracking-[0.25em] uppercase font-light mb-1">{t.success.bookingCode}</p>
-              <p className="text-[#F5E6B8] text-lg font-mono tracking-widest font-medium">{result.billCode}</p>
+            <div className="mb-6 px-4 py-3 rounded-2xl border border-white/10 text-center relative overflow-hidden">
+              <div className="absolute inset-0 bg-white/[0.02]" />
+              <p className="relative text-white/40 text-[10px] tracking-widest uppercase font-medium mb-1">MÃ ĐẶT LỊCH</p>
+              <p className="relative text-[#eab308] text-xl font-mono tracking-widest font-semibold">{result.billCode}</p>
             </div>
 
             {/* Details */}
-            <div className="space-y-2.5 mb-6 text-sm">
+            <div className="space-y-1 mb-6 text-[13px] tracking-wide">
               {[
                 { label: t.success.customerName, value: result.customerName },
                 ...(result.customerPhone ? [{ label: t.success.phone, value: result.customerPhone }] : []),
-                { label: t.success.dateTime, value: `${result.date}${result.time ? ` · ${result.time}` : ''}` },
+                { label: t.success.dateTime, value: `${result.date}${result.time ? ` - ${result.time}` : ''}` },
                 { label: t.success.branch, value: result.branchName },
               ].map(item => (
-                <div key={item.label} className="flex justify-between py-2 border-b border-white/[0.05]">
-                  <span className="text-white/30 font-light">{item.label}</span>
-                  <span className="text-white/70 font-light">{item.value}</span>
+                <div key={item.label} className="flex justify-between py-2.5 border-b border-white/[0.05]">
+                  <span className="text-white/40 font-light">{item.label}</span>
+                  <span className="text-white/80 font-medium">{item.value}</span>
                 </div>
               ))}
-              <div className="flex justify-between py-2">
-                <span className="text-white/40 text-xs tracking-[0.15em] uppercase font-light">{t.success.total}</span>
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#E7AA51] via-[#FFF3D4] to-[#B8860B] text-lg font-serif">
+              <div className="flex justify-between py-4 items-center">
+                <span className="text-white/40 text-[11px] tracking-widest uppercase font-medium">TỔNG CỘNG</span>
+                <span className="text-[#eab308] text-xl font-bold">
                   {result.totalAmount.toLocaleString('vi-VN')}đ
                 </span>
               </div>
             </div>
 
-            <p className="text-center text-white/20 text-[11px] font-light mb-5 leading-relaxed">{t.success.note}</p>
+            <p className="text-center text-white/30 text-[11px] font-light mb-6 leading-relaxed px-4">{t.success.note}</p>
 
-            <a href="/" className="block w-full relative overflow-hidden rounded-xl py-3.5 transition-all active:scale-[0.98] group/btn">
-              <div className="absolute inset-0 bg-gradient-to-r from-[#B8860B] via-[#D4AF37] to-[#E7AA51] group-hover/btn:opacity-90 transition-opacity" />
-              <span className="relative z-10 block text-center text-black font-medium text-sm tracking-[0.15em] uppercase">{t.success.backHome}</span>
+            <a href="/" className="flex items-center justify-center w-full rounded-full bg-[#eab308] py-4 transition-all active:scale-[0.98]">
+              <span className="text-black font-semibold text-[15px] tracking-[0.1em] uppercase">VỀ TRANG CHỦ</span>
             </a>
           </div>
         </motion.div>
@@ -1239,43 +1221,43 @@ const BookingForm = () => {
 
   // ─ Step 2: Personal Details ─
   const renderPersonalDetails = () => (
-    <div className="space-y-5">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-8 h-8 rounded-xl bg-[#D4AF37]/15 flex items-center justify-center ring-1 ring-[#D4AF37]/20">
-          <UserCircle className="w-4 h-4 text-[#D4AF37]" />
+    <div className="space-y-6">
+      <div className="flex items-center gap-3 mb-2">
+        <div className="w-10 h-10 rounded-2xl bg-[#D4AF37]/15 flex items-center justify-center ring-1 ring-[#D4AF37]/30">
+          <UserCircle className="w-5 h-5 text-[#D4AF37]" />
         </div>
         <div>
-          <h3 className="text-white/80 text-sm tracking-[0.15em] uppercase font-light">{t.steps.details}</h3>
-          <p className="text-white/25 text-xs font-light mt-0.5">Điền thông tin của bạn</p>
+          <h3 className="text-white/90 text-sm tracking-[0.2em] uppercase font-medium">THÔNG TIN</h3>
+          <p className="text-white/40 text-[11px] font-light mt-0.5">Điền thông tin của bạn</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <FormInput label={t.fields.name} name="name" value={formData.name}
-          onChange={handleChange} placeholder={t.fields.namePlaceholder} required
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+        <FormInput label="HỌ VÀ TÊN" name="name" value={formData.name}
+          onChange={handleChange} placeholder="Nhập họ và tên đầy đủ" required
           validate={v => v.trim().length < 2 ? t.validation.nameMin : null} />
-        <FormInput label={t.fields.phone} type="tel" name="phone" value={formData.phone}
-          onChange={handleChange} placeholder={t.fields.phonePlaceholder} required
+        <FormInput label="SỐ ĐIỆN THOẠI" type="tel" name="phone" value={formData.phone}
+          onChange={handleChange} placeholder="+84 90 123 4567" required
           validate={v => !PHONE_REGEX.test(v) ? t.validation.phoneInvalid : null} />
-        <FormInput label={t.fields.email} type="email" name="email" value={formData.email}
-          onChange={handleChange} placeholder={t.fields.emailPlaceholder}
+        <FormInput label="EMAIL" type="email" name="email" value={formData.email}
+          onChange={handleChange} placeholder="example@email.com"
           validate={v => v.length > 0 && !EMAIL_REGEX.test(v) ? t.validation.emailInvalid : null} />
       </div>
 
       {/* Guests */}
       <div>
-        <label className="text-[#D4AF37]/70 text-[10px] tracking-[0.2em] uppercase font-light mb-2 flex items-center gap-1.5">
-          <Users className="w-3 h-3" /> {t.fields.guests}
+        <label className="text-[#D4AF37] text-[11px] tracking-widest uppercase font-medium mb-3 flex items-center gap-2">
+          <Users className="w-3.5 h-3.5" /> SỐ KHÁCH
         </label>
-        <div className="flex items-center gap-4 bg-white/[0.03] ring-1 ring-white/[0.07] rounded-xl px-4 py-3 w-fit">
+        <div className="flex items-center gap-5 w-fit">
           <button type="button" onClick={() => updateGuests(-1)}
-            className="w-7 h-7 rounded-full ring-1 ring-white/15 flex items-center justify-center text-white/50 hover:ring-white/30 hover:text-white/80 transition-all">
+            className="w-8 h-8 rounded-full border border-white/20 flex items-center justify-center text-white/50 hover:border-white/50 hover:text-white/80 transition-all">
             <Minus className="w-3 h-3" />
           </button>
           <motion.span key={formData.guests} initial={{ scale: 1.2 }} animate={{ scale: 1 }} transition={countBounceTransition}
-            className="text-white/80 text-base font-light w-5 text-center">{formData.guests}</motion.span>
+            className="text-white/90 text-lg font-medium w-6 text-center">{formData.guests}</motion.span>
           <button type="button" onClick={() => updateGuests(1)}
-            className="w-7 h-7 rounded-full ring-1 ring-white/15 flex items-center justify-center text-white/50 hover:ring-white/30 hover:text-white/80 transition-all">
+            className="w-8 h-8 rounded-full border border-white/20 flex items-center justify-center text-white/50 hover:border-white/50 hover:text-white/80 transition-all">
             <Plus className="w-3 h-3" />
           </button>
         </div>
@@ -1283,17 +1265,17 @@ const BookingForm = () => {
 
       {/* Staff gender */}
       <div>
-        <label className="text-[#D4AF37]/70 text-[10px] tracking-[0.2em] uppercase font-light mb-2 block">{t.fields.staff}</label>
-        <div className="flex gap-2">
+        <label className="text-[#D4AF37] text-[11px] tracking-widest uppercase font-medium mb-3 block">SỞ THÍCH KTV</label>
+        <div className="flex gap-3">
           {(['any', 'male', 'female'] as const).map(g => (
             <button key={g} type="button"
               onClick={() => handleChange({ target: { name: 'staffGender', value: g, type: 'text' } } as any)}
-              className={`px-4 py-2 rounded-xl text-xs font-light tracking-wide transition-all duration-200 ${formData.staffGender === g
-                  ? 'bg-[#D4AF37]/20 text-[#D4AF37] ring-1 ring-[#D4AF37]/40 font-medium'
-                  : 'bg-white/[0.03] text-white/40 ring-1 ring-white/[0.07] hover:ring-white/15'
+              className={`px-4 py-1.5 rounded-full text-sm transition-all duration-200 ${formData.staffGender === g
+                  ? 'text-[#eab308] border border-[#eab308] bg-[#eab308]/5'
+                  : 'text-white/40 bg-white/[0.03] hover:text-white/70'
                 }`}
             >
-              {g === 'any' ? t.fields.staffAny : g === 'male' ? t.fields.staffMale : t.fields.staffFemale}
+              {g === 'any' ? 'Không có sở thích' : g === 'male' ? 'Nam' : 'Nữ'}
             </button>
           ))}
         </div>
@@ -1301,50 +1283,50 @@ const BookingForm = () => {
 
       {/* Note */}
       <div>
-        <label className="text-[#D4AF37]/70 text-[10px] tracking-[0.2em] uppercase font-light mb-2 block">{t.fields.note}</label>
+        <label className="text-[#D4AF37] text-[11px] tracking-widest uppercase font-medium mb-3 block">GHI CHÚ THÊM</label>
         <textarea name="note" value={formData.note}
-          onChange={e => handleChange(e as any)} placeholder={t.fields.notePlaceholder} rows={3}
-          className="w-full bg-white/[0.03] ring-1 ring-white/[0.07] rounded-xl px-4 py-3 text-white/80 text-sm font-light
-            placeholder:text-white/15 focus:outline-none focus:ring-[#D4AF37]/30 transition-all duration-300 resize-none" />
+          onChange={e => handleChange(e as any)} placeholder="Yêu cầu đặc biệt hoặc thông tin cần biết..." rows={3}
+          className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-3.5 text-white/80 text-sm font-light
+            placeholder:text-white/20 focus:outline-none focus:border-[#D4AF37]/50 transition-all duration-300 resize-none" />
       </div>
     </div>
   );
 
   // ─ Step 3: Schedule + Confirm ─
   const renderScheduleConfirm = () => (
-    <div className="space-y-5">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-8 h-8 rounded-xl bg-[#D4AF37]/15 flex items-center justify-center ring-1 ring-[#D4AF37]/20">
-          <CalendarDays className="w-4 h-4 text-[#D4AF37]" />
+    <div className="space-y-6">
+      <div className="flex items-center gap-3 mb-2">
+        <div className="w-10 h-10 rounded-2xl bg-[#D4AF37]/15 flex items-center justify-center ring-1 ring-[#D4AF37]/30">
+          <CalendarDays className="w-5 h-5 text-[#D4AF37]" />
         </div>
         <div>
-          <h3 className="text-white/80 text-sm tracking-[0.15em] uppercase font-light">{t.steps.confirm}</h3>
-          <p className="text-white/25 text-xs font-light mt-0.5">Chọn ngày giờ phù hợp</p>
+          <h3 className="text-white/90 text-sm tracking-[0.2em] uppercase font-medium">XÁC NHẬN</h3>
+          <p className="text-white/40 text-[11px] font-light mt-0.5">Chọn ngày giờ phù hợp</p>
         </div>
       </div>
 
       {/* Date */}
       <div>
-        <label className="text-[#D4AF37]/70 text-[10px] tracking-[0.2em] uppercase font-light mb-2 flex items-center gap-1.5">
-          <CalendarDays className="w-3 h-3" /> {t.fields.date} *
+        <label className="text-[#D4AF37] text-[11px] tracking-widest uppercase font-medium mb-3 flex items-center gap-2">
+          <CalendarDays className="w-3.5 h-3.5" /> NGÀY *
         </label>
         <input type="date" name="date" value={formData.date} onChange={handleChange} min={today} required
-          className="w-full bg-white/[0.03] ring-1 ring-white/[0.07] rounded-xl px-4 py-3.5 text-white/80 text-sm font-light
-            focus:outline-none focus:ring-[#D4AF37]/30 transition-all [color-scheme:dark]" />
+          className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-3.5 text-white/90 text-[15px] font-medium
+            focus:outline-none focus:border-[#D4AF37]/50 transition-all [color-scheme:dark]" />
       </div>
 
       {/* Time Slots */}
       <div>
-        <label className="text-[#D4AF37]/70 text-[10px] tracking-[0.2em] uppercase font-light mb-3 flex items-center gap-1.5">
-          <Clock className="w-3 h-3" /> {t.fields.time} *
+        <label className="text-[#D4AF37] text-[11px] tracking-widest uppercase font-medium mb-3 flex items-center gap-2">
+          <Clock className="w-3.5 h-3.5" /> GIỜ *
         </label>
-        <div className="grid grid-cols-5 sm:grid-cols-6 gap-2">
+        <div className="grid grid-cols-5 gap-2.5">
           {TIME_SLOTS.map(slot => (
             <button key={slot} type="button"
               onClick={() => handleChange({ target: { name: 'time', value: slot, type: 'text' } } as any)}
-              className={`py-2 rounded-xl text-[11px] font-light tracking-wide transition-all duration-200 ${formData.time === slot
-                  ? 'bg-[#D4AF37]/20 text-[#D4AF37] ring-1 ring-[#D4AF37]/40'
-                  : 'bg-white/[0.03] text-white/40 ring-1 ring-white/[0.06] hover:ring-white/15 hover:text-white/65'
+              className={`py-2.5 rounded-2xl text-[13px] font-medium tracking-wide transition-all duration-200 ${formData.time === slot
+                  ? 'bg-[#eab308]/15 text-[#eab308] border border-[#eab308]/50'
+                  : 'bg-white/[0.03] text-white/40 border border-white/5 hover:border-white/20 hover:text-white/70'
                 }`}
             >{slot}</button>
           ))}
@@ -1353,29 +1335,27 @@ const BookingForm = () => {
 
       {/* Branch */}
       <div>
-        <label className="text-[#D4AF37]/70 text-[10px] tracking-[0.2em] uppercase font-light mb-2 flex items-center gap-1.5">
-          <MapPin className="w-3 h-3" /> {t.fields.branch}
+        <label className="text-[#D4AF37] text-[11px] tracking-widest uppercase font-medium mb-3 flex items-center gap-2">
+          <MapPin className="w-3.5 h-3.5" /> CHI NHÁNH
         </label>
-        <div className="space-y-2">
+        <div className="space-y-3">
           {BRANCH_LIST.map(branch => (
             <button key={branch.id} type="button"
               onClick={() => handleChange({ target: { name: 'branchId', value: branch.id, type: 'text' } } as any)}
-              className={`w-full flex items-start gap-3 p-4 rounded-xl text-left transition-all duration-200 ${formData.branchId === branch.id
-                  ? 'bg-[#D4AF37]/10 ring-1 ring-[#D4AF37]/40'
-                  : 'bg-white/[0.02] ring-1 ring-white/[0.06] hover:ring-white/12'
+              className={`w-full flex items-start gap-4 p-5 rounded-2xl text-left transition-all duration-200 border relative overflow-hidden ${formData.branchId === branch.id
+                  ? 'bg-[#eab308]/5 border-[#eab308]/40'
+                  : 'bg-white/[0.02] border-white/10 hover:border-white/20'
                 }`}
             >
-              <MapPin className={`w-4 h-4 mt-0.5 flex-shrink-0 ${formData.branchId === branch.id ? 'text-[#D4AF37]' : 'text-white/30'}`} />
-              <div>
-                <p className={`text-sm font-light ${formData.branchId === branch.id ? 'text-[#F5E6B8]' : 'text-white/70'}`}>{branch.name}</p>
-                <p className="text-white/30 text-xs font-light mt-0.5">{branch.address}</p>
-                <p className="text-white/25 text-[11px] font-light mt-0.5">{branch.hours}</p>
+              <MapPin className={`w-4 h-4 mt-0.5 flex-shrink-0 ${formData.branchId === branch.id ? 'text-[#eab308]' : 'text-white/30'}`} />
+              <div className="pr-4">
+                <p className={`text-[15px] font-medium ${formData.branchId === branch.id ? 'text-[#F5E6B8]' : 'text-white/70'}`}>{branch.name}</p>
+                <p className="text-white/40 text-[13px] font-light mt-1 leading-relaxed">{branch.address}</p>
+                <p className="text-white/30 text-[11px] font-medium mt-1 uppercase tracking-wider">{branch.hours}</p>
               </div>
               {formData.branchId === branch.id && (
-                <div className="ml-auto flex-shrink-0">
-                  <div className="w-4 h-4 rounded-full bg-[#D4AF37] flex items-center justify-center">
-                    <Check className="w-2.5 h-2.5 text-black" strokeWidth={3} />
-                  </div>
+                <div className="absolute top-4 right-4 w-5 h-5 rounded-full bg-[#eab308] flex items-center justify-center shadow-[0_0_15px_rgba(234,179,8,0.3)]">
+                  <Check className="w-3 h-3 text-black" strokeWidth={3} />
                 </div>
               )}
             </button>
@@ -1385,55 +1365,54 @@ const BookingForm = () => {
 
       {/* Review summary on mobile */}
       {bookingSummary.services.length > 0 && (
-        <div className="lg:hidden bg-white/[0.02] ring-1 ring-white/[0.06] rounded-xl p-4">
-          <p className="text-white/35 text-[10px] tracking-[0.2em] uppercase font-light mb-3">Tóm tắt đơn</p>
-          <div className="space-y-2">
+        <div className="lg:hidden mt-2">
+          <label className="text-[#D4AF37] text-[11px] tracking-widest uppercase font-medium mb-4 block">TÓM TẮT ĐƠN</label>
+          <div className="space-y-4">
             {bookingSummary.services.map(svc => (
-              <div key={`${svc.groupKey}-${svc.variantId}`} className="flex justify-between text-xs font-light">
-                <div className="min-w-0 pr-4">
-                  <span className="text-white/55 truncate block">{svc.name}</span>
-                  <span className="text-white/25 text-[9px]">{svc.duration}m × {svc.quantity}</span>
+              <div key={`${svc.groupKey}-${svc.variantId}`} className="flex flex-col border-b border-white/[0.08] pb-3">
+                <div className="flex justify-between items-start mb-0.5">
+                  <span className="text-white/90 text-[15px] font-medium pr-4 line-clamp-2">{svc.name}</span>
+                  <span className="text-[#eab308] text-[15px] font-semibold whitespace-nowrap">{(svc.priceVND * svc.quantity).toLocaleString('vi-VN')}đ</span>
                 </div>
-                <div className="text-right flex-shrink-0">
-                  <span className="text-white/40 block">{(svc.priceVND * svc.quantity).toLocaleString('vi-VN')}đ</span>
-                  <span className="text-[#FF3B30]/60 text-[10px] font-bold">{(svc.priceUSD * svc.quantity)} USD</span>
+                <div className="flex justify-between items-center mt-1">
+                  <span className="text-white/40 text-[13px] font-light">{svc.duration}m × {svc.quantity}</span>
+                  <span className="text-[#FF3B30] text-[13px] font-bold">{(svc.priceUSD * svc.quantity)} USD</span>
                 </div>
               </div>
             ))}
           </div>
-          <div className="flex justify-between mt-4 pt-3 border-t border-white/[0.05] items-baseline">
-            <span className="text-white/40 text-xs font-light">{bookingSummary.totalDuration} phút</span>
+          <div className="flex justify-between mt-5 items-baseline">
+            <span className="text-white/80 text-[15px] font-medium">{bookingSummary.totalDuration} phút</span>
             <div className="text-right">
-              <span className="text-[#D4AF37] font-medium text-lg block leading-none mb-0.5">{bookingSummary.totalPriceVND.toLocaleString('vi-VN')}đ</span>
-              <span className="text-[#FF3B30] font-bold text-xs">{bookingSummary.totalPriceUSD} USD</span>
+              <span className="text-[#eab308] font-bold text-[22px] block leading-none mb-1.5">{bookingSummary.totalPriceVND.toLocaleString('vi-VN')}đ</span>
+              <span className="text-[#FF3B30] font-bold text-[13px]">{bookingSummary.totalPriceUSD} USD</span>
             </div>
           </div>
         </div>
       )}
 
       {/* Mobile Terms + Submit */}
-      <div className="space-y-4 lg:hidden">
-        <label className="flex items-start gap-3 cursor-pointer">
-          <div className="relative mt-0.5">
-            <div className={`w-5 h-5 rounded transition-all flex items-center justify-center ${formData.agreeTerms ? 'bg-[#D4AF37]' : 'ring-1 ring-white/20'}`}>
+      <div className="space-y-5 lg:hidden pt-4">
+        <label className="flex items-center gap-3 cursor-pointer">
+          <div className="relative">
+            <div className={`w-[22px] h-[22px] rounded-md transition-all flex items-center justify-center ${formData.agreeTerms ? 'bg-[#eab308]' : 'bg-white/[0.05] border border-white/20'}`}>
               <input type="checkbox" name="agreeTerms" checked={formData.agreeTerms} onChange={handleChange}
                 className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
-              <Check className={`w-3 h-3 text-black transition-transform ${formData.agreeTerms ? 'scale-100' : 'scale-0'}`} />
+              <Check className={`w-3.5 h-3.5 text-black transition-transform ${formData.agreeTerms ? 'scale-100' : 'scale-0'}`} strokeWidth={3} />
             </div>
           </div>
-          <span className="text-white/35 text-xs font-light">
+          <span className="text-white/50 text-[13px] font-light">
             {t.terms.agree}{' '}
-            <span className="text-[#D4AF37]/60 underline underline-offset-2">{t.terms.link}</span>
+            <span className="text-[#eab308]/80 hover:underline underline-offset-2">{t.terms.link}</span>
           </span>
         </label>
 
         <button type="submit" onClick={handleSubmit}
           disabled={isSubmitting || !formData.agreeTerms || bookingSummary.services.length === 0}
-          className="w-full relative overflow-hidden rounded-xl py-4 transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-[0.98]"
+          className="w-full rounded-full bg-[#eab308] py-3.5 transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed active:scale-[0.98] flex items-center justify-center"
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-[#B8860B] via-[#D4AF37] to-[#E7AA51]" />
-          <span className="relative z-10 text-black font-medium text-sm tracking-[0.15em] uppercase">
-            {isSubmitting ? t.buttons.processing : t.buttons.confirm}
+          <span className="text-black font-semibold text-[15px] tracking-[0.1em] uppercase">
+            {isSubmitting ? t.buttons.processing : 'XÁC NHẬN ĐẶT LỊCH'}
           </span>
         </button>
       </div>
@@ -1478,8 +1457,6 @@ const BookingForm = () => {
               <StepProgress
                 current={currentStep}
                 total={totalSteps}
-                onStepClick={goToStep}
-                canClickStep={step => step < currentStep}
               />
 
               {/* Layout */}
@@ -1528,19 +1505,18 @@ const BookingForm = () => {
                     )}
                   </div>
 
-                  {/* Mobile Next button (non-submit steps) */}
-                  {currentStep < totalSteps && (
-                    <div className="lg:hidden mt-4">
+                  {/* Mobile Nav Button (Step 2 Only) */}
+                  {currentStep === 2 && (
+                    <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-[#1A1A1A] border-t border-[#D4AF37]/30 px-4 py-3 flex items-center justify-between pb-[max(0.75rem,env(safe-area-inset-bottom))] z-40">
+                      <button type="button" onClick={prevStep} className="text-white/60 text-[15px] font-medium flex items-center gap-1.5 px-2">
+                        <ArrowLeft className="w-4 h-4" /> Quay lại
+                      </button>
                       <button type="button" onClick={nextStep}
                         disabled={!canProceedFromStep(currentStep)}
-                        className="w-full relative overflow-hidden rounded-xl py-3.5 transition-all disabled:opacity-25 disabled:cursor-not-allowed active:scale-[0.98] ring-1 ring-white/15"
+                        className="rounded-full bg-[#eab308] px-6 py-2 transition-all disabled:opacity-40 active:scale-[0.96] flex items-center gap-1.5"
                       >
-                        <div className="absolute inset-0 bg-white/[0.04]" />
-                        <span className="relative z-10 flex items-center justify-center gap-2 text-white/65 text-sm font-light">
-                          {t.buttons.next}
-                          {currentStep === 1 && formData.selectedServices.length > 0 && <span className="text-[#D4AF37]">({formData.selectedServices.length})</span>}
-                          <ArrowRight className="w-4 h-4" />
-                        </span>
+                        <span className="text-black font-semibold text-[15px]">Tiếp tục</span>
+                        <ArrowRight className="w-4 h-4 text-black" />
                       </button>
                     </div>
                   )}

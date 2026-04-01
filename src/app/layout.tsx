@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Playfair_Display, Inter } from "next/font/google";
-import Header from "@/components/Header/Header";
-import FloatingWidgets from "@/components/FloatingWidgets/FloatingWidgets";
+import LayoutWrapper from "@/components/LayoutWrapper";
 import "./globals.css";
 
 // 🔧 FONT CONFIGURATION
@@ -48,9 +47,7 @@ const RootLayout = ({
   return (
     <html lang="vi" className={`${playfair.variable} ${inter.variable}`}>
       <body suppressHydrationWarning>
-        <Header />
-        {children}
-        <FloatingWidgets />
+        <LayoutWrapper>{children}</LayoutWrapper>
       </body>
     </html>
   );
