@@ -11,6 +11,54 @@ const STEP_OFFSET = 60;
 const INTENT_STAGGER = 0.08;
 const CARD_HOVER_SCALE = 1.03;
 const BASKET_SLIDE_Y = 80;
+const SHEET_DURATION = 0.4;
+
+// ─── Sheet & Modal ───
+export const overlayVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 0.3 } },
+};
+
+export const sheetVariants: Variants = {
+  hidden: { y: '100%', opacity: 1 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: {
+      duration: SHEET_DURATION,
+      ease: [0.22, 1, 0.36, 1], // expoOut
+    },
+  },
+  exit: {
+    y: '100%',
+    transition: {
+      duration: SHEET_DURATION * 0.8,
+      ease: [0.32, 0, 0.67, 0], // polyIn
+    },
+  },
+};
+
+export const modalVariants: Variants = {
+  hidden: { scale: 0.95, opacity: 0, y: 15 },
+  visible: {
+    scale: 1,
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.35,
+      ease: [0.25, 0.1, 0.25, 1],
+    },
+  },
+  exit: {
+    scale: 0.97,
+    opacity: 0,
+    y: 10,
+    transition: {
+      duration: 0.25,
+      ease: 'easeIn',
+    },
+  },
+};
 
 // ─── Step Transitions ───
 export const stepSlideVariants: Variants = {

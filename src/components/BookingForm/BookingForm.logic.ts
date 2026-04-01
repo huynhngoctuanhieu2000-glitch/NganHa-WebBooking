@@ -22,6 +22,13 @@ const TOTAL_STEPS = 3; // Step 1 = Services, Step 2 = Details, Step 3 = Confirm
 const ALL_CATEGORY = 'all';
 
 /** One selected service = grouped service + chosen variant */
+export type ServiceCustomOptions = {
+  bodyParts: { focus: string[]; avoid: string[] };
+  strength?: 'light' | 'medium' | 'strong';
+  therapist: 'male' | 'female' | 'random';
+  notes: string;
+};
+
 export type SelectedServiceItem = {
   groupKey: string;
   variantId: string;
@@ -29,6 +36,8 @@ export type SelectedServiceItem = {
   duration: number;
   priceVND: number;
   priceUSD: number;
+  quantity: number;
+  customOptions?: ServiceCustomOptions;
 };
 
 export type StaffGender = 'any' | 'male' | 'female';
@@ -85,6 +94,7 @@ export const useBookingForm = () => {
 
   // ─── Accordion: only 1 category open at a time ───
   const [openCategoryKey, setOpenCategoryKey] = useState<string | null>(null);
+  const [activeServiceForSheet, setActiveServiceForSheet] = useState<GroupedService | null>(null);
 
   // ─── Step State ───
   const [currentStep, setCurrentStep] = useState(1);
@@ -175,6 +185,14 @@ export const useBookingForm = () => {
     setOpenCategoryKey(prev => (prev === cat ? null : cat));
   }, []);
 
+  const openServiceSheet = useCallback((group: GroupedService) => {
+    setActiveServiceForSheet(group);
+  }, []);
+
+  const closeServiceSheet = useCallback(() => {
+    setActiveServiceForSheet(null);
+  }, []);
+
   // ─── Form Handlers ───
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -197,10 +215,10 @@ export const useBookingForm = () => {
     setFormData(prev => {
       const exists = prev.selectedServices.find(s => s.groupKey === group.groupKey);
       if (exists) {
-        return {
-          ...prev,
-          selectedServices: prev.selectedServices.filter(s => s.groupKey !== group.groupKey),
-        };
+        // If exists, just open the sheet to edit/add more, doesn't automatically remove anymore
+        // However, for single-click logic from outside, maybe we don't do anything here
+        // and let openServiceSheet handle it.
+        return prev;
       } else {
         const defaultVariant = group.variants[0];
         const newItem: SelectedServiceItem = {
@@ -210,11 +228,53 @@ export const useBookingForm = () => {
           duration: defaultVariant.duration,
           priceVND: defaultVariant.priceVND,
           priceUSD: defaultVariant.priceUSD,
+          quantity: 1, // Default quantity
         };
         return {
           ...prev,
           selectedServices: [...prev.selectedServices, newItem],
         };
+      }
+    });
+  }, []);
+
+  /**
+   * Update or Add a service selection from the Sheet
+   */
+  const updateServiceSelection = useCallback((group: GroupedService, variant: DurationVariant, quantity: number) => {
+    setFormData(prev => {
+      const existingIndex = prev.selectedServices.findIndex(
+        s => s.groupKey === group.groupKey && s.variantId === variant.id
+      );
+
+      if (quantity <= 0) {
+        // Remove if quantity is 0
+        return {
+          ...prev,
+          selectedServices: prev.selectedServices.filter(
+            s => !(s.groupKey === group.groupKey && s.variantId === variant.id)
+          ),
+        };
+      }
+
+      const newItem: SelectedServiceItem = {
+        groupKey: group.groupKey,
+        variantId: variant.id,
+        name: getGroupedServiceName(group, 'vi'),
+        duration: variant.duration,
+        priceVND: variant.priceVND,
+        priceUSD: variant.priceUSD,
+        quantity,
+      };
+
+      if (existingIndex >= 0) {
+        // Replace existing variant selection
+        const newList = [...prev.selectedServices];
+        newList[existingIndex] = newItem;
+        return { ...prev, selectedServices: newList };
+      } else {
+        // Add as new variant selection
+        return { ...prev, selectedServices: [...prev.selectedServices, newItem] };
       }
     });
   }, []);
@@ -240,8 +300,30 @@ export const useBookingForm = () => {
     }));
   }, []);
 
+  /**
+   * Update custom options (body map, strength, therapist) for a selected service
+   */
+  const updateServiceCustomOptions = useCallback((groupKey: string, variantId: string, options: ServiceCustomOptions) => {
+    setFormData(prev => ({
+      ...prev,
+      selectedServices: prev.selectedServices.map(s =>
+        s.groupKey === groupKey && s.variantId === variantId
+          ? { ...s, customOptions: options }
+          : s
+      ),
+    }));
+  }, []);
+
   const isServiceSelected = useCallback(
     (groupKey: string) => formData.selectedServices.some(s => s.groupKey === groupKey),
+    [formData.selectedServices]
+  );
+
+  const getServiceQuantity = useCallback(
+    (groupKey: string) =>
+      formData.selectedServices
+        .filter(s => s.groupKey === groupKey)
+        .reduce((sum, s) => sum + s.quantity, 0),
     [formData.selectedServices]
   );
 
@@ -304,9 +386,9 @@ export const useBookingForm = () => {
   // ─── Booking Summary ───
   const bookingSummary = useMemo((): BookingSummary => {
     const selectedBranch = BRANCH_LIST.find(b => b.id === formData.branchId);
-    const totalDuration = formData.selectedServices.reduce((sum, s) => sum + s.duration, 0);
-    const totalPriceVND = formData.selectedServices.reduce((sum, s) => sum + s.priceVND, 0);
-    const totalPriceUSD = formData.selectedServices.reduce((sum, s) => sum + s.priceUSD, 0);
+    const totalDuration = formData.selectedServices.reduce((sum, s) => sum + s.duration * s.quantity, 0);
+    const totalPriceVND = formData.selectedServices.reduce((sum, s) => sum + s.priceVND * s.quantity, 0);
+    const totalPriceUSD = formData.selectedServices.reduce((sum, s) => sum + s.priceUSD * s.quantity, 0);
     return {
       services: formData.selectedServices,
       totalDuration,
@@ -395,12 +477,19 @@ export const useBookingForm = () => {
     // Accordion
     openCategoryKey,
     toggleCategory,
+    // Service Sheet
+    activeServiceForSheet,
+    openServiceSheet,
+    closeServiceSheet,
     // Form
     formData,
     handleChange,
     toggleService,
+    updateServiceSelection,
     changeVariant,
+    updateServiceCustomOptions,
     isServiceSelected,
+    getServiceQuantity,
     getSelectedVariantId,
     updateGuests,
     handleSubmit,

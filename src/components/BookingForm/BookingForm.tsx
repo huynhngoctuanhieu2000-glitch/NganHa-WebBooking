@@ -4,7 +4,8 @@ import React from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useBookingForm } from './BookingForm.logic';
-import type { BookingResult } from './BookingForm.logic';
+import type { BookingResult, SelectedServiceItem, ServiceCustomOptions } from './BookingForm.logic';
+import CustomForYouView from './Customization/CustomForYouView';
 import { t } from './BookingForm.i18n';
 import {
   stepSlideVariants,
@@ -22,6 +23,9 @@ import {
   successCardVariants,
   confettiItemVariants,
   sectionFadeVariants,
+  overlayVariants,
+  sheetVariants,
+  modalVariants,
 } from './BookingForm.animation';
 import { GroupedService, DurationVariant, getGroupedServiceName, getGroupedServiceDescription } from '@/lib/groupServices';
 import { getCategoryDisplay, INTENT_DISPLAY, IntentKey } from '@/data/categoryImages';
@@ -32,6 +36,7 @@ import {
   ShoppingBag, ChevronDown, ChevronUp, X, Star,
   Waves, Scissors, Zap, Wind, Footprints, Hand, PlusCircle,
 } from 'lucide-react';
+import { getServiceImage } from '@/data/serviceImages';
 
 // ─── UI CONFIG ───
 const GOLD = '#D4AF37';
@@ -98,6 +103,295 @@ const StepProgress = ({
   );
 };
 
+// ════════════════════════════════════════
+// SERVICE DETAIL SHEET (Bottom Sheet / Modal)
+// ════════════════════════════════════════
+
+const ServiceDetailSheet = ({
+  group,
+  onClose,
+  selections,
+  onUpdate,
+  onCustomSave,
+}: {
+  group: GroupedService;
+  onClose: () => void;
+  selections: SelectedServiceItem[];
+  onUpdate: (group: GroupedService, variant: DurationVariant, quantity: number) => void;
+  onCustomSave?: (groupKey: string, variantId: string, options: ServiceCustomOptions) => void;
+}) => {
+  const name = getGroupedServiceName(group, 'vi');
+  const desc = getGroupedServiceDescription(group, 'vi');
+
+  // 🔧 UI CONFIGURATION
+  const PULSE_SCALE = 1.03;
+  const PULSE_DURATION = 0.3;
+
+  // viewMode: 'SELECT' (duration grid) or 'CUSTOM' (custom for you)
+  const [viewMode, setViewMode] = React.useState<'SELECT' | 'CUSTOM'>('SELECT');
+
+  // Default to the first selection or first variant
+  const [activeVariantId, setActiveVariantId] = React.useState<string>(
+    selections.length > 0 ? selections[0].variantId : group.variants[0].id
+  );
+
+  const activeVariant = group.variants.find(v => v.id === activeVariantId) || group.variants[0];
+  const currentQty = selections.find(s => s.variantId === activeVariantId)?.quantity || 0;
+  
+  // Temporary qty for the variant being adjusted
+  const [tempQty, setTempQty] = React.useState<number>(currentQty > 0 ? currentQty : 1);
+  // Pulse key for button animation
+  const [pulseKey, setPulseKey] = React.useState(0);
+
+  // Sync tempQty when variant changes
+  React.useEffect(() => {
+    const existing = selections.find(s => s.variantId === activeVariantId);
+    setTempQty(existing ? existing.quantity : 1);
+  }, [activeVariantId, selections]);
+
+  // Trigger pulse animation when qty or variant changes
+  React.useEffect(() => {
+    setPulseKey(prev => prev + 1);
+  }, [tempQty, activeVariantId]);
+
+  const handleUpdate = () => {
+    onUpdate(group, activeVariant, tempQty);
+    // After adding to cart, show Custom for You
+    if (tempQty > 0) {
+      setViewMode('CUSTOM');
+    }
+  };
+
+  const handleCustomSave = (prefs: import('./Customization/types').CustomPreferences) => {
+    if (onCustomSave) {
+      onCustomSave(group.groupKey, activeVariantId, {
+        bodyParts: prefs.bodyParts,
+        strength: prefs.strength,
+        therapist: prefs.therapist,
+        notes: prefs.notes,
+      });
+    }
+    onClose();
+  };
+
+  const handleSkipCustom = () => {
+    onClose();
+  };
+
+  const totalForGroupVND = selections.reduce((sum, s) => sum + s.priceVND * s.quantity, 0);
+  const totalForGroupUSD = selections.reduce((sum, s) => sum + s.priceUSD * s.quantity, 0);
+
+  return (
+    <AnimatePresence>
+      <div className="fixed inset-0 z-[100] flex items-end lg:items-center justify-center p-0 lg:p-4">
+        {/* Overlay */}
+        <motion.div
+          variants={overlayVariants}
+          initial="hidden"
+          animate="visible"
+          exit="hidden"
+          onClick={onClose}
+          className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        />
+
+        {/* Content Sheet / Modal */}
+        <motion.div
+          variants={typeof window !== 'undefined' && window.innerWidth >= 1024 ? modalVariants : sheetVariants}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+          className="relative w-full lg:max-w-xl bg-[#0D0D0D] border-t lg:border border-white/10 rounded-t-[2.5rem] lg:rounded-[2rem] overflow-hidden shadow-[0_-10px_40px_rgba(0,0,0,0.5)] flex flex-col"
+        >
+          {/* Header Image with Close Button */}
+          <div className="relative w-full h-48 sm:h-56 lg:h-64 flex-shrink-0">
+            <Image
+              src={getServiceImage(group.groupKey)}
+              alt={name}
+              fill
+              className="object-cover"
+              sizes="(max-width: 1024px) 100vw, 600px"
+              priority
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0D0D0D] via-black/20 to-transparent" />
+            
+            {/* Close Button (All devices) */}
+            <button 
+              type="button"
+              onClick={onClose}
+              className="absolute top-4 right-4 z-10 flex items-center justify-center w-10 h-10 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-white/70 hover:text-white transition-all active:scale-95"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Float Handle (Mobile) */}
+            <div className="absolute top-3 left-1/2 -translate-x-1/2 lg:hidden">
+              <div className="w-10 h-1 bg-white/30 rounded-full" />
+            </div>
+          </div>
+
+          <div className="p-6 sm:p-8 pt-4 lg:pt-6 flex-1 overflow-y-auto custom-scrollbar">
+            {/* Header */}
+            <div className="mb-6 lg:pr-10">
+              <h2 className="text-2xl sm:text-3xl font-serif text-[#F5E6B8] mb-2 leading-tight">
+                {name}
+              </h2>
+              {desc && (
+                <p className="text-white/40 text-sm font-light leading-relaxed line-clamp-3">
+                  {desc}
+                </p>
+              )}
+            </div>
+
+            {/* Selected Summary (if any) */}
+            {selections.length > 0 && (
+              <div className="mb-8 p-4 rounded-2xl bg-[#D4AF37]/5 border border-[#D4AF37]/10">
+                <p className="text-[#D4AF37]/60 text-[10px] tracking-[0.2em] uppercase font-medium mb-3">
+                  {t.sheet.selectedVariants}
+                </p>
+                <div className="space-y-2">
+                  {selections.map(s => (
+                    <div key={s.variantId} className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]" />
+                        <span className="text-white/70 text-sm font-light">
+                          {s.duration} phút ({s.quantity} suất)
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-white/40 text-xs block">{(s.priceVND * s.quantity).toLocaleString('vi-VN')}đ</span>
+                        <span className="text-[#FF3B30]/60 text-[10px] font-bold">{(s.priceUSD * s.quantity)} USD</span>
+                      </div>
+                    </div>
+                  ))}
+                  <div className="pt-2 mt-2 border-t border-[#D4AF37]/10 flex justify-between items-baseline">
+                    <span className="text-[#D4AF37] text-xs font-medium uppercase tracking-wider">{t.sheet.total}</span>
+                    <div className="text-right">
+                      <span className="text-[#D4AF37] text-base font-semibold block">{totalForGroupVND.toLocaleString('vi-VN')}đ</span>
+                      <span className="text-[#FF3B30] text-xs font-bold">{totalForGroupUSD} USD</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Duration Grid */}
+            <div className="mb-8">
+              <p className="text-white/35 text-[10px] tracking-[0.2em] uppercase font-light mb-4">
+                {t.sheet.duration}
+              </p>
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                {group.variants.map((v) => {
+                  const isActive = v.id === activeVariantId;
+                  
+                  return (
+                    <button
+                      key={v.id}
+                      type="button"
+                      onClick={() => setActiveVariantId(v.id)}
+                      className={`relative p-3 sm:p-4 rounded-2xl text-left transition-all duration-300 border flex flex-col gap-1 ${
+                        isActive 
+                          ? 'bg-[#D4AF37]/10 border-[#D4AF37]/40 ring-1 ring-[#D4AF37]/20 shadow-[0_0_20px_rgba(212,175,55,0.1)]' 
+                          : 'bg-white/[0.03] border-white/5 hover:border-white/15'
+                      }`}
+                    >
+                      <div className="flex justify-between items-center">
+                        <p className={`text-base sm:text-lg font-medium tracking-tight transition-colors ${isActive ? 'text-[#F5E6B8]' : 'text-white/80'}`}>
+                          {v.duration} <span className="text-[10px] sm:text-xs font-light opacity-60">PHÚT</span>
+                        </p>
+                        {isActive && <Check className="w-3.5 h-3.5 text-[#D4AF37]" strokeWidth={3} />}
+                      </div>
+                      <div className="flex flex-col">
+                        <p className={`text-sm font-semibold transition-colors ${isActive ? 'text-[#D4AF37]' : 'text-[#D4AF37]/60'}`}>
+                          {v.priceVND.toLocaleString('vi-VN')}đ
+                        </p>
+                        <p className={`text-[10px] sm:text-xs font-bold transition-colors ${isActive ? 'text-[#FF3B30]' : 'text-[#FF3B30]/50'}`}>
+                          {v.priceUSD} USD
+                        </p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Quantity Tracker */}
+            <div className="mb-2">
+              <p className="text-white/35 text-[10px] tracking-[0.2em] uppercase font-light mb-4">
+                {t.sheet.quantity}
+              </p>
+              <div className="flex items-center justify-between bg-white/[0.03] border border-white/10 rounded-full px-2 py-2 max-w-[180px]">
+                <button 
+                  type="button" 
+                  onClick={() => setTempQty(Math.max(0, tempQty - 1))}
+                  className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all active:scale-90"
+                >
+                  <Minus className="w-4 h-4" />
+                </button>
+                <motion.span 
+                  key={tempQty} 
+                  initial={{ scale: 1.2 }} 
+                  animate={{ scale: 1 }} 
+                  className="text-white text-xl font-medium min-w-[30px] text-center"
+                >
+                  {tempQty}
+                </motion.span>
+                <button 
+                  type="button" 
+                  onClick={() => setTempQty(Math.min(10, tempQty + 1))}
+                  className="w-10 h-10 rounded-full bg-[#D4AF37] flex items-center justify-center text-black transition-all active:scale-95"
+                >
+                  <Plus className="w-4 h-4" strokeWidth={3} />
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-8 pb-4">
+              <motion.button
+                key={pulseKey}
+                type="button"
+                onClick={handleUpdate}
+                disabled={tempQty === currentQty}
+                initial={{ scale: 1 }}
+                animate={{ scale: [1, PULSE_SCALE, 1] }}
+                transition={{ duration: PULSE_DURATION, ease: 'easeInOut' }}
+                className="w-full relative overflow-hidden rounded-2xl py-4 sm:py-5 transition-all duration-300 disabled:opacity-40 active:scale-[0.98] group/btn shadow-[0_10px_30px_rgba(212,175,55,0.15)]"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-[#B8860B] via-[#D4AF37] to-[#E7AA51]" />
+                <div className="relative z-10 flex flex-col items-center">
+                  <span className="text-black font-bold text-base sm:text-lg tracking-wider uppercase mb-0.5">
+                    {currentQty > 0 
+                      ? (tempQty === 0 ? 'XÓA LUÔN' : t.sheet.update) 
+                      : t.sheet.addToBasket
+                    }
+                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-black/80 font-medium text-sm">
+                      {(activeVariant.priceVND * tempQty).toLocaleString('vi-VN')}đ
+                    </span>
+                    <div className="w-[1px] h-3 bg-black/20" />
+                    <span className="text-[#FF3B30] font-bold text-sm">
+                      {(activeVariant.priceUSD * tempQty)} USD
+                    </span>
+                  </div>
+                </div>
+              </motion.button>
+            </div>
+          </div>
+
+          {/* Custom for You overlay (Step 2) */}
+          <CustomForYouView
+            serviceName={name}
+            isOpen={viewMode === 'CUSTOM'}
+            onClose={handleSkipCustom}
+            onSave={handleCustomSave}
+            onBack={() => setViewMode('SELECT')}
+            showStrength={group.category === 'body' || group.category === 'foot'}
+          />
+        </motion.div>
+      </div>
+    </AnimatePresence>
+  );
+};
 const FormInput = ({
   label, type = 'text', name, value, onChange, placeholder, required = false, validate,
 }: {
@@ -159,7 +453,7 @@ const IntentQuizSection = ({
       <motion.h2
         custom={1}
         variants={sectionFadeVariants}
-        className="text-3xl sm:text-4xl font-serif text-white/90 tracking-wide mb-3"
+        className="text-3xl sm:text-4xl font-serif text-white/90 mb-3"
       >
         {t.intent.heading}
       </motion.h2>
@@ -316,104 +610,97 @@ const DurationPicker = ({
 // ════════════════════════════════════════
 
 const ServiceRow = ({
-  group, isSelected, selectedVariantId, onToggle, onVariantChange,
+  group, 
+  isAnySelected, 
+  totalQty, 
+  onOpenSheet,
 }: {
-  group: GroupedService; isSelected: boolean; selectedVariantId: string | null;
-  onToggle: () => void; onVariantChange: (v: DurationVariant) => void;
+  group: GroupedService; 
+  isAnySelected: boolean; 
+  totalQty: number; 
+  onOpenSheet: () => void;
 }) => {
   const name = getGroupedServiceName(group, 'vi');
   const desc = getGroupedServiceDescription(group, 'vi');
-  const currentVariant = group.variants.find(v => v.id === selectedVariantId) || group.variants[0];
-  const hasVariants = group.variants.length > 1;
   const minDur = group.variants[0].duration;
   const maxDur = group.variants[group.variants.length - 1].duration;
-  const categoryInfo = getCategoryDisplay(group.category);
+  const priceMin = group.variants[0].priceVND;
+  const hasVariants = group.variants.length > 1;
 
   return (
-    <motion.div variants={serviceRowVariants} className={`relative rounded-xl overflow-hidden transition-all duration-300 ${isSelected ? 'ring-1 ring-[#D4AF37]/40 shadow-[0_0_16px_rgba(212,175,55,0.06)]' : 'ring-1 ring-white/[0.06] hover:ring-white/[0.12]'
-      }`}>
-      <div className={`absolute inset-0 transition-all duration-400 ${isSelected
-          ? 'bg-gradient-to-r from-[#D4AF37]/10 via-[#D4AF37]/[0.04] to-transparent'
-          : 'bg-gradient-to-r from-white/[0.025] to-white/[0.01]'
-        }`} />
-
-      <div className="relative z-10 flex gap-3 p-3.5">
-        {/* Service thumbnail */}
-        <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 relative">
+    <motion.button
+      type="button"
+      variants={serviceRowVariants}
+      onClick={onOpenSheet}
+      className={`w-full group/row relative rounded-2xl overflow-hidden transition-all duration-500 border ${
+        isAnySelected 
+          ? 'bg-[#D4AF37]/[0.03] border-[#D4AF37]/30 shadow-[0_8px_25px_rgba(212,175,55,0.08)]' 
+          : 'bg-white/[0.02] border-white/5 hover:border-white/15 hover:bg-white/[0.04]'
+      }`}
+    >
+      <div className="flex items-center gap-4 p-4 text-left">
+        {/* Left: Image */}
+        <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden flex-shrink-0 ring-1 ring-white/10 group-hover/row:ring-[#D4AF37]/30 transition-all">
           <Image
-            src={group.image || categoryInfo.image}
+            src={getServiceImage(group.groupKey)}
             alt={name}
             fill
-            className="object-cover"
-            sizes="56px"
+            className="object-cover transition-transform duration-700 group-hover/row:scale-110"
+            sizes="(max-width: 640px) 80px, 96px"
           />
-          <div className="absolute inset-0 bg-black/20" />
+          <div className="absolute inset-0 bg-black/10 group-hover/row:bg-transparent transition-colors" />
         </div>
 
-        {/* Info */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <p className={`text-sm font-light leading-snug truncate transition-colors ${isSelected ? 'text-[#F5E6B8]' : 'text-white/80'}`}>
-                  {name}
-                </p>
-                {group.isBestSeller && (
-                  <span className="flex-shrink-0 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-[#D4AF37]/15 text-[#D4AF37]/80 text-[9px] tracking-wide font-medium">
-                    <Star className="w-2 h-2" fill="currentColor" /> Bán chạy
-                  </span>
-                )}
-              </div>
-              <p className="text-white/30 text-[11px] font-light mt-0.5 flex items-center gap-1">
-                <Clock className="w-2.5 h-2.5 opacity-60" />
-                {hasVariants ? `${minDur}–${maxDur} phút` : `${minDur} phút`}
-              </p>
-              {desc && !isSelected && (
-                <p className="text-white/25 text-[11px] font-light mt-1 line-clamp-1">{desc}</p>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2.5 flex-shrink-0">
-              {!isSelected && (
-                <span className="text-white/45 text-sm font-light">
-                  {hasVariants ? `từ ` : ''}{currentVariant.priceVND.toLocaleString('vi-VN')}
-                  <span className="text-[10px] opacity-60">đ</span>
-                </span>
-              )}
-              <button
-                type="button"
-                onClick={onToggle}
-                className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-300 ${isSelected
-                    ? 'bg-[#D4AF37] shadow-[0_0_10px_rgba(212,175,55,0.3)]'
-                    : 'ring-1 ring-white/20 hover:ring-[#D4AF37]/50 hover:bg-[#D4AF37]/10'
-                  }`}
-              >
-                {isSelected
-                  ? <Check className="w-3.5 h-3.5 text-black" strokeWidth={2.5} />
-                  : <Plus className="w-3.5 h-3.5 text-white/40" />
-                }
-              </button>
-            </div>
+        {/* Center: Info */}
+        <div className="flex-1 min-w-0 py-1">
+          <div className="flex items-center gap-2 flex-wrap mb-1">
+            <p className={`text-base sm:text-lg font-serif font-semibold tracking-tight transition-colors ${isAnySelected ? 'text-[#F5E6B8]' : 'text-white/90'}`}>
+              {name}
+            </p>
+            {group.isBestSeller && (
+              <span className="flex-shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#D4AF37]/10 text-[#D4AF37] text-[8px] tracking-wide font-bold uppercase ring-1 ring-[#D4AF37]/30">
+                HOT
+              </span>
+            )}
           </div>
+          <div className="flex flex-col items-start gap-1">
+            <p className="text-white/40 text-[11px] font-light flex items-center gap-1.5 italic">
+              {desc && <span className="line-clamp-1">{desc}</span>}
+            </p>
+            <p className={`text-sm font-bold tracking-tight mt-1 ${isAnySelected ? 'text-[#D4AF37]' : 'text-[#D4AF37]/80'}`}>
+              {priceMin.toLocaleString('vi-VN')}đ
+              <span className="mx-1.5 opacity-20 whitespace-normal">|</span>
+              <span className="text-[#FF3B30] text-xs">{group.variants[0].priceUSD} USD</span>
+            </p>
+          </div>
+        </div>
 
-          {isSelected && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.25 }}>
-              <div className="flex items-center justify-between mt-2 pt-2 border-t border-[#D4AF37]/10">
-                <span className="text-white/30 text-[11px] font-light flex items-center gap-1">
-                  <Clock className="w-2.5 h-2.5" /> {currentVariant.duration} phút
-                </span>
-                <span className="text-[#D4AF37] text-sm font-light tracking-wide">
-                  {currentVariant.priceVND.toLocaleString('vi-VN')}đ
-                </span>
-              </div>
-              {hasVariants && (
-                <DurationPicker variants={group.variants} selectedVariantId={selectedVariantId} onSelect={onVariantChange} />
-              )}
-            </motion.div>
-          )}
+        {/* Right: Plus Circle and Badge */}
+        <div className="relative flex-shrink-0 ml-2">
+          <div className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition-all duration-500 ${
+            isAnySelected
+              ? 'bg-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.3)]'
+              : 'bg-white/[0.05] group-hover/row:bg-[#D4AF37]/20 group-hover/row:ring-1 group-hover/row:ring-[#D4AF37]/40 ring-1 ring-white/10'
+          }`}>
+            <PlusCircle className={`w-6 h-6 transition-all duration-300 ${isAnySelected ? 'text-black' : 'text-white/20 group-hover/row:text-[#D4AF37]'}`} />
+          </div>
+          
+          {/* Quantity Badge */}
+          <AnimatePresence>
+            {totalQty > 0 && (
+              <motion.div
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0, opacity: 0 }}
+                className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-[#FF3B30] border-2 border-black flex items-center justify-center shadow-lg"
+              >
+                <span className="text-white text-[10px] font-bold">{totalQty}</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
-    </motion.div>
+    </motion.button>
   );
 };
 
@@ -423,16 +710,14 @@ const ServiceRow = ({
 
 const ServiceAccordionSection = ({
   category, services, isOpen, onToggle,
-  isServiceSelected, getSelectedVariantId, onToggleService, onVariantChange,
+  getServiceQuantity, onOpenSheet,
 }: {
   category: string; services: GroupedService[]; isOpen: boolean; onToggle: () => void;
-  isServiceSelected: (k: string) => boolean;
-  getSelectedVariantId: (k: string) => string | null;
-  onToggleService: (g: GroupedService) => void;
-  onVariantChange: (k: string, v: DurationVariant, name: string) => void;
+  getServiceQuantity: (k: string) => number;
+  onOpenSheet: (g: GroupedService) => void;
 }) => {
   const info = getCategoryDisplay(category);
-  const selectedInCat = services.filter(s => isServiceSelected(s.groupKey)).length;
+  const selectedInCat = services.filter(s => getServiceQuantity(s.groupKey) > 0).length;
 
   return (
     <div className={`rounded-2xl overflow-hidden transition-all duration-300 ${isOpen ? 'ring-1 ring-[#D4AF37]/25' : 'ring-1 ring-white/[0.06]'
@@ -456,7 +741,7 @@ const ServiceAccordionSection = ({
             <p className="text-white/30 text-[11px] font-light">{services.length} dịch vụ</p>
           </div>
           {selectedInCat > 0 && (
-            <span className="ml-2 bg-[#D4AF37] text-black text-[9px] font-bold rounded-full w-4.5 h-4.5 w-5 h-5 flex items-center justify-center shadow-lg">
+            <span className="ml-2 bg-[#D4AF37] text-black text-[9px] font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-lg">
               {selectedInCat}
             </span>
           )}
@@ -482,16 +767,15 @@ const ServiceAccordionSection = ({
               variants={serviceRowContainerVariants}
               initial="hidden"
               animate="visible"
-              className="p-3 space-y-2"
+              className="p-3 sm:p-4 space-y-3 sm:space-y-4"
             >
               {services.map(group => (
                 <ServiceRow
                   key={group.groupKey}
                   group={group}
-                  isSelected={isServiceSelected(group.groupKey)}
-                  selectedVariantId={getSelectedVariantId(group.groupKey)}
-                  onToggle={() => onToggleService(group)}
-                  onVariantChange={v => onVariantChange(group.groupKey, v, getGroupedServiceName(group, 'vi'))}
+                  isAnySelected={getServiceQuantity(group.groupKey) > 0}
+                  totalQty={getServiceQuantity(group.groupKey)}
+                  onOpenSheet={() => onOpenSheet(group)}
                 />
               ))}
             </motion.div>
@@ -507,9 +791,9 @@ const ServiceAccordionSection = ({
 // ════════════════════════════════════════
 
 const FloatingBasket = ({
-  serviceCount, totalDuration, totalPrice, onContinue, canContinue,
+  serviceCount, totalDuration, totalPriceVND, totalPriceUSD, onContinue, canContinue,
 }: {
-  serviceCount: number; totalDuration: number; totalPrice: number;
+  serviceCount: number; totalDuration: number; totalPriceVND: number; totalPriceUSD: number;
   onContinue: () => void; canContinue: boolean;
 }) => (
   <AnimatePresence>
@@ -540,15 +824,27 @@ const FloatingBasket = ({
               <span className="text-white/30 mx-1.5">·</span>
               {totalDuration} {t.basket.minutes}
             </p>
-            <motion.p
-              key={totalPrice}
-              initial={{ y: -4, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.2 }}
-              className="text-[#D4AF37] text-sm font-medium"
-            >
-              {totalPrice.toLocaleString('vi-VN')}đ
-            </motion.p>
+            <div className="flex items-center gap-2">
+              <motion.p
+                key={totalPriceVND}
+                initial={{ y: -4, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.2 }}
+                className="text-[#D4AF37] text-sm font-medium"
+              >
+                {totalPriceVND.toLocaleString('vi-VN')}đ
+              </motion.p>
+              <div className="w-[1px] h-3 bg-white/10" />
+              <motion.p
+                key={totalPriceUSD}
+                initial={{ y: -4, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.2 }}
+                className="text-[#FF3B30] text-[11px] font-bold"
+              >
+                {totalPriceUSD} USD
+              </motion.p>
+            </div>
           </div>
 
           {/* CTA */}
@@ -592,69 +888,50 @@ const BookingSummaryPanel = ({
         <h3 className="text-white/80 font-serif text-base tracking-wide">{t.summary.title}</h3>
       </div>
 
-      {summary.services.length === 0 ? (
-        <div className="text-center py-6">
-          <motion.div animate={{ scale: [1, 1.08, 1] }} transition={{ duration: 2.5, repeat: Infinity }}>
-            <ShoppingBag className="w-8 h-8 text-white/15 mx-auto mb-3" />
-          </motion.div>
-          <p className="text-white/25 text-sm font-light">{t.summary.noServiceSelected}</p>
-          <p className="text-white/15 text-xs mt-1 font-light leading-relaxed">{t.summary.hint}</p>
-        </div>
-      ) : (
-        <div className="space-y-2 max-h-[180px] overflow-y-auto pr-1 mb-4">
-          {summary.services.map(svc => (
-            <div key={svc.groupKey} className="flex justify-between gap-2 py-2 border-b border-white/[0.04] last:border-0">
-              <div className="flex-1 min-w-0">
-                <p className="text-white/70 text-xs font-light truncate">{svc.name}</p>
-                <p className="text-white/25 text-[10px] mt-0.5">{svc.duration} phút</p>
-              </div>
-              <span className="text-white/50 text-xs font-light flex-shrink-0">{svc.priceVND.toLocaleString('vi-VN')}đ</span>
+      {/* Services List */}
+      <div className="space-y-4 mb-6 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+        {summary.services.map((svc, idx) => (
+          <motion.div
+            key={`${svc.groupKey}-${idx}`}
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: idx * 0.05 }}
+            className="flex justify-between items-start group"
+          >
+            <div className="min-w-0 pr-4">
+              <p className="text-white/80 text-sm font-light truncate group-hover:text-white transition-colors">{svc.name}</p>
+              <p className="text-white/25 text-[10px] mt-0.5">{svc.duration} phút × {svc.quantity}</p>
             </div>
-          ))}
-        </div>
-      )}
-
-      {(summary.date || summary.branchName) && (
-        <>
-          <GoldDivider />
-          <div className="space-y-2 text-xs font-light">
-            {(summary.date || summary.time) && (
-              <div className="flex justify-between">
-                <span className="text-white/30 flex items-center gap-1.5"><CalendarDays className="w-3 h-3" />{t.fields.date}</span>
-                <span className="text-white/55">{summary.date}{summary.time && ` · ${summary.time}`}</span>
-              </div>
-            )}
-            {summary.branchName && (
-              <div className="flex justify-between">
-                <span className="text-white/30 flex items-center gap-1.5"><MapPin className="w-3 h-3" />{t.fields.branch}</span>
-                <span className="text-white/55">{summary.branchName}</span>
-              </div>
-            )}
-            {summary.guests > 1 && (
-              <div className="flex justify-between">
-                <span className="text-white/30 flex items-center gap-1.5"><Users className="w-3 h-3" />{t.fields.guests}</span>
-                <span className="text-white/55">{summary.guests}</span>
-              </div>
-            )}
-          </div>
-        </>
-      )}
-
-      <GoldDivider />
-      <div className="flex justify-between items-end mb-5">
-        <div>
-          <span className="text-white/35 text-[10px] tracking-[0.2em] uppercase font-light">{t.summary.total}</span>
-          {summary.totalDuration > 0 && (
-            <p className="text-white/20 text-[10px] mt-0.5">{summary.totalDuration} phút</p>
-          )}
-        </div>
-        <p className="text-2xl font-serif tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-[#E7AA51] via-[#FFF3D4] to-[#B8860B]">
-          {summary.totalPriceVND > 0 ? `${summary.totalPriceVND.toLocaleString('vi-VN')}đ` : '—'}
-        </p>
+            <div className="text-right flex-shrink-0">
+              <p className="text-[#D4AF37]/80 text-sm font-medium">{(svc.priceVND * svc.quantity).toLocaleString('vi-VN')}đ</p>
+              <p className="text-[#FF3B30]/60 text-[10px] font-bold">{(svc.priceUSD * svc.quantity)} USD</p>
+            </div>
+          </motion.div>
+        ))}
       </div>
 
+      <div className="space-y-3 pt-6 border-t border-white/[0.06]">
+        <div className="flex justify-between text-sm font-light">
+          <span className="text-white/30 lowercase tracking-wider">{t.sheet.duration}</span>
+          <span className="text-white/70">{summary.totalDuration} {t.basket.minutes}</span>
+        </div>
+        <div className="flex justify-between items-baseline pt-2">
+          <span className="text-[#D4AF37] text-xs font-medium uppercase tracking-[0.2em]">{t.sheet.total}</span>
+          <div className="text-right">
+            <p className="text-2xl font-serif text-[#D4AF37] leading-none mb-1">
+              {summary.totalPriceVND.toLocaleString('vi-VN')}đ
+            </p>
+            <p className="text-base font-bold text-[#FF3B30]">
+              {summary.totalPriceUSD} USD
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <GoldDivider />
+      
       {/* Terms + Submit */}
-      <div className="space-y-4">
+      <div className="space-y-4 mt-6">
         <label className="flex items-start gap-3 cursor-pointer group">
           <div className="relative mt-0.5">
             <div className={`w-4 h-4 rounded transition-all duration-300 flex items-center justify-center ${agreeTerms ? 'bg-[#D4AF37]' : 'ring-1 ring-white/20'}`}>
@@ -790,8 +1067,9 @@ const BookingForm = () => {
     groupedByCategory, isLoadingServices, visibleCategories, categories,
     intentFilter, hasPassedIntentScreen, setIntent, skipIntent,
     openCategoryKey, toggleCategory,
+    activeServiceForSheet, openServiceSheet, closeServiceSheet,
     formData, handleChange,
-    toggleService, changeVariant, isServiceSelected, getSelectedVariantId,
+    toggleService, updateServiceSelection, changeVariant, updateServiceCustomOptions, isServiceSelected, getServiceQuantity, getSelectedVariantId,
     updateGuests, handleSubmit, isSubmitting, isSuccess, bookingResult,
     currentStep, stepDirection, totalSteps, nextStep, prevStep, goToStep,
     canProceedFromStep, bookingSummary,
@@ -854,24 +1132,52 @@ const BookingForm = () => {
 
       {/* Intent context badge */}
       {intentFilter && (
-        <div className="flex items-center gap-2 mb-4">
-          <span className="text-[#D4AF37]/60 text-[11px] font-light">
-            {INTENT_DISPLAY[intentFilter].emoji} Gợi ý cho "{INTENT_DISPLAY[intentFilter].labelVi}"
-          </span>
-          <button type="button" onClick={skipIntent} className="text-white/25 hover:text-white/50 transition-colors">
-            <X className="w-3.5 h-3.5" />
-          </button>
-        </div>
+        <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="flex items-center mb-6">
+          <div className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-full bg-[#D4AF37]/15 ring-1 ring-[#D4AF37]/30 shadow-[0_0_15px_rgba(212,175,55,0.05)]">
+            <span className="text-[#F5E6B8] text-sm sm:text-base font-medium tracking-wide">
+              {INTENT_DISPLAY[intentFilter].emoji} Gợi ý cho "{INTENT_DISPLAY[intentFilter].labelVi}"
+            </span>
+            <div className="w-[1px] h-3.5 bg-[#D4AF37]/40 mx-0.5" />
+            <button 
+              type="button" 
+              onClick={skipIntent} 
+              className="text-[#D4AF37]/70 hover:text-[#D4AF37] hover:bg-[#D4AF37]/20 transition-all p-1 rounded-full flex items-center justify-center"
+              aria-label="Xóa bộ lọc"
+            >
+              <X className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+            </button>
+          </div>
+        </motion.div>
       )}
 
-      {/* Service accordions */}
+      {/* Service accordions OR direct list */}
       {isLoadingServices ? (
         <div className="space-y-3">
           {[1, 2, 3].map(i => (
             <div key={i} className="h-16 rounded-2xl bg-white/[0.03] animate-pulse" />
           ))}
         </div>
+      ) : openCategoryKey ? (
+        /* Direct list for selected category */
+        <motion.div
+          key="selected-category-list"
+          variants={serviceRowContainerVariants}
+          initial="hidden"
+          animate="visible"
+          className="space-y-4"
+        >
+          {(groupedByCategory[openCategoryKey] ?? []).map(group => (
+            <ServiceRow
+              key={group.groupKey}
+              group={group}
+              isAnySelected={getServiceQuantity(group.groupKey) > 0}
+              totalQty={getServiceQuantity(group.groupKey)}
+              onOpenSheet={() => openServiceSheet(group)}
+            />
+          ))}
+        </motion.div>
       ) : (
+        /* Accordion list for "Show All" or initial state */
         <div className="space-y-2.5">
           {visibleCategories.map(cat => (
             <ServiceAccordionSection
@@ -880,10 +1186,8 @@ const BookingForm = () => {
               services={groupedByCategory[cat] ?? []}
               isOpen={openCategoryKey === cat}
               onToggle={() => toggleCategory(cat)}
-              isServiceSelected={isServiceSelected}
-              getSelectedVariantId={getSelectedVariantId}
-              onToggleService={toggleService}
-              onVariantChange={changeVariant}
+              getServiceQuantity={getServiceQuantity}
+              onOpenSheet={openServiceSheet}
             />
           ))}
         </div>
@@ -965,7 +1269,7 @@ const BookingForm = () => {
             <button key={g} type="button"
               onClick={() => handleChange({ target: { name: 'staffGender', value: g, type: 'text' } } as any)}
               className={`px-4 py-2 rounded-xl text-xs font-light tracking-wide transition-all duration-200 ${formData.staffGender === g
-                  ? 'bg-[#D4AF37]/20 text-[#D4AF37] ring-1 ring-[#D4AF37]/40'
+                  ? 'bg-[#D4AF37]/20 text-[#D4AF37] ring-1 ring-[#D4AF37]/40 font-medium'
                   : 'bg-white/[0.03] text-white/40 ring-1 ring-white/[0.07] hover:ring-white/15'
                 }`}
             >
@@ -1063,17 +1367,26 @@ const BookingForm = () => {
       {bookingSummary.services.length > 0 && (
         <div className="lg:hidden bg-white/[0.02] ring-1 ring-white/[0.06] rounded-xl p-4">
           <p className="text-white/35 text-[10px] tracking-[0.2em] uppercase font-light mb-3">Tóm tắt đơn</p>
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             {bookingSummary.services.map(svc => (
-              <div key={svc.groupKey} className="flex justify-between text-xs font-light">
-                <span className="text-white/55 truncate flex-1">{svc.name}</span>
-                <span className="text-white/35 ml-2 flex-shrink-0">{svc.priceVND.toLocaleString('vi-VN')}đ</span>
+              <div key={`${svc.groupKey}-${svc.variantId}`} className="flex justify-between text-xs font-light">
+                <div className="min-w-0 pr-4">
+                  <span className="text-white/55 truncate block">{svc.name}</span>
+                  <span className="text-white/25 text-[9px]">{svc.duration}m × {svc.quantity}</span>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <span className="text-white/40 block">{(svc.priceVND * svc.quantity).toLocaleString('vi-VN')}đ</span>
+                  <span className="text-[#FF3B30]/60 text-[10px] font-bold">{(svc.priceUSD * svc.quantity)} USD</span>
+                </div>
               </div>
             ))}
           </div>
-          <div className="flex justify-between mt-3 pt-3 border-t border-white/[0.05]">
+          <div className="flex justify-between mt-4 pt-3 border-t border-white/[0.05] items-baseline">
             <span className="text-white/40 text-xs font-light">{bookingSummary.totalDuration} phút</span>
-            <span className="text-[#D4AF37] font-light">{bookingSummary.totalPriceVND.toLocaleString('vi-VN')}đ</span>
+            <div className="text-right">
+              <span className="text-[#D4AF37] font-medium text-lg block leading-none mb-0.5">{bookingSummary.totalPriceVND.toLocaleString('vi-VN')}đ</span>
+              <span className="text-[#FF3B30] font-bold text-xs">{bookingSummary.totalPriceUSD} USD</span>
+            </div>
           </div>
         </div>
       )}
@@ -1236,11 +1549,25 @@ const BookingForm = () => {
         <FloatingBasket
           serviceCount={bookingSummary.services.length}
           totalDuration={bookingSummary.totalDuration}
-          totalPrice={bookingSummary.totalPriceVND}
+          totalPriceVND={bookingSummary.totalPriceVND}
+          totalPriceUSD={bookingSummary.totalPriceUSD}
           onContinue={nextStep}
           canContinue={canProceedFromStep(1)}
         />
       )}
+
+      {/* Service Detail Sheet */}
+      <AnimatePresence>
+        {activeServiceForSheet && (
+          <ServiceDetailSheet
+            group={activeServiceForSheet}
+            onClose={closeServiceSheet}
+            selections={formData.selectedServices.filter(s => s.groupKey === activeServiceForSheet.groupKey)}
+            onUpdate={updateServiceSelection}
+            onCustomSave={updateServiceCustomOptions}
+          />
+        )}
+      </AnimatePresence>
     </section>
   );
 };

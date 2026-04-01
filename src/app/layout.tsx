@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, Inter } from "next/font/google";
+import { Playfair_Display, Inter } from "next/font/google";
 import Header from "@/components/Header/Header";
 import FloatingWidgets from "@/components/FloatingWidgets/FloatingWidgets";
 import "./globals.css";
 
 // 🔧 FONT CONFIGURATION
-const cormorant = Cormorant_Garamond({
+const playfair = Playfair_Display({
   subsets: ["latin", "vietnamese"],
-  weight: ["400", "600", "700"],
+  weight: ["400", "500", "600", "700"],
   style: ["normal", "italic"],
   variable: "--font-heading",
   display: "swap",
@@ -46,7 +46,7 @@ const RootLayout = ({
   children: React.ReactNode;
 }>) => {
   return (
-    <html lang="vi" className={`${cormorant.variable} ${inter.variable}`}>
+    <html lang="vi" className={`${playfair.variable} ${inter.variable}`}>
       <body suppressHydrationWarning>
         <Header />
         {children}

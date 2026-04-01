@@ -8,14 +8,14 @@ export const t = {
   badge: 'Đặt Lịch',
 
   // Main heading
-  heading: 'Trải Nghiệm',
-  headingHighlight: 'Của Bạn',
-  subheading: 'Hãy để chúng tôi chăm sóc bạn',
+  heading: 'Hôm nay của bạn thế nào?',
+  headingHighlight: 'Thư Giãn',
+  subheading: 'Hôm nay của bạn thế nào?',
 
   // ─── Intent Quiz (Step 0 / Curator B) ───
   intent: {
-    heading: 'Hôm nay bạn muốn gì?',
-    subheading: 'Chọn để chúng tôi gợi ý dịch vụ phù hợp nhất',
+    heading: 'Ngày hôm nay của bạn ra sao?',
+    subheading: 'Lắng nghe cơ thể và chọn một hành trình chữa lành nhé.',
     relaxation: 'Thư giãn',
     beauty: 'Làm đẹp',
     recovery: 'Phục hồi',
@@ -151,5 +151,20 @@ export const t = {
     backHome: 'Về trang chủ',
     bookMore: 'Đặt thêm',
     note: '• Vui lòng đến trước 10 phút · Mang theo mã đặt lịch này',
+  },
+
+  // ─── Service Detail Sheet ───
+  sheet: {
+    addToBasket: 'Thêm vào giỏ',
+    update: 'Cập nhật',
+    quantity: 'Số lượng',
+    duration: 'Thời lượng',
+    price: 'Giá tiền',
+    selectedVariants: 'Bạn đã chọn:',
+    addMore: 'Thêm tùy chọn thời gian khác',
+    total: 'Tổng cộng',
+    customForYou: 'Tùy chỉnh dịch vụ',
+    customized: 'Đã tùy chỉnh',
+    skipCustom: 'Bỏ qua',
   },
 } as const;
