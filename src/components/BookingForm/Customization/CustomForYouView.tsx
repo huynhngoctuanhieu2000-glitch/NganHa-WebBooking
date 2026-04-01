@@ -289,7 +289,7 @@ const CustomForYouView: React.FC<CustomForYouViewProps> = ({
                             key={opt.value}
                             type="button"
                             onClick={() => setPrefs(prev => ({ ...prev, strength: opt.value }))}
-                            className={`py-3.5 rounded-xl text-sm font-medium ring-1 transition-all ${
+                            className={`py-4 w-full rounded-[14px] text-base font-medium ring-1 transition-all ${
                               isActive
                                 ? colorMap[opt.color as keyof typeof colorMap]
                                 : 'bg-white/[0.03] ring-white/[0.07] text-white/40 hover:ring-white/15'
@@ -319,7 +319,7 @@ const CustomForYouView: React.FC<CustomForYouViewProps> = ({
                           key={opt.value}
                           type="button"
                           onClick={() => setPrefs(prev => ({ ...prev, therapist: opt.value }))}
-                          className={`py-3.5 rounded-xl text-sm font-medium ring-1 transition-all ${
+                          className={`py-4 w-full rounded-[14px] text-base font-medium ring-1 transition-all ${
                             isActive
                               ? 'bg-[#D4AF37]/15 ring-[#D4AF37]/40 text-[#D4AF37]'
                               : 'bg-white/[0.03] ring-white/[0.07] text-white/40 hover:ring-white/15'

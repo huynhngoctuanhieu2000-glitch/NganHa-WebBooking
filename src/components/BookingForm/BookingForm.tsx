@@ -142,6 +142,9 @@ const ServiceDetailSheet = ({
   const [tempQty, setTempQty] = React.useState<number>(currentQty > 0 ? currentQty : 1);
   // Pulse key for button animation
   const [pulseKey, setPulseKey] = React.useState(0);
+  
+  // Trạng thái cho việc "Xem thêm" mốc thời gian
+  const [showAllDurations, setShowAllDurations] = React.useState(false);
 
   // Sync tempQty when variant changes
   React.useEffect(() => {
@@ -200,7 +203,7 @@ const ServiceDetailSheet = ({
           initial="hidden"
           animate="visible"
           exit="exit"
-          className="relative w-full lg:max-w-xl bg-[#0D0D0D] border-t lg:border border-white/10 rounded-t-[2.5rem] lg:rounded-[2rem] overflow-hidden shadow-[0_-10px_40px_rgba(0,0,0,0.5)] flex flex-col"
+          className="relative w-full max-h-[85dvh] lg:max-w-xl bg-[#0D0D0D] border-t lg:border border-white/10 rounded-t-[2.5rem] lg:rounded-[2rem] overflow-hidden shadow-[0_-10px_40px_rgba(0,0,0,0.5)] flex flex-col"
         >
           {/* Header Image with Close Button */}
           <div className="relative w-full h-48 sm:h-56 lg:h-64 flex-shrink-0">
@@ -280,7 +283,7 @@ const ServiceDetailSheet = ({
                 {t.sheet.duration}
               </p>
               <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                {group.variants.map((v) => {
+                {(showAllDurations ? group.variants : group.variants.slice(0, 4)).map((v) => {
                   const isActive = v.id === activeVariantId;
                   
                   return (
@@ -312,70 +315,78 @@ const ServiceDetailSheet = ({
                   );
                 })}
               </div>
+              
+              {group.variants.length > 4 && !showAllDurations && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllDurations(true)}
+                  className="w-full mt-4 py-3 bg-white/[0.02] border border-white/5 rounded-2xl flex items-center justify-center gap-2 text-white/40 text-sm font-medium hover:text-white/70 hover:bg-white/[0.05] transition-all"
+                >
+                  <span className="uppercase tracking-widest text-[10px] pt-0.5">Xem thêm thời lượng</span>
+                  <ChevronDown className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
+          </div>
 
+          {/* ═══ STICKY FOOTER: Quantity + Add to Cart (outside scroll area) ═══ */}
+          <div className="p-5 pt-3 bg-[#0D0D0D] border-t border-white/10 flex-shrink-0 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
             {/* Quantity Tracker */}
-            <div className="mb-2">
-              <p className="text-white/35 text-[10px] tracking-[0.2em] uppercase font-light mb-4">
-                {t.sheet.quantity}
-              </p>
-              <div className="flex items-center justify-between bg-white/[0.03] border border-white/10 rounded-full px-2 py-2 max-w-[180px]">
+            <div className="flex items-center justify-center mb-6">
+              <div className="flex items-center gap-6 bg-white/[0.05] border border-white/10 rounded-full p-2 px-6">
                 <button 
                   type="button" 
                   onClick={() => setTempQty(Math.max(0, tempQty - 1))}
-                  className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all active:scale-90"
+                  className="w-11 h-11 rounded-full bg-white/10 flex items-center justify-center text-white/80 hover:bg-white/20 transition-colors"
                 >
-                  <Minus className="w-4 h-4" />
+                  <Minus className="w-5 h-5" />
                 </button>
-                <motion.span 
-                  key={tempQty} 
-                  initial={{ scale: 1.2 }} 
-                  animate={{ scale: 1 }} 
-                  className="text-white text-xl font-medium min-w-[30px] text-center"
-                >
-                  {tempQty}
-                </motion.span>
+                <div className="min-w-[40px] text-center">
+                  <motion.span 
+                    key={tempQty} 
+                    initial={{ scale: 1.2 }} 
+                    animate={{ scale: 1 }} 
+                    className="text-white text-2xl font-bold font-mono inline-block"
+                  >
+                    {tempQty}
+                  </motion.span>
+                </div>
                 <button 
                   type="button" 
                   onClick={() => setTempQty(Math.min(10, tempQty + 1))}
-                  className="w-10 h-10 rounded-full bg-[#D4AF37] flex items-center justify-center text-black transition-all active:scale-95"
+                  className="w-11 h-11 rounded-full bg-[#D4AF37] flex items-center justify-center text-black hover:brightness-110 transition-colors"
                 >
-                  <Plus className="w-4 h-4" strokeWidth={3} />
+                  <Plus className="w-6 h-6" strokeWidth={3} />
                 </button>
               </div>
             </div>
 
-            <div className="mt-8 pb-4">
-              <motion.button
-                key={pulseKey}
-                type="button"
-                onClick={handleUpdate}
-                disabled={tempQty === currentQty}
-                initial={{ scale: 1 }}
-                animate={{ scale: [1, PULSE_SCALE, 1] }}
-                transition={{ duration: PULSE_DURATION, ease: 'easeInOut' }}
-                className="w-full relative overflow-hidden rounded-2xl py-4 sm:py-5 transition-all duration-300 disabled:opacity-40 active:scale-[0.98] group/btn shadow-[0_10px_30px_rgba(212,175,55,0.15)]"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-[#B8860B] via-[#D4AF37] to-[#E7AA51]" />
-                <div className="relative z-10 flex flex-col items-center">
-                  <span className="text-black font-bold text-base sm:text-lg tracking-wider uppercase mb-0.5">
-                    {currentQty > 0 
-                      ? (tempQty === 0 ? 'XÓA LUÔN' : t.sheet.update) 
-                      : t.sheet.addToBasket
-                    }
-                  </span>
-                  <div className="flex items-center gap-3">
-                    <span className="text-black/80 font-medium text-sm">
-                      {(activeVariant.priceVND * tempQty).toLocaleString('vi-VN')}đ
-                    </span>
-                    <div className="w-[1px] h-3 bg-black/20" />
-                    <span className="text-[#FF3B30] font-bold text-sm">
-                      {(activeVariant.priceUSD * tempQty)} USD
-                    </span>
-                  </div>
-                </div>
-              </motion.button>
-            </div>
+            {/* Add to Cart / Update Button */}
+            <motion.button
+              key={pulseKey}
+              type="button"
+              onClick={handleUpdate}
+              disabled={tempQty === currentQty}
+              initial={{ scale: 1 }}
+              animate={{ scale: [1, PULSE_SCALE, 1] }}
+              transition={{ duration: PULSE_DURATION, ease: 'easeInOut' }}
+              className="w-full bg-gradient-to-r from-[#D4AF37] to-[#e4c25f] rounded-xl py-4 sm:py-4 transition-all duration-300 disabled:opacity-40 active:scale-[0.98] shadow-lg flex items-center justify-center gap-2"
+            >
+              <span className="text-black font-bold text-[17px] tracking-wide uppercase">
+                {currentQty > 0 
+                  ? (tempQty === 0 ? 'XÓA LUÔN' : t.sheet.update) 
+                  : t.sheet.addToBasket
+                }
+              </span>
+              <span className="text-black/40 mx-0.5">|</span>
+              <span className="text-black/80 font-bold text-base">
+                {(activeVariant.priceVND * tempQty).toLocaleString('vi-VN')}đ
+              </span>
+              <span className="text-black/40 mx-0.5">/</span>
+              <span className="text-[#FF3B30] font-bold text-base">
+                {(activeVariant.priceUSD * tempQty)} USD
+              </span>
+            </motion.button>
           </div>
 
           {/* Custom for You overlay (Step 2) */}
@@ -1089,8 +1100,17 @@ const BookingForm = () => {
       document.body.classList.remove('has-floating-basket');
     }
 
-    return () => document.body.classList.remove('has-floating-basket');
-  }, [bookingSummary.services.length, hasPassedIntentScreen, currentStep]);
+    if (activeServiceForSheet) {
+      document.body.classList.add('has-booking-modal');
+    } else {
+      document.body.classList.remove('has-booking-modal');
+    }
+
+    return () => {
+      document.body.classList.remove('has-floating-basket');
+      document.body.classList.remove('has-booking-modal');
+    };
+  }, [bookingSummary.services.length, hasPassedIntentScreen, currentStep, activeServiceForSheet]);
 
   // ─ Success Screen ─
   if (isSuccess && bookingResult) return <SuccessScreen result={bookingResult} />;

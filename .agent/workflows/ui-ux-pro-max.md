@@ -257,6 +257,8 @@ These are frequently overlooked issues that make UI look unprofessional:
 | **Floating navbar** | Add `top-4 left-4 right-4` spacing | Stick navbar to `top-0 left-0 right-0` |
 | **Content padding** | Account for fixed navbar height | Let content hide behind fixed elements |
 | **Consistent max-width** | Use same `max-w-6xl` or `max-w-7xl` | Mix different container widths |
+| **Touch Targets (Mobile)** | Minimum `py-3.5` or 44px height for interactive items | Create "pill" buttons that tightly hug text (`fit-content`) |
+| **Grid Buttons Layout** | Use `w-full` inside `grid-cols` so buttons expand evenly | Leave buttons isolated resulting in small ellipses |
 
 ---
 
