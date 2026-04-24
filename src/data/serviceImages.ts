@@ -1,40 +1,40 @@
-// serviceImages.ts - Mapping from group key to local generated image path
-// Images are generated AI images stored in /public/images/services/
+// serviceImages.ts - Mapping from group key to imgBB-hosted image URL
+// Images uploaded to imgBB for CDN delivery
 
 // ═══════════════════════════════════════
 // Service Image Mapping
 // ═══════════════════════════════════════
 
 /**
- * Maps a service group key (category_slug-name) to a local image path.
+ * Maps a service group key (category_slug-name) to an imgBB-hosted image URL.
  * Falls back to a default image if no mapping is found.
  */
 
-const DEFAULT_SERVICE_IMAGE = '/images/services/aroma-oil.png';
+const DEFAULT_SERVICE_IMAGE = 'https://i.ibb.co/FbNjKwKZ/aroma-oil.jpg';
 
 export const SERVICE_IMAGES: Record<string, string> = {
   // Body category
-  'body_aroma-oil': '/images/services/aroma-oil.png',
-  'body_coconut-oil': '/images/services/coconut-oil.png',
-  'body_shiatsu': '/images/services/shiatsu.png',
-  'body_hotstone': '/images/services/hotstone.png',
-  'body_thai': '/images/services/thai.png',
-  'body_four-hand': '/images/services/four-hand.png',
+  'body_aroma-oil': 'https://i.ibb.co/FbNjKwKZ/aroma-oil.jpg',
+  'body_coconut-oil': 'https://i.ibb.co/QvtnjcDQ/coconut-oil.jpg',
+  'body_shiatsu': 'https://i.ibb.co/Q3yRwkZ2/shiatsu.jpg',
+  'body_hotstone': 'https://i.ibb.co/mCXLjYB0/hotstone.jpg',
+  'body_thai': 'https://i.ibb.co/b5s9VJjf/thai.jpg',
+  'body_four-hand': 'https://i.ibb.co/DfSh9qrN/four-hand.jpg',
 
   // Foot category
-  'foot_professional-foot-massage': '/images/services/foot-massage.png',
-  'foot_foot-massage': '/images/services/foot-massage.png',
+  'foot_professional-foot-massage': 'https://i.ibb.co/M59V3YQF/foot-massage.jpg',
+  'foot_foot-massage': 'https://i.ibb.co/M59V3YQF/foot-massage.jpg',
 
   // Hair Wash category
-  'hair wash_hair-wash': '/images/services/hair-wash.png',
-  'hair-wash_hair-wash': '/images/services/hair-wash.png',
+  'hair wash_hair-wash': 'https://i.ibb.co/N6WKRKZ2/hair-wash.jpg',
+  'hair-wash_hair-wash': 'https://i.ibb.co/N6WKRKZ2/hair-wash.jpg',
 
   // Facial category
-  'facial_facial': '/images/services/facial.png',
+  'facial_facial': 'https://i.ibb.co/sdNmRhc5/facial.jpg',
 
   // Ear Clean category
-  'ear clean_ear-clean': '/images/services/ear-clean.png',
-  'ear-clean_ear-clean': '/images/services/ear-clean.png',
+  'ear clean_ear-clean': 'https://i.ibb.co/ZRfrGzhx/ear-clean.jpg',
+  'ear-clean_ear-clean': 'https://i.ibb.co/ZRfrGzhx/ear-clean.jpg',
 };
 
 /**
@@ -58,14 +58,14 @@ export const getServiceImage = (groupKey: string): string => {
   // Try category-based match
   const category = lowerKey.split('_')[0];
   const categoryImages: Record<string, string> = {
-    body: '/images/services/aroma-oil.png',
-    foot: '/images/services/foot-massage.png',
-    'hair wash': '/images/services/hair-wash.png',
-    'hair-wash': '/images/services/hair-wash.png',
-    facial: '/images/services/facial.png',
-    'ear clean': '/images/services/ear-clean.png',
-    'ear-clean': '/images/services/ear-clean.png',
-    combo: '/images/services/aroma-oil.png',
+    body: 'https://i.ibb.co/FbNjKwKZ/aroma-oil.jpg',
+    foot: 'https://i.ibb.co/M59V3YQF/foot-massage.jpg',
+    'hair wash': 'https://i.ibb.co/N6WKRKZ2/hair-wash.jpg',
+    'hair-wash': 'https://i.ibb.co/N6WKRKZ2/hair-wash.jpg',
+    facial: 'https://i.ibb.co/sdNmRhc5/facial.jpg',
+    'ear clean': 'https://i.ibb.co/ZRfrGzhx/ear-clean.jpg',
+    'ear-clean': 'https://i.ibb.co/ZRfrGzhx/ear-clean.jpg',
+    combo: 'https://i.ibb.co/FbNjKwKZ/aroma-oil.jpg',
   };
 
   return categoryImages[category] || DEFAULT_SERVICE_IMAGE;

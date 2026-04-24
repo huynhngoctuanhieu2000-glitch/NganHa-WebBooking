@@ -3,7 +3,6 @@
 import dynamic from 'next/dynamic';
 import Hero from '@/components/Hero/Hero';
 import AboutStory from '@/components/AboutStory/AboutStory';
-import BookingForm from '@/components/BookingForm/BookingForm';
 
 // Dynamic import to avoid SSR issues with react-pageflip
 const ServiceBook = dynamic(
@@ -22,11 +21,29 @@ const HomePage = () => {
 
       {/* Service Menu - Book flip */}
       <section id="services" className="section-services">
-        <ServiceBook />
-      </section>
+        <div className="section-services__inner">
+          <div className="section-services__intro">
+            <span className="section-services__eyebrow">Service Menu</span>
+            <h2 className="section-services__title">
+              Lật từng trang để chọn đúng trải nghiệm bạn muốn
+            </h2>
+            <p className="section-services__subtitle">
+              Hãy chọn cho mình một dịch vụ hoàn hảo và thư giãn.
+            </p>
+          </div>
 
-      {/* Booking Form */}
-      <BookingForm />
+          <ServiceBook />
+
+          <div className="section-services__hint">
+            <p className="section-services__hint-text">
+              Bạn có thể nhấp vào nút dưới đây để tiếp tục.
+            </p>
+            <a href="/en/new-user/select-menu" className="section-services__cta">
+              Đi tới bước đặt lịch
+            </a>
+          </div>
+        </div>
+      </section>
     </main>
   );
 };

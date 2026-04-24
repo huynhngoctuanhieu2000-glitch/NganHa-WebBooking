@@ -111,7 +111,7 @@ const Hero = () => {
       <div className="hero-bg">
         <div
           className="hero-image"
-          style={{ backgroundImage: 'url(/images/hero-spa-bg.png)' }}
+          style={{ backgroundImage: 'url(https://i.ibb.co/fs2MBD4/hero-spa-bg.jpg)' }}
         />
         <div className="hero-overlay" />
       </div>
@@ -174,7 +174,7 @@ const Hero = () => {
           <a href="#services" className="hero-cta-btn hero-cta-primary hero-cta--pill">
             {HERO_TEXT.cta1}
           </a>
-          <a href="#booking" className="hero-cta-btn hero-cta-secondary hero-cta--pill">
+          <a href="/en/new-user/select-menu" className="hero-cta-btn hero-cta-secondary hero-cta--pill">
             {HERO_TEXT.cta2}
           </a>
         </motion.div>

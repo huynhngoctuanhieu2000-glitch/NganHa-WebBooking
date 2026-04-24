@@ -184,7 +184,17 @@ const BookingCheckout = ({ lang, onBack }: BookingCheckoutProps) => {
         }),
       });
 
-      const json = await res.json();
+      let json;
+      try {
+        json = await res.json();
+      } catch (parseError) {
+        throw new Error(`Lỗi phản hồi máy chủ (Mã: ${res.status}). Vui lòng thử lại!`);
+      }
+
+      if (!res.ok) {
+        throw new Error(json.error || `Lỗi HTTP ${res.status}`);
+      }
+
       if (json.success) {
         setBookingResult({
           bookingId: json.data.bookingId,

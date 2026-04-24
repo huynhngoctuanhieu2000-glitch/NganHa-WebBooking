@@ -5,17 +5,14 @@ import { LanguageCode } from './types';
 export const getText = (source: any, lang: string): string => {
     if (!source) return '';
 
-    // Chuẩn hóa lang code (ví dụ 'vi' -> 'vi' nếu cần)
-    // Giả sử source key luôn là lowercase hoặc uppercase tùy convention, ta sẽ check cả 2
-
     const key = lang.toLowerCase();
 
     // Check key trực tiếp
     if (source[key]) return source[key];
 
-    // Fallback: Check các biến thể phổ biến
-    if (key === 'vi' && source['vi']) return source['vi'];
-    if (key === 'vi' && source['vi']) return source['vi'];
+    // Xoá logic đổi vn <-> vi vì đã được chuẩn hoá ở gốc (middleware)
+    // Nhưng giữ fallback nếu payload từ DB vẫn lưu dưới key 'vn'
+    if (key === 'vi' && source['vn']) return source['vn'];
 
     // Check Uppercase key (VD trong data Service NAMES: { EN: "...", VN: "..." })
     const upperKey = key.toUpperCase();

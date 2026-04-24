@@ -18,9 +18,9 @@ const BG_OVERLAY_OPACITY = 0.88;
 const VIEWPORT_THRESHOLD = 0.1;
 
 const GALLERY_IMAGES = [
-  { src: '/images/about-cruise.png', caption: 'Buổi tối trên Saigon Princess' },
-  { src: '/images/about-treatment.png', caption: 'Bấm huyệt chân tại Ngân Hà' },
-  { src: '/images/about-street.png', caption: 'Tham quan thành phố dưới Saigon Waterbus' },
+  { src: 'https://i.ibb.co/7tJW9WYR/about-cruise.jpg', caption: 'Buổi tối trên Saigon Princess' },
+  { src: 'https://i.ibb.co/W48KXqCY/about-treatment.jpg', caption: 'Bấm huyệt chân tại Ngân Hà' },
+  { src: 'https://i.ibb.co/b5ZLkbVt/about-street.jpg', caption: 'Tham quan thành phố dưới Saigon Waterbus' },
 ];
 
 const AboutStory = () => {
@@ -32,7 +32,7 @@ const AboutStory = () => {
       <div className="about-bg">
         <div
           className="about-bg-image"
-          style={{ backgroundImage: 'url(/images/about-bg.png)' }}
+          style={{ backgroundImage: 'url(https://i.ibb.co/27P1VkQQ/about-bg.jpg)' }}
         />
         <div
           className="about-bg-overlay"
@@ -128,7 +128,7 @@ const AboutStory = () => {
               style={{ borderRadius: IMAGE_BORDER_RADIUS }}
             >
               <Image
-                src="/images/about-street.png"
+                src="https://i.ibb.co/b5ZLkbVt/about-street.jpg"
                 alt="Đường Ngô Đức Kế, Quận 1"
                 width={600}
                 height={450}
@@ -202,7 +202,7 @@ const AboutStory = () => {
               style={{ borderRadius: IMAGE_BORDER_RADIUS }}
             >
               <Image
-                src="/images/about-cruise.png"
+                src="https://i.ibb.co/7tJW9WYR/about-cruise.jpg"
                 alt="Du thuyền sông Sài Gòn"
                 width={600}
                 height={450}

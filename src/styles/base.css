@@ -89,11 +89,7 @@
   /* Padding duoi "Cuon xuong de kham pha" */
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+
 
 body {
   background: var(--dark-bg);
@@ -101,4 +97,12 @@ body {
   font-family: var(--font-body, 'Inter', sans-serif);
   min-height: 100vh;
   overflow-x: hidden;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+section[id] {
+  scroll-margin-top: calc(var(--header-height) + 20px);
 }

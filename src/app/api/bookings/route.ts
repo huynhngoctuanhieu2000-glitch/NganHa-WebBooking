@@ -120,7 +120,8 @@ export async function POST(request: Request) {
 
     // ── 4. INSERT Bookings ────────────────────────────
     const totalAmount = selectedServices.reduce(
-      (sum: number, s: { priceVND: number }) => sum + (s.priceVND || 0),
+      (sum: number, s: { priceVND: number; quantity?: number }) =>
+        sum + (s.priceVND || 0) * (s.quantity || 1),
       0
     );
 
@@ -162,11 +163,12 @@ export async function POST(request: Request) {
       priceVND: number;
       name: string;
       duration: number;
+      quantity?: number;
     }) => ({
       id: `${bookingId}-${svc.variantId}`,
       bookingId,
       serviceId: svc.variantId,
-      quantity: 1,
+      quantity: svc.quantity || 1,
       price: svc.priceVND,
       status: 'WAITING',
     }));

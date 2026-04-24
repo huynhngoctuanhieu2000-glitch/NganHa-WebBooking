@@ -1,6 +1,7 @@
 // ═══════════════════════════════════════
 // Category Images & Intent Filter Data
 // Mapping for BookingForm Curator redesign
+// Images hosted on imgBB CDN
 // ═══════════════════════════════════════
 
 // 🔧 CONFIGURATION
@@ -46,7 +47,7 @@ export const INTENT_DISPLAY: Record<
 export interface CategoryDisplayInfo {
   label: string;        // English label
   labelVi: string;      // Vietnamese label
-  image: string;        // /public/images/* path
+  image: string;        // imgBB CDN URL
   gradient: string;     // Tailwind gradient classes (fallback)
   description: string;  // Short tagline
   descriptionVi: string;
@@ -55,13 +56,13 @@ export interface CategoryDisplayInfo {
 
 /**
  * Display info for each service category.
- * Images are existing assets in /public/images/.
+ * Images hosted on imgBB CDN.
  */
 export const CATEGORY_DISPLAY: Record<string, CategoryDisplayInfo> = {
   body: {
     label: 'Body Treatment',
     labelVi: 'Trị Liệu Cơ Thể',
-    image: '/images/body-treatment-full.png',
+    image: 'https://i.ibb.co/9HRs4pQQ/body-treatment-full.jpg',
     gradient: 'from-amber-900/80 to-stone-900/90',
     description: 'Deep muscle relaxation',
     descriptionVi: 'Thư giãn cơ sâu',
@@ -70,7 +71,7 @@ export const CATEGORY_DISPLAY: Record<string, CategoryDisplayInfo> = {
   facial: {
     label: 'Facial Care',
     labelVi: 'Chăm Sóc Da Mặt',
-    image: '/images/facial.png',
+    image: 'https://i.ibb.co/rTytGvL/facial.jpg',
     gradient: 'from-rose-900/80 to-stone-900/90',
     description: 'Radiant skin refresh',
     descriptionVi: 'Làn da rạng rỡ',
@@ -79,7 +80,7 @@ export const CATEGORY_DISPLAY: Record<string, CategoryDisplayInfo> = {
   'hair wash': {
     label: 'Hair Wash',
     labelVi: 'Gội Đầu',
-    image: '/images/hair-wash.png',
+    image: 'https://i.ibb.co/bgSXH78X/hair-wash.jpg',
     gradient: 'from-indigo-900/80 to-stone-900/90',
     description: 'Cleanse & nourish',
     descriptionVi: 'Làm sạch & dưỡng tóc',
@@ -88,7 +89,7 @@ export const CATEGORY_DISPLAY: Record<string, CategoryDisplayInfo> = {
   barber: {
     label: 'Barber',
     labelVi: 'Cắt Tóc & Cạo Râu',
-    image: '/images/barbershop.png',
+    image: 'https://i.ibb.co/3tK7xRb/barbershop.jpg',
     gradient: 'from-zinc-800/80 to-stone-900/90',
     description: "Sharp & refined gentleman's cut",
     descriptionVi: 'Phong cách nam tính',
@@ -97,7 +98,7 @@ export const CATEGORY_DISPLAY: Record<string, CategoryDisplayInfo> = {
   'ear clean': {
     label: 'Ear Clean',
     labelVi: 'Lấy Ráy Tai',
-    image: '/images/ear-clean.png',
+    image: 'https://i.ibb.co/4gnW3LWM/ear-clean.jpg',
     gradient: 'from-teal-900/80 to-stone-900/90',
     description: 'Deep ear cleansing',
     descriptionVi: 'Vệ sinh tai sâu',
@@ -106,7 +107,7 @@ export const CATEGORY_DISPLAY: Record<string, CategoryDisplayInfo> = {
   foot: {
     label: 'Foot Care',
     labelVi: 'Chăm Sóc Bàn Chân',
-    image: '/images/heel-care.png',
+    image: 'https://i.ibb.co/F4PZBL4X/heel-care.jpg',
     gradient: 'from-emerald-900/80 to-stone-900/90',
     description: 'Soothing foot relief',
     descriptionVi: 'Thư giãn đôi chân',
@@ -115,7 +116,7 @@ export const CATEGORY_DISPLAY: Record<string, CategoryDisplayInfo> = {
   'heel skin shave': {
     label: 'Heel Care',
     labelVi: 'Chăm Sóc Gót Chân',
-    image: '/images/heel-care.png',
+    image: 'https://i.ibb.co/F4PZBL4X/heel-care.jpg',
     gradient: 'from-emerald-900/80 to-stone-900/90',
     description: 'Smooth & restore',
     descriptionVi: 'Làm đẹp gót chân',
@@ -124,7 +125,7 @@ export const CATEGORY_DISPLAY: Record<string, CategoryDisplayInfo> = {
   'manicure & pedicure': {
     label: 'Nail Care',
     labelVi: 'Chăm Sóc Móng',
-    image: '/images/nail-care-full.png',
+    image: 'https://i.ibb.co/JTbwW0C/nail-care-full.jpg',
     gradient: 'from-pink-900/80 to-stone-900/90',
     description: 'Beautiful nails',
     descriptionVi: 'Làm đẹp móng tay chân',
@@ -133,7 +134,7 @@ export const CATEGORY_DISPLAY: Record<string, CategoryDisplayInfo> = {
   additional: {
     label: 'Additional',
     labelVi: 'Dịch Vụ Khác',
-    image: '/images/service-other.png',
+    image: 'https://i.ibb.co/XrY6NN1F/service-other.jpg',
     gradient: 'from-violet-900/80 to-stone-900/90',
     description: 'Special treatments',
     descriptionVi: 'Các liệu trình đặc biệt',
@@ -142,7 +143,7 @@ export const CATEGORY_DISPLAY: Record<string, CategoryDisplayInfo> = {
   premium: {
     label: 'Premium',
     labelVi: 'PREMIUM',
-    image: '/images/additional-premium.png',
+    image: 'https://i.ibb.co/bMZpBPwg/additional-premium.jpg',
     gradient: 'from-[#D4AF37]/80 to-stone-900/90',
     description: 'Elite experience',
     descriptionVi: 'Dịch vụ 2 KTV phục vụ',
@@ -159,7 +160,7 @@ export const getCategoryDisplay = (category: string): CategoryDisplayInfo => {
     CATEGORY_DISPLAY[key] ?? {
       label: category,
       labelVi: category,
-      image: '/images/about-treatment.png',
+      image: 'https://i.ibb.co/W48KXqCY/about-treatment.jpg',
       gradient: 'from-stone-800/80 to-stone-900/90',
       description: 'Premium service',
       descriptionVi: 'Dịch vụ cao cấp',

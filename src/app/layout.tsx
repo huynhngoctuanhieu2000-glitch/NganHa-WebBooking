@@ -39,6 +39,15 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false, // Prevent zooming
+  viewportFit: "cover",
+  themeColor: "#000000",
+};
+
 const RootLayout = ({
   children,
 }: Readonly<{
@@ -46,7 +55,7 @@ const RootLayout = ({
 }>) => {
   return (
     <html lang="vi" className={`${playfair.variable} ${inter.variable}`}>
-      <body suppressHydrationWarning>
+      <body className="w-full h-full antialiased font-sans" suppressHydrationWarning>
         <LayoutWrapper>{children}</LayoutWrapper>
       </body>
     </html>

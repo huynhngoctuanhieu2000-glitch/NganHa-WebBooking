@@ -67,7 +67,7 @@ const GroupedServicePage = forwardRef<HTMLDivElement, { group: GroupedService; i
   ({ group, index }, ref) => {
     const [selectedIndex, setSelectedIndex] = useState(0);
     const selectedVariant = group.variants[selectedIndex];
-    const imageUrl = group.image || '/images/services/aroma-oil.png';
+    const imageUrl = group.image || 'https://i.ibb.co/FbNjKwKZ/aroma-oil.jpg';
 
     // Get description (prefer EN, fallback to VN)
     const description = group.description
