@@ -78,10 +78,7 @@ const useCountdown = () => {
 
 // Video configurations
 const HOMEPAGE_VIDEOS = [
-  { id: '1', url: '/videos/spa-bg-1.mp4', poster: 'https://i.ibb.co/fs2MBD4/hero-spa-bg.jpg' },
-  { id: '2', url: '/videos/spa-bg-2.mp4', poster: 'https://i.ibb.co/fs2MBD4/hero-spa-bg.jpg' },
-  { id: '3', url: '/videos/spa-bg-3.mp4', poster: 'https://i.ibb.co/fs2MBD4/hero-spa-bg.jpg' },
-  { id: '4', url: '/videos/spa-bg-4.mp4', poster: 'https://i.ibb.co/fs2MBD4/hero-spa-bg.jpg' },
+  { id: '1', url: '/videos/video1.mp4', poster: 'https://i.ibb.co/fs2MBD4/hero-spa-bg.jpg' },
 ];
 
 const Hero = () => {
@@ -280,17 +277,12 @@ const Hero = () => {
 
         {/* Countdown */}
         <motion.div className="hero-countdown" variants={fadeInUp}>
-          <span className="hero-countdown__label">{HERO_TEXT.countdown.title}</span>
+          <div className="hero-countdown__label">{HERO_TEXT.countdown.title}</div>
           <div className="hero-countdown__boxes">
-            {[
-              { value: countdown.days, label: HERO_TEXT.countdown.days },
-              { value: countdown.hours, label: HERO_TEXT.countdown.hours },
-              { value: countdown.minutes, label: HERO_TEXT.countdown.minutes },
-              { value: countdown.seconds, label: HERO_TEXT.countdown.seconds },
-            ].map((unit) => (
-              <div key={unit.label} className="hero-countdown__unit">
-                <span className="hero-countdown__num">{String(unit.value).padStart(2, '0')}</span>
-                <span className="hero-countdown__text">{unit.label}</span>
+            {Object.entries(countdown).map(([unit, value]) => (
+              <div key={unit} className="hero-countdown__unit">
+                <span className="hero-countdown__num">{value.toString().padStart(2, '0')}</span>
+                <span className="hero-countdown__text">{HERO_TEXT.countdown[unit as keyof typeof HERO_TEXT.countdown] || unit}</span>
               </div>
             ))}
           </div>
@@ -307,44 +299,48 @@ const Hero = () => {
         </motion.div>
 
         {/* Chevrons Navigation for Desktop */}
-        <div className="hero-nav-controls" style={{ zIndex: 10 }}>
-          <button
-            onClick={handlePrevVideo}
-            className="hero-nav-arrow hero-nav-arrow--left"
-            aria-label="Previous Video"
-          >
-            <ChevronLeft size={28} />
-          </button>
-          <button
-            onClick={handleNextVideo}
-            className="hero-nav-arrow hero-nav-arrow--right"
-            aria-label="Next Video"
-          >
-            <ChevronRight size={28} />
-          </button>
-        </div>
+        {HOMEPAGE_VIDEOS.length > 1 && (
+          <div className="hero-nav-controls" style={{ zIndex: 10 }}>
+            <button
+              onClick={handlePrevVideo}
+              className="hero-nav-arrow hero-nav-arrow--left"
+              aria-label="Previous Video"
+            >
+              <ChevronLeft size={28} />
+            </button>
+            <button
+              onClick={handleNextVideo}
+              className="hero-nav-arrow hero-nav-arrow--right"
+              aria-label="Next Video"
+            >
+              <ChevronRight size={28} />
+            </button>
+          </div>
+        )}
 
         {/* Pagination Dots & Text */}
-        <div className="hero-pagination" style={{ zIndex: 10 }}>
-          <span className="hero-pagination-number">
-            {String(activeVideoIndex + 1).padStart(2, '0')} / {String(HOMEPAGE_VIDEOS.length).padStart(2, '0')}
-          </span>
-          <div className="hero-pagination-dots">
-            {HOMEPAGE_VIDEOS.map((_, idx) => (
-              <button
-                key={idx}
-                className={`hero-pagination-dot ${idx === activeVideoIndex ? 'active' : ''}`}
-                onClick={() => setActiveVideoIndex(idx)}
-                aria-label={`Go to video ${idx + 1}`}
-              />
-            ))}
+        {HOMEPAGE_VIDEOS.length > 1 && (
+          <div className="hero-pagination" style={{ zIndex: 10 }}>
+            <span className="hero-pagination-number">
+              {String(activeVideoIndex + 1).padStart(2, '0')} / {String(HOMEPAGE_VIDEOS.length).padStart(2, '0')}
+            </span>
+            <div className="hero-pagination-dots">
+              {HOMEPAGE_VIDEOS.map((_, idx) => (
+                <button
+                  key={idx}
+                  className={`hero-pagination-dot ${idx === activeVideoIndex ? 'active' : ''}`}
+                  onClick={() => setActiveVideoIndex(idx)}
+                  aria-label={`Go to video ${idx + 1}`}
+                />
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Scroll Hint */}
         <motion.div className="hero-scroll-hint" variants={fadeInUp}>
           <ChevronDown size={20} className="hero-scroll-icon" />
-          <span>{HERO_TEXT.scrollHint}</span>
+          <span className="hero-scroll-text">{HERO_TEXT.scrollHint}</span>
         </motion.div>
       </motion.div>
 
@@ -363,24 +359,19 @@ const Hero = () => {
             rel="noopener noreferrer"
             className="branch-card"
           >
-            <h3 className="branch-card-name">{branch.name}</h3>
             <div className="branch-card-info">
               <div className="branch-card-row">
-                <MapPin size={14} />
+                <MapPin size={18} />
                 <span>{branch.address}</span>
               </div>
               <div className="branch-card-row">
-                <Clock size={14} />
+                <Clock size={18} />
                 <span>Open {branch.hours}</span>
               </div>
               <div className="branch-card-row">
-                <Clock size={12} />
+                <Clock size={18} />
                 <span className="branch-last-order">Last order: 11:30pm</span>
               </div>
-            </div>
-            <div className="branch-card-link">
-              <ExternalLink size={14} />
-              <span>Google Maps</span>
             </div>
           </a>
         ))}

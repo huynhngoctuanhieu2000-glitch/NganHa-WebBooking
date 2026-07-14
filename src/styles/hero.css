@@ -350,72 +350,61 @@
 }
 
 .branch-card {
-  background: rgba(20, 20, 20, 0.6);
-  border: 1px solid rgba(212, 175, 55, 0.25);
-  border-radius: 12px;
-  padding: 24px;
+  background: transparent;
+  border: none;
+  padding: 16px;
   min-width: 280px;
-  max-width: 360px;
+  max-width: 400px;
   flex: 1;
   text-decoration: none;
   color: white;
   transition: all 0.3s ease;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  text-align: center;
   gap: 12px;
 }
 
 .branch-card:hover {
-  border-color: var(--gold-400);
   transform: translateY(-4px);
-  box-shadow: 0 12px 40px rgba(212, 175, 55, 0.15);
-  background: rgba(20, 20, 20, 0.8);
-}
-
-.branch-card-name {
-  font-family: var(--font-heading, 'Cormorant Garamond', serif);
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--gold-300);
-  letter-spacing: 1px;
 }
 
 .branch-card-info {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  align-items: center;
+  gap: 12px;
 }
 
 .branch-card-row {
   display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.65);
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.85);
   line-height: 1.4;
+}
+
+.branch-card-row span {
+  transition: text-decoration 0.2s ease;
+}
+
+.branch-card:hover .branch-card-row span {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-color: var(--gold-400);
 }
 
 .branch-card-row svg {
   color: var(--gold-400);
   flex-shrink: 0;
-  margin-top: 2px;
 }
 
 .branch-last-order {
   font-style: italic;
-  color: rgba(255, 255, 255, 0.45);
-}
-
-.branch-card-link {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--gold-400);
-  font-size: 13px;
-  font-weight: 500;
-  margin-top: 4px;
-  padding-top: 8px;
-  border-top: 1px solid rgba(212, 175, 55, 0.15);
+  color: rgba(255, 255, 255, 0.6);
 }
 
 /* Hero background video: visible on all devices */

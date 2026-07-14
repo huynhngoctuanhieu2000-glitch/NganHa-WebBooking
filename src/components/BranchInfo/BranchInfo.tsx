@@ -40,10 +40,9 @@ const BranchInfo = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.2, type: "spring", stiffness: 100 }}
-              className="bg-[#151515] p-8 md:p-10 rounded-3xl border border-white/5 shadow-2xl hover:border-[#D4AF37]/30 transition-all duration-500 group relative overflow-hidden flex flex-col h-full"
+              className="p-4 md:p-6 transition-all duration-500 group relative flex flex-col h-full"
             >
-              {/* Subtle gold glow on hover */}
-              <div className="absolute inset-0 bg-gradient-to-br from-[#D4AF37]/0 to-[#D4AF37]/[0.02] group-hover:to-[#D4AF37]/[0.05] transition-colors duration-500 pointer-events-none" />
+              {/* Removed background and border per user request */}
               
               <h3 className="text-2xl font-serif text-white mb-8 group-hover:text-[#D4AF37] transition-colors relative z-10">{branch.name}</h3>
               

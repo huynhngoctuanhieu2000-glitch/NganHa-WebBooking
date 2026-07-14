@@ -42,7 +42,7 @@ const Header = () => {
       <div className="header-inner-container">
         {/* Top Row: Mobile Toggle, Logo, Right Controls, Desktop Navigation */}
         <div className="header-top-row">
-          {/* Mobile toggle & Desktop Navigation on the left */}
+          {/* Logo & Mobile Toggle on the left */}
           <div className="header-top-left">
             <button
               className="header-mobile-toggle"
@@ -52,24 +52,26 @@ const Header = () => {
               {isMobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
             </button>
 
-            {/* Desktop Navigation Links */}
-            <nav className="header-nav-desktop">
-              {NAV_ITEMS.map((item) => (
-                <a key={item.href} href={item.href} className="header-nav-link">
-                  {item.label}
-                </a>
-              ))}
-            </nav>
+            <a href="#hero" className="header-logo">
+              <span className="header-logo-icon">✦</span>
+              <div className="header-logo-text">
+                <span className="header-logo-name">Ngân Hà</span>
+              </div>
+            </a>
           </div>
 
-          {/* Centered Logo */}
-          <a href="#hero" className="header-logo">
-            <span className="header-logo-icon">✦</span>
-            <div className="header-logo-text">
-              <span className="header-logo-name">Ngân Hà</span>
-              <span className="header-logo-sub">let us understand you</span>
-            </div>
-          </a>
+          {/* Desktop Navigation Centered */}
+          <nav className="header-nav-desktop">
+            {NAV_ITEMS.map((item) => (
+              <a 
+                key={item.href} 
+                href={item.href} 
+                className={`header-nav-link ${item.label === 'Academy' || item.label === 'Spa home' ? 'dimmed' : ''}`}
+              >
+                {item.label}
+              </a>
+            ))}
+          </nav>
 
           {/* Right Section: Languages, Login, Cart */}
           <div className="header-right">
@@ -95,7 +97,6 @@ const Header = () => {
             {/* Login & Cart */}
             <a href="#login" className="header-icon-btn" aria-label="Log in">
               <User size={20} />
-              <span className="header-icon-label">Log in</span>
             </a>
             <a href="#cart" className="header-icon-btn" aria-label="Cart">
               <ShoppingBag size={20} />

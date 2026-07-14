@@ -55,7 +55,7 @@ const RootLayout = ({
 }>) => {
   return (
     <html lang="vi" className={`${playfair.variable} ${inter.variable}`}>
-      <body className="w-full h-full antialiased font-sans" suppressHydrationWarning>
+      <body className="w-full min-h-full antialiased font-sans" suppressHydrationWarning>
         <LayoutWrapper>{children}</LayoutWrapper>
       </body>
     </html>

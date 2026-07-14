@@ -129,7 +129,7 @@ const CategoryPicker = ({ categories, lang, onSelect, onBack }: Props) => {
                 animate="visible"
                 exit="exit"
             >
-                <div className="grid grid-cols-2 grid-rows-5 gap-3 max-w-sm w-full self-center flex-1">
+                <div className="grid grid-cols-2 grid-rows-5 gap-2 max-w-sm w-full self-center flex-1">
                     {categories.map((cat) => {
                         const name = cat.names[lang as keyof typeof cat.names] || cat.names['en'];
 
@@ -140,12 +140,12 @@ const CategoryPicker = ({ categories, lang, onSelect, onBack }: Props) => {
                                 onClick={() => handleSelect(cat.id)}
                                 whileHover={{ scale: 1.04, borderColor: 'rgba(201,169,110,0.5)' }}
                                 whileTap={{ scale: 0.96 }}
-                                className={`w-full h-full flex flex-col items-center justify-center gap-3 px-3 rounded-2xl ${TOKENS.cardBg} ${TOKENS.cardBorder} border hover:border-[#C9A96E]/50 transition-colors relative overflow-hidden group shadow-lg`}
+                                className={`w-full h-full flex flex-col items-center justify-center gap-1 px-3 rounded-2xl ${TOKENS.cardBg} ${TOKENS.cardBorder} border hover:border-[#C9A96E]/50 transition-colors relative overflow-hidden group shadow-lg`}
                             >
                                 {/* Glow Effect */}
                                 <div className="absolute inset-0 bg-gradient-to-br from-[#C9A96E]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
 
-                                <div className="w-14 h-14 flex items-center justify-center relative z-10 transition-transform duration-500 group-hover:scale-110">
+                                <div className="w-12 h-12 flex items-center justify-center relative z-10 transition-transform duration-500 group-hover:scale-110">
                                     <img
                                         src={cat.image}
                                         alt={name}
