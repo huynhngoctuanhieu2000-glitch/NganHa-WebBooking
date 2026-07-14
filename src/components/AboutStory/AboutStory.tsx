@@ -21,6 +21,11 @@ const GALLERY_IMAGES = [
   { src: 'https://i.ibb.co/7tJW9WYR/about-cruise.jpg', caption: 'Buổi tối trên Saigon Princess' },
   { src: 'https://i.ibb.co/W48KXqCY/about-treatment.jpg', caption: 'Bấm huyệt chân tại Ngân Hà' },
   { src: 'https://i.ibb.co/b5ZLkbVt/about-street.jpg', caption: 'Tham quan thành phố dưới Saigon Waterbus' },
+  { src: 'https://images.pexels.com/photos/14883151/pexels-photo-14883151.jpeg?auto=compress&cs=tinysrgb&w=600', caption: 'Ngắm Landmark 81 & Bitexco lung linh' },
+  { src: 'https://images.pexels.com/photos/3757942/pexels-photo-3757942.jpeg?auto=compress&cs=tinysrgb&w=600', caption: 'Thư giãn massage đá nóng chuyên sâu' },
+  { src: 'https://images.pexels.com/photos/14438779/pexels-photo-14438779.jpeg?auto=compress&cs=tinysrgb&w=600', caption: 'Dạo bước qua Nhà thờ Đức Bà cổ kính' },
+  { src: 'https://images.pexels.com/photos/3757952/pexels-photo-3757952.jpeg?auto=compress&cs=tinysrgb&w=600', caption: 'Liệu pháp mùi hương thảo mộc tự nhiên' },
+  { src: 'https://images.pexels.com/photos/14006159/pexels-photo-14006159.jpeg?auto=compress&cs=tinysrgb&w=600', caption: 'Nhịp sống bình yên góc phố Sài Gòn' },
 ];
 
 const AboutStory = () => {
@@ -215,7 +220,7 @@ const AboutStory = () => {
         {/* ═══ FILM STRIP GALLERY ═══ */}
         <motion.div className="about-filmstrip" variants={cardVariants}>
           <div className="about-filmstrip-track">
-            {GALLERY_IMAGES.map((img, idx) => (
+            {[...GALLERY_IMAGES, ...GALLERY_IMAGES].map((img, idx) => (
               <div key={idx} className="about-filmstrip-frame">
                 <div className="about-filmstrip-holes about-filmstrip-holes--top">
                   {Array.from({ length: 6 }).map((_, i) => (

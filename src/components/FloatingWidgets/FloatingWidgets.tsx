@@ -11,7 +11,7 @@ const WIDGET_GAP = 12;
 
 const FloatingWidgets = () => {
   return (
-    <div className="floating-widgets">
+    <div className="floating-widgets" suppressHydrationWarning={true}>
       {/* AI ChatBot - text + voice chat */}
       <AIChatBot />
 
@@ -23,6 +23,7 @@ const FloatingWidgets = () => {
         className="floating-btn floating-location"
         aria-label="View on Google Maps"
         style={{ width: WIDGET_SIZE, height: WIDGET_SIZE }}
+        suppressHydrationWarning={true}
       >
         <MapPin size={20} />
       </a>
@@ -33,6 +34,7 @@ const FloatingWidgets = () => {
         className="floating-btn floating-phone"
         aria-label="Call hotline"
         style={{ width: WIDGET_SIZE, height: WIDGET_SIZE }}
+        suppressHydrationWarning={true}
       >
         <Phone size={20} />
       </a>

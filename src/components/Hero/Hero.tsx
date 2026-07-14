@@ -1,9 +1,9 @@
 // Hero.tsx - Cinematic Fullscreen Hero (Showcase Style)
 'use client';
 
-import { useMemo, useState, useEffect, useCallback } from 'react';
+import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { MapPin, Clock, ExternalLink, ChevronDown } from 'lucide-react';
+import { MapPin, Clock, ExternalLink, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { BRANCH_LIST } from '@/data/branches';
 import {
   heroStagger, fadeInUp, fadeInDown, heroTitle, scaleIn, branchEntrance,
@@ -76,8 +76,101 @@ const useCountdown = () => {
 // HERO COMPONENT
 // ═══════════════════════════════════════════
 
+// Video configurations
+const HOMEPAGE_VIDEOS = [
+  { id: '1', url: '/videos/spa-bg-1.mp4', poster: 'https://i.ibb.co/fs2MBD4/hero-spa-bg.jpg' },
+  { id: '2', url: '/videos/spa-bg-2.mp4', poster: 'https://i.ibb.co/fs2MBD4/hero-spa-bg.jpg' },
+  { id: '3', url: '/videos/spa-bg-3.mp4', poster: 'https://i.ibb.co/fs2MBD4/hero-spa-bg.jpg' },
+  { id: '4', url: '/videos/spa-bg-4.mp4', poster: 'https://i.ibb.co/fs2MBD4/hero-spa-bg.jpg' },
+];
+
 const Hero = () => {
   const countdown = useCountdown();
+  const [activeVideoIndex, setActiveVideoIndex] = useState(0);
+  const [loadedIndices, setLoadedIndices] = useState<number[]>([0]);
+  
+  const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
+  const touchStartX = useRef(0);
+  const touchEndX = useRef(0);
+  const lastScrollTime = useRef(0);
+
+  const handleNextVideo = useCallback(() => {
+    setActiveVideoIndex((prev) => (prev + 1) % HOMEPAGE_VIDEOS.length);
+  }, []);
+
+  const handlePrevVideo = useCallback(() => {
+    setActiveVideoIndex((prev) => (prev - 1 + HOMEPAGE_VIDEOS.length) % HOMEPAGE_VIDEOS.length);
+  }, []);
+
+  // Swipe detection
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.targetTouches[0].clientX;
+    touchEndX.current = e.targetTouches[0].clientX;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.targetTouches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    const diffX = touchStartX.current - touchEndX.current;
+    const minSwipeDistance = 50;
+    if (Math.abs(diffX) > minSwipeDistance) {
+      if (diffX > 0) {
+        handleNextVideo();
+      } else {
+        handlePrevVideo();
+      }
+    }
+  };
+
+  // Lazy load video index
+  useEffect(() => {
+    if (!loadedIndices.includes(activeVideoIndex)) {
+      setLoadedIndices((prev) => [...prev, activeVideoIndex]);
+    }
+  }, [activeVideoIndex, loadedIndices]);
+
+  // Handle Play/Pause
+  useEffect(() => {
+    videoRefs.current.forEach((video, idx) => {
+      if (video) {
+        if (idx === activeVideoIndex) {
+          video.play().catch(() => {});
+        } else {
+          video.pause();
+        }
+      }
+    });
+  }, [activeVideoIndex, loadedIndices]);
+
+  // Horizontal scroll trackpad detection with debounce
+  useEffect(() => {
+    const handleWheel = (e: WheelEvent) => {
+      const now = Date.now();
+      if (now - lastScrollTime.current < 800) return;
+
+      // Detect horizontal scroll (trackpad)
+      if (Math.abs(e.deltaX) > 20) {
+        lastScrollTime.current = now;
+        if (e.deltaX > 0) {
+          handleNextVideo();
+        } else {
+          handlePrevVideo();
+        }
+      }
+    };
+
+    const element = document.getElementById('hero');
+    if (element) {
+      element.addEventListener('wheel', handleWheel, { passive: true });
+    }
+    return () => {
+      if (element) {
+        element.removeEventListener('wheel', handleWheel);
+      }
+    };
+  }, [handleNextVideo, handlePrevVideo]);
 
   // Memoize particles to avoid hydration mismatch
   const particles = useMemo(() =>
@@ -107,13 +200,56 @@ const Hero = () => {
       {/* Animated Gradient BG */}
       <div className="hero-gradient-bg" />
 
-      {/* Background Image (Desktop only) */}
-      <div className="hero-bg">
-        <div
-          className="hero-image"
-          style={{ backgroundImage: 'url(https://i.ibb.co/fs2MBD4/hero-spa-bg.jpg)' }}
-        />
-        <div className="hero-overlay" />
+      {/* Background Videos with Lazy-load & Cross-fade */}
+      <div 
+        className="hero-bg"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        {HOMEPAGE_VIDEOS.map((video, idx) => {
+          const isActive = idx === activeVideoIndex;
+          const isLoaded = loadedIndices.includes(idx);
+          return (
+            <div
+              key={video.id}
+              className={`hero-video-wrapper ${isActive ? 'active' : ''}`}
+              style={{
+                position: 'absolute',
+                inset: 0,
+                opacity: isActive ? 1 : 0,
+                transition: 'opacity 800ms ease-in-out',
+                zIndex: isActive ? 1 : 0,
+              }}
+            >
+              {isLoaded ? (
+                <video
+                  ref={(el) => {
+                    videoRefs.current[idx] = el;
+                  }}
+                  className="hero-video"
+                  src={video.url}
+                  poster={video.poster}
+                  autoPlay={isActive}
+                  muted
+                  loop
+                  playsInline
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                  }}
+                />
+              ) : (
+                <div
+                  className="hero-image"
+                  style={{ backgroundImage: `url(${video.poster})` }}
+                />
+              )}
+            </div>
+          );
+        })}
+        <div className="hero-overlay" style={{ zIndex: 2 }} />
       </div>
 
       {/* Content */}
@@ -123,10 +259,7 @@ const Hero = () => {
         animate="visible"
         variants={heroStagger}
       >
-        {/* Badge */}
-        <motion.div className="hero-cinematic-badge" variants={fadeInDown}>
-          {HERO_TEXT.badge}
-        </motion.div>
+
 
         {/* Subtitle */}
         <motion.span className="hero-cinematic-sub" variants={fadeInUp}>
@@ -143,13 +276,7 @@ const Hero = () => {
           {HERO_TEXT.subTitle2}
         </motion.span>
 
-        {/* Divider */}
-        <motion.div className="hero-brand-divider" variants={scaleIn} />
 
-        {/* Tagline */}
-        <motion.p className="hero-cinematic-tagline" variants={fadeInUp}>
-          {HERO_TEXT.tagline}
-        </motion.p>
 
         {/* Countdown */}
         <motion.div className="hero-countdown" variants={fadeInUp}>
@@ -178,6 +305,41 @@ const Hero = () => {
             {HERO_TEXT.cta2}
           </a>
         </motion.div>
+
+        {/* Chevrons Navigation for Desktop */}
+        <div className="hero-nav-controls" style={{ zIndex: 10 }}>
+          <button
+            onClick={handlePrevVideo}
+            className="hero-nav-arrow hero-nav-arrow--left"
+            aria-label="Previous Video"
+          >
+            <ChevronLeft size={28} />
+          </button>
+          <button
+            onClick={handleNextVideo}
+            className="hero-nav-arrow hero-nav-arrow--right"
+            aria-label="Next Video"
+          >
+            <ChevronRight size={28} />
+          </button>
+        </div>
+
+        {/* Pagination Dots & Text */}
+        <div className="hero-pagination" style={{ zIndex: 10 }}>
+          <span className="hero-pagination-number">
+            {String(activeVideoIndex + 1).padStart(2, '0')} / {String(HOMEPAGE_VIDEOS.length).padStart(2, '0')}
+          </span>
+          <div className="hero-pagination-dots">
+            {HOMEPAGE_VIDEOS.map((_, idx) => (
+              <button
+                key={idx}
+                className={`hero-pagination-dot ${idx === activeVideoIndex ? 'active' : ''}`}
+                onClick={() => setActiveVideoIndex(idx)}
+                aria-label={`Go to video ${idx + 1}`}
+              />
+            ))}
+          </div>
+        </div>
 
         {/* Scroll Hint */}
         <motion.div className="hero-scroll-hint" variants={fadeInUp}>

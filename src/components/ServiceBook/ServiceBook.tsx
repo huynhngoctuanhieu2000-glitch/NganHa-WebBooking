@@ -4,6 +4,7 @@ import React, { useRef, useState, useCallback, useEffect, forwardRef } from 'rea
 import HTMLFlipBook from 'react-pageflip';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Clock, Sparkles, Loader2 } from 'lucide-react';
+import { Skeleton } from '@astryxdesign/core';
 
 import { Service } from '@/types';
 import { fetchServices } from '@/data/services';
@@ -235,10 +236,25 @@ const ServiceBook = () => {
   // Loading state
   if (isLoading) {
     return (
-      <div className="book-container flex items-center justify-center min-h-[400px]">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-10 h-10 text-[#D4AF37] animate-spin" />
-          <p className="text-white/60 font-serif italic text-lg">Loading services...</p>
+      <div className="book-container flex items-center justify-center min-h-[400px] w-full p-8">
+        <div className="flex flex-col gap-6 w-full max-w-[500px] bg-[#111] p-6 rounded-2xl border border-white/5">
+          <div className="flex gap-4 items-center">
+            <Skeleton width={50} height={50} radius="rounded" />
+            <div className="flex flex-col gap-2 flex-1">
+              <Skeleton width="60%" height={16} />
+              <Skeleton width="40%" height={12} />
+            </div>
+          </div>
+          <Skeleton width="100%" height={150} radius={2} />
+          <div className="flex flex-col gap-2">
+            <Skeleton width="90%" height={14} />
+            <Skeleton width="95%" height={14} />
+            <Skeleton width="50%" height={14} />
+          </div>
+          <div className="flex justify-between items-center mt-4">
+            <Skeleton width={100} height={24} />
+            <Skeleton width={120} height={40} radius={2} />
+          </div>
         </div>
       </div>
     );

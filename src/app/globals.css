@@ -2,6 +2,31 @@
 @import "tailwindcss";
 @source "../";
 
+@font-face {
+  font-family: 'SFU Futura';
+  src: url('/fonts/Futura.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'UTM French Vanilla';
+  src: url('/fonts/UTM-French-Vanilla.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Abramo';
+  src: url('/fonts/Abramo.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+
 /* --- 0. ENVIRONMENT VARIABLES CONFIGURATION (NEW - IMPORTANT FOR MOBILE) --- */
 :root {
   /* Automatically get notch height, fallback to 20px if on Desktop where env() = 0px */

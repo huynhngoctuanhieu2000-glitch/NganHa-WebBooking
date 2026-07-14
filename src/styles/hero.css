@@ -113,8 +113,8 @@
   max-width: var(--hero-max-width);
   flex: 1;
   justify-content: center;
-  padding-top: var(--hero-padding-top);
-  padding-bottom: var(--hero-padding-bottom);
+  padding-top: calc(var(--hero-padding-top) - 60px);
+  padding-bottom: calc(var(--hero-padding-bottom) + 100px);
 }
 
 /* Particles */
@@ -418,9 +418,89 @@
   border-top: 1px solid rgba(212, 175, 55, 0.15);
 }
 
-/* Hero background image: visible on desktop only */
+/* Hero background video: visible on all devices */
+.hero-section--cinematic .hero-bg {
+  display: block;
+}
+
+/* --- Navigation Controls & Pagination --- */
+.hero-nav-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(10, 10, 10, 0.25);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  color: var(--gold-400);
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 10;
+  backdrop-filter: blur(4px);
+}
+
+.hero-nav-arrow:hover {
+  background: rgba(212, 175, 55, 0.15);
+  border-color: var(--gold-400);
+  transform: translateY(-50%) scale(1.05);
+}
+
+.hero-nav-arrow--left {
+  left: 32px;
+}
+
+.hero-nav-arrow--right {
+  right: 32px;
+}
+
+.hero-pagination {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  z-index: 10;
+}
+
+.hero-pagination-number {
+  font-family: var(--font-heading, 'Cormorant Garamond', serif);
+  font-size: 14px;
+  color: var(--gold-300);
+  letter-spacing: 2px;
+}
+
+.hero-pagination-dots {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.hero-pagination-dot {
+  width: 16px;
+  height: 2px;
+  background: var(--gold-400);
+  opacity: 0.3;
+  border: none;
+  cursor: pointer;
+  transition: all 300ms ease;
+  padding: 0;
+}
+
+.hero-pagination-dot.active {
+  width: 32px;
+  opacity: 1;
+}
+
+/* Responsive adjustments */
 @media (max-width: 768px) {
-  .hero-section--cinematic .hero-bg {
-    display: none;
+  .hero-nav-arrow {
+    display: none; /* Hide arrows on mobile, use swipe instead */
+  }
+  .hero-pagination {
+    margin-top: 8px;
   }
 }

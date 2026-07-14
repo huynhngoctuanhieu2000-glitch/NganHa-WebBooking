@@ -2,6 +2,8 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { NextRequest, NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 // ═══════════════════════════════════════
 // Spa Knowledge Base (injected into system prompt)
 // ═══════════════════════════════════════

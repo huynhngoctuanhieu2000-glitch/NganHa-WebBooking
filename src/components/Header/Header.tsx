@@ -39,63 +39,68 @@ const Header = () => {
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: HEADER_TRANSITION_DURATION, ease: 'easeOut' }}
     >
-      <div className="header-inner">
-        {/* Logo */}
-        <a href="#hero" className="header-logo">
-          <span className="header-logo-icon">✦</span>
-          <div className="header-logo-text">
-            <span className="header-logo-name">Ngân Hà</span>
-            <span className="header-logo-sub">let us understand you</span>
-          </div>
-        </a>
+      <div className="header-inner-container">
+        {/* Top Row: Mobile Toggle, Logo, Right Controls, Desktop Navigation */}
+        <div className="header-top-row">
+          {/* Mobile toggle & Desktop Navigation on the left */}
+          <div className="header-top-left">
+            <button
+              className="header-mobile-toggle"
+              onClick={toggleMobileMenu}
+              aria-label="Toggle menu"
+            >
+              {isMobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
+            </button>
 
-        {/* Desktop Navigation */}
-        <nav className="header-nav-desktop">
-          {NAV_ITEMS.map((item) => (
-            <a key={item.href} href={item.href} className="header-nav-link">
-              {item.label}
+            {/* Desktop Navigation Links */}
+            <nav className="header-nav-desktop">
+              {NAV_ITEMS.map((item) => (
+                <a key={item.href} href={item.href} className="header-nav-link">
+                  {item.label}
+                </a>
+              ))}
+            </nav>
+          </div>
+
+          {/* Centered Logo */}
+          <a href="#hero" className="header-logo">
+            <span className="header-logo-icon">✦</span>
+            <div className="header-logo-text">
+              <span className="header-logo-name">Ngân Hà</span>
+              <span className="header-logo-sub">let us understand you</span>
+            </div>
+          </a>
+
+          {/* Right Section: Languages, Login, Cart */}
+          <div className="header-right">
+            {/* Language Flags */}
+            <div className="header-languages">
+              {LANGUAGES.map((lang) => (
+                <button
+                  key={lang.code}
+                  className="header-lang-btn"
+                  title={lang.label}
+                  aria-label={`Switch to ${lang.label}`}
+                >
+                  <img
+                    src={`https://flagcdn.com/w40/${lang.countryCode}.png`}
+                    srcSet={`https://flagcdn.com/w80/${lang.countryCode}.png 2x`}
+                    alt={lang.label}
+                    className="header-lang-flag-img"
+                  />
+                </button>
+              ))}
+            </div>
+
+            {/* Login & Cart */}
+            <a href="#login" className="header-icon-btn" aria-label="Log in">
+              <User size={20} />
+              <span className="header-icon-label">Log in</span>
             </a>
-          ))}
-        </nav>
-
-        {/* Right Section: Languages, Login, Cart */}
-        <div className="header-right">
-          {/* Language Flags */}
-          <div className="header-languages">
-            {LANGUAGES.map((lang) => (
-              <button
-                key={lang.code}
-                className="header-lang-btn"
-                title={lang.label}
-                aria-label={`Switch to ${lang.label}`}
-              >
-                <img
-                  src={`https://flagcdn.com/w40/${lang.countryCode}.png`}
-                  srcSet={`https://flagcdn.com/w80/${lang.countryCode}.png 2x`}
-                  alt={lang.label}
-                  className="header-lang-flag-img"
-                />
-              </button>
-            ))}
+            <a href="#cart" className="header-icon-btn" aria-label="Cart">
+              <ShoppingBag size={20} />
+            </a>
           </div>
-
-          {/* Login & Cart */}
-          <a href="#login" className="header-icon-btn" aria-label="Log in">
-            <User size={20} />
-            <span className="header-icon-label">Log in</span>
-          </a>
-          <a href="#cart" className="header-icon-btn" aria-label="Cart">
-            <ShoppingBag size={20} />
-          </a>
-
-          {/* Mobile Menu Toggle */}
-          <button
-            className="header-mobile-toggle"
-            onClick={toggleMobileMenu}
-            aria-label="Toggle menu"
-          >
-            {isMobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
-          </button>
         </div>
       </div>
 
