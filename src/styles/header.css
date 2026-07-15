@@ -37,6 +37,7 @@
 
 /* ═══ Liquid Glass Effect (Brown) ═══ */
 .header-scrolled::before {
+  --glass-filter: blur(40px) saturate(180%) brightness(1.05);
   background:
     linear-gradient(
       135deg,
@@ -46,8 +47,8 @@
       rgba(120, 80, 40, 0.05) 100%
     ),
     rgba(30, 18, 8, 0.65);
-  backdrop-filter: blur(40px) saturate(180%) brightness(1.05);
-  -webkit-backdrop-filter: blur(40px) saturate(180%) brightness(1.05);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
   /* Fix specific to Windows Chrome backdrop-filter rendering */
   transform: translate3d(0, 0, 0); 
   box-shadow:
@@ -264,6 +265,7 @@
   inset: 0;
   z-index: -1;
   pointer-events: none;
+  --glass-filter: blur(40px) saturate(180%) brightness(1.05);
   background:
     linear-gradient(
       135deg,
@@ -273,8 +275,8 @@
       rgba(120, 80, 40, 0.05) 100%
     ),
     rgba(30, 18, 8, 0.75);
-  backdrop-filter: blur(40px) saturate(180%) brightness(1.05);
-  -webkit-backdrop-filter: blur(40px) saturate(180%) brightness(1.05);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
   transform: translate3d(0, 0, 0);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   border-bottom: 1px solid rgba(212, 175, 55, 0.15);
