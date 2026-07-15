@@ -2,8 +2,8 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, ShoppingBag, User } from 'lucide-react';
-import { useHeaderLogic } from './Header.logic';
+import { Menu, X, ShoppingBag, User, ChevronDown } from 'lucide-react';
+import { useHeaderLogic, LANGUAGES } from './Header.logic';
 
 // 🔧 UI CONFIGURATION
 const HEADER_TRANSITION_DURATION = 0.3;
@@ -16,21 +16,21 @@ const NAV_ITEMS = [
   { label: 'Shop', href: '#shop' },
   { label: 'Service Area', href: '#branches' },
   { label: 'Blogs', href: '#blogs' },
-  { label: 'Academy', href: '#academy' },
-  { label: 'Spa home', href: '#hero' },
-];
-
-// Language flags (using ISO 3166-1 alpha-2 country codes for flagcdn)
-const LANGUAGES = [
-  { code: 'vi', countryCode: 'vn', label: 'Tiếng Việt' },
-  { code: 'en', countryCode: 'gb', label: 'English' },
-  { code: 'cn', countryCode: 'cn', label: '中文' },
-  { code: 'jp', countryCode: 'jp', label: '日本語' },
-  { code: 'kr', countryCode: 'kr', label: '한국어' },
+  { label: 'Academy', href: '#academy', isComingSoon: true },
+  { label: 'Spa home', href: '#hero', isComingSoon: true },
 ];
 
 const Header = () => {
-  const { isMobileMenuOpen, isScrolled, toggleMobileMenu } = useHeaderLogic();
+  const { 
+    isMobileMenuOpen, 
+    isScrolled, 
+    toggleMobileMenu,
+    currentLang,
+    isLangDropdownOpen,
+    toggleLangDropdown,
+    handleSelectLanguage,
+    langDropdownRef
+  } = useHeaderLogic();
 
   return (
     <motion.header
@@ -66,21 +66,29 @@ const Header = () => {
               <a 
                 key={item.href} 
                 href={item.href} 
-                className={`header-nav-link ${item.label === 'Academy' || item.label === 'Spa home' ? 'dimmed' : ''}`}
+                className={`header-nav-link ${item.isComingSoon ? 'dimmed' : ''}`}
               >
-                {item.label}
+                {item.isComingSoon ? (
+                  <span className="nav-item-coming-soon">
+                    <span className="nav-text-primary">{item.label}</span>
+                    <span className="nav-text-secondary">Coming Soon</span>
+                  </span>
+                ) : (
+                  item.label
+                )}
               </a>
             ))}
           </nav>
 
           {/* Right Section: Languages, Login, Cart */}
           <div className="header-right">
-            {/* Language Flags */}
+            {/* Language Flags (Desktop only) */}
             <div className="header-languages">
               {LANGUAGES.map((lang) => (
                 <button
                   key={lang.code}
-                  className="header-lang-btn"
+                  className={`header-lang-btn ${currentLang.code === lang.code ? 'active' : ''}`}
+                  onClick={() => handleSelectLanguage(lang)}
                   title={lang.label}
                   aria-label={`Switch to ${lang.label}`}
                 >
@@ -92,6 +100,42 @@ const Header = () => {
                   />
                 </button>
               ))}
+            </div>
+
+            {/* Language Flag Selector (Mobile only, <= 1024px) */}
+            <div className="mobile-lang-selector" ref={langDropdownRef}>
+              <button 
+                className="mobile-lang-btn" 
+                onClick={toggleLangDropdown}
+                aria-expanded={isLangDropdownOpen}
+                aria-label="Select language"
+              >
+                <img
+                  src={`https://flagcdn.com/w40/${currentLang.countryCode}.png`}
+                  srcSet={`https://flagcdn.com/w80/${currentLang.countryCode}.png 2x`}
+                  alt={currentLang.label}
+                  className="header-lang-flag-img"
+                />
+                <ChevronDown size={14} className={`lang-chevron ${isLangDropdownOpen ? 'rotate' : ''}`} />
+              </button>
+              
+              {/* Dropdown Menu */}
+              <div className={`lang-dropdown-menu ${isLangDropdownOpen ? 'open' : ''}`}>
+                {LANGUAGES.filter(l => l.code !== currentLang.code).map((lang) => (
+                  <button
+                    key={lang.code}
+                    className="lang-dropdown-item"
+                    onClick={() => handleSelectLanguage(lang)}
+                  >
+                    <img
+                      src={`https://flagcdn.com/w40/${lang.countryCode}.png`}
+                      srcSet={`https://flagcdn.com/w80/${lang.countryCode}.png 2x`}
+                      alt={lang.label}
+                      className="header-lang-flag-img"
+                    />
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Login & Cart */}
@@ -116,27 +160,19 @@ const Header = () => {
             transition={{ duration: MOBILE_MENU_DURATION }}
           >
             {NAV_ITEMS.map((item) => (
-              <a
-                key={item.href}
-                href={item.href}
-                className="mobile-nav-link"
-                onClick={toggleMobileMenu}
-              >
-                {item.label}
-              </a>
+              <div key={item.href} className="mobile-nav-link-wrapper">
+                <a
+                  href={item.href}
+                  className={`mobile-nav-link ${item.isComingSoon ? 'dimmed' : ''}`}
+                  onClick={toggleMobileMenu}
+                >
+                  {item.label}
+                </a>
+                {item.isComingSoon && (
+                  <span className="coming-soon-badge">Coming Soon</span>
+                )}
+              </div>
             ))}
-            <div className="mobile-lang-row">
-              {LANGUAGES.map((lang) => (
-                <button key={lang.code} className="header-lang-btn" title={lang.label}>
-                  <img
-                    src={`https://flagcdn.com/w40/${lang.countryCode}.png`}
-                    srcSet={`https://flagcdn.com/w80/${lang.countryCode}.png 2x`}
-                    alt={lang.label}
-                    className="header-lang-flag-img"
-                  />
-                </button>
-              ))}
-            </div>
           </motion.nav>
         )}
       </AnimatePresence>

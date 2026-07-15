@@ -1,11 +1,23 @@
 // Header.logic.ts - Header business logic
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+
+// Cấu hình danh sách ngôn ngữ dùng chung
+export const LANGUAGES = [
+  { code: 'vi', countryCode: 'vn', label: 'Tiếng Việt' },
+  { code: 'en', countryCode: 'gb', label: 'English' },
+  { code: 'cn', countryCode: 'cn', label: '中文' },
+  { code: 'jp', countryCode: 'jp', label: '日本語' },
+  { code: 'kr', countryCode: 'kr', label: '한국어' },
+];
 
 export const useHeaderLogic = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [currentLang, setCurrentLang] = useState(LANGUAGES[0]);
+  const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
+  const langDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -22,7 +34,38 @@ export const useHeaderLogic = () => {
     };
   }, []);
 
-  const toggleMobileMenu = () => setIsMobileMenuOpen((prev) => !prev);
+  // Handle click outside for language dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (langDropdownRef.current && !langDropdownRef.current.contains(event.target as Node)) {
+        setIsLangDropdownOpen(false);
+      }
+    };
 
-  return { isMobileMenuOpen, isScrolled, toggleMobileMenu };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const toggleMobileMenu = () => setIsMobileMenuOpen((prev) => !prev);
+  const toggleLangDropdown = () => setIsLangDropdownOpen((prev) => !prev);
+  const closeLangDropdown = () => setIsLangDropdownOpen(false);
+  
+  const handleSelectLanguage = (lang: typeof LANGUAGES[0]) => {
+    setCurrentLang(lang);
+    closeLangDropdown();
+  };
+
+  return { 
+    isMobileMenuOpen, 
+    isScrolled, 
+    toggleMobileMenu,
+    currentLang,
+    isLangDropdownOpen,
+    toggleLangDropdown,
+    closeLangDropdown,
+    handleSelectLanguage,
+    langDropdownRef
+  };
 };
