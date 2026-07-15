@@ -4,7 +4,17 @@ import React, { useRef, useState, useCallback, useEffect, forwardRef } from 'rea
 import HTMLFlipBook from 'react-pageflip';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Clock, Sparkles, Loader2 } from 'lucide-react';
-import { Skeleton } from '@astryxdesign/core';
+// Simple Skeleton component (replaces @astryxdesign/core to fix prod jsxDEV error)
+const Skeleton = ({ width, height, radius }: { width?: string | number; height?: number; radius?: string | number }) => (
+  <div
+    className="animate-pulse bg-white/10"
+    style={{
+      width: typeof width === 'number' ? `${width}px` : width || '100%',
+      height: height ? `${height}px` : '16px',
+      borderRadius: radius === 'rounded' ? '9999px' : typeof radius === 'number' ? `${radius}px` : '8px',
+    }}
+  />
+);
 
 import { Service } from '@/types';
 import { fetchServices } from '@/data/services';
