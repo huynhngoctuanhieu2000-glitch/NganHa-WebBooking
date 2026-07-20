@@ -157,10 +157,10 @@ const GroupedServicePage = forwardRef<HTMLDivElement, { group: GroupedService; i
               <div className="price-usd">${selectedVariant.priceUSD}</div>
             </div>
 
-            <button className="book-button">
+            <a href="/en/new-user/select-menu" className="book-button" style={{ textDecoration: 'none' }}>
               <Sparkles size={16} />
               <span>Đặt Lịch Ngay</span>
-            </button>
+            </a>
           </div>
         </div>
       </Page>
@@ -183,10 +183,10 @@ const BackCover = forwardRef<HTMLDivElement>((_, ref) => {
             <p>📍 11 Ngô Đức Kế, Q1, TP.HCM</p>
             <p>🕘 9:00 AM - 12:00 AM</p>
           </div>
-          <button className="book-button large">
+          <a href="/en/new-user/select-menu" className="book-button large" style={{ textDecoration: 'none' }}>
             <Sparkles size={20} />
             <span>BOOK NOW</span>
-          </button>
+          </a>
         </div>
         <div className="cover-ornament bottom" />
       </div>

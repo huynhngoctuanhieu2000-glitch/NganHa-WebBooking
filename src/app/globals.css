@@ -2,31 +2,6 @@
 @import "tailwindcss";
 @source "../";
 
-@font-face {
-  font-family: 'SFU Futura';
-  src: url('/fonts/Futura.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'UTM French Vanilla';
-  src: url('/fonts/UTM-French-Vanilla.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Abramo';
-  src: url('/fonts/Abramo.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-
-
 /* --- 0. ENVIRONMENT VARIABLES CONFIGURATION (NEW - IMPORTANT FOR MOBILE) --- */
 :root {
   /* Automatically get notch height, fallback to 20px if on Desktop where env() = 0px */
@@ -34,29 +9,21 @@
   --safe-bottom: max(env(safe-area-inset-bottom), 20px);
 }
 
-html {
+html,
+body,
+:root {
   width: 100%;
-  height: auto;
+  min-height: 100vh;
   margin: 0;
   padding: 0;
   overflow-x: hidden;
-  overflow-y: scroll;
   box-sizing: border-box;
   background-color: black;
   color: white;
+
+  /* Mobile optimizations from HTML */
   overscroll-behavior: none;
   -webkit-text-size-adjust: 100%;
-}
-
-body {
-  width: 100%;
-  min-height: 100dvh;
-  margin: 0;
-  padding: 0;
-  overflow-x: hidden;
-  overflow-y: visible;
-  box-sizing: border-box;
-  touch-action: pan-x pan-y;
 }
 
 *, *::before, *::after {

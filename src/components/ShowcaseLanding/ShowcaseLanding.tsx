@@ -11,6 +11,7 @@ import {
   Sparkles, CreditCard, MapPin, Star, ChevronDown, ChevronLeft,
   ChevronRight, Shield, RotateCcw, Lock, ArrowRight, Phone,
   Mail, BookOpen, Timer, Check, Gem, Crown, Zap,
+  type LucideIcon,
 } from 'lucide-react';
 import { t } from './ShowcaseLanding.i18n';
 import {
@@ -28,7 +29,7 @@ import {
 const SECTION_IDS = ['hero', 'painpoint', 'features', 'testimonials', 'services', 'pricing', 'faq', 'blog', 'contact'];
 
 // ─── Icon Map ───
-const iconMap: Record<string, React.ElementType> = {
+const iconMap: Record<string, LucideIcon> = {
   Brain, HeartCrack, Clock, CalendarCheck, Award, Globe,
   Sparkles, CreditCard, MapPin, Shield, RotateCcw, Lock,
 };
