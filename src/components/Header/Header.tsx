@@ -15,7 +15,7 @@ const NAV_ITEMS = [
   { label: 'Service', href: '#services' },
   { label: 'Shop', href: '#shop' },
   { label: 'Service Area', href: '#branches' },
-  { label: 'Blogs', href: '#blogs' },
+  { label: 'Blogs', href: '/blog.html', target: '_blank' },
   { label: 'Academy', href: '#academy', isComingSoon: true },
   { label: 'Spa home', href: '#hero', isComingSoon: true },
 ];
@@ -66,6 +66,7 @@ const Header = () => {
               <a 
                 key={item.href} 
                 href={item.href} 
+                target={item.target || undefined}
                 className={`header-nav-link ${item.isComingSoon ? 'dimmed' : ''}`}
               >
                 {item.isComingSoon ? (
@@ -163,6 +164,7 @@ const Header = () => {
               <div key={item.href} className="mobile-nav-link-wrapper">
                 <a
                   href={item.href}
+                  target={item.target || undefined}
                   className={`mobile-nav-link ${item.isComingSoon ? 'dimmed' : ''}`}
                   onClick={toggleMobileMenu}
                 >
