@@ -1,4 +1,4 @@
-﻿/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 /*  MAIN LAYOUT                           */
 /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
@@ -52,12 +52,17 @@
   z-index: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
+  width: 100%;
 }
 
 .book-wrapper {
-  perspective: 2000px;
+  perspective: 1200px;
   position: relative;
+  width: 100%;
+  max-width: 550px;
+  height: 680px;
+  margin: 0 auto;
 }
 
 .book-wrapper::after {
@@ -80,6 +85,33 @@
   background: var(--dark-card);
   overflow: hidden;
   border: 1px solid rgba(212, 175, 55, 0.15);
+  border-left: none; /* Không viền ở gáy sách */
+}
+
+/* Tạo bóng đổ gáy sách bằng pseudo-element để không bị các class con đè background */
+.page::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 15%;
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.2) 30%, transparent 100%);
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Thêm bóng nhẹ cho mép phải trang để có độ cong */
+.page::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 5%;
+  background: linear-gradient(to left, rgba(0, 0, 0, 0.3) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 10;
 }
 
 /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
@@ -501,6 +533,7 @@
 .book-navigation {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 20px;
   margin-top: 28px;
 }
