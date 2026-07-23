@@ -142,7 +142,7 @@
 
 .cover-ornament::before,
 .cover-ornament::after {
-  content: 'âœ¦';
+  content: '✦';
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
