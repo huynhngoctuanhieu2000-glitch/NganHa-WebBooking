@@ -13,8 +13,8 @@
       }
     }
   </script>
-  <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="celestial-style.css?v=2.5">
+  <link rel="stylesheet" href="style.css?v=3.2">
+  <link rel="stylesheet" href="celestial-style.css?v=2.9">
 <style>
 @import url("https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap");
 
@@ -376,10 +376,12 @@
         display: grid;
         place-items: center;
         border-radius: 999px;
-        background: #b39560;
-        color: #120f08;
+        border: 1px solid rgba(255, 255, 255, 0.88);
+        background: #e1272d;
+        color: #fff;
         font: 800 11px var(--ui-font);
         opacity: 0;
+        box-shadow: 0 8px 18px rgba(225, 39, 45, 0.28);
       }
 
       .cart-button.has-items span {
@@ -769,25 +771,63 @@
         font: 500 12px var(--ui-font);
       }
 
-      .cart-notification {
-        position: fixed;
-        z-index: 7;
-        top: calc(var(--safe-top) + 70px);
-        right: 30px;
-        max-width: min(360px, calc(100vw - 60px));
-        padding: 12px 16px;
-        border: 1px solid rgba(245, 222, 162, 0.42);
+      .service-card.is-selected {
+        border-color: rgba(245, 222, 162, 0.16);
+        background:
+          linear-gradient(135deg, rgba(245, 222, 162, 0.055), rgba(255, 255, 255, 0.018)),
+          rgba(8, 12, 22, 0.22);
+      }
+
+      .service-qty-control {
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        padding: 5px;
+        border: 1px solid rgba(245, 222, 162, 0.28);
         border-radius: 999px;
-        background: rgba(3, 9, 19, 0.82);
+        background: rgba(7, 12, 22, 0.34);
+        backdrop-filter: blur(16px) saturate(128%);
+        -webkit-backdrop-filter: blur(16px) saturate(128%);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      }
+
+      .service-qty-control button {
+        width: 34px;
+        height: 34px;
+        display: grid;
+        place-items: center;
+        border: 1px solid rgba(245, 222, 162, 0.2);
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.035);
         color: var(--gold-3);
-        opacity: 0;
-        transform: translateY(-8px);
-        transition: opacity 220ms ease, transform 220ms ease;
+        cursor: pointer;
+        font: 800 18px/1 var(--ui-font);
+        transition: transform 180ms ease, background 180ms ease, border-color 180ms ease;
+      }
+
+      .service-qty-control button:hover,
+      .service-qty-control button:focus-visible {
+        transform: translateY(-1px);
+        border-color: rgba(245, 222, 162, 0.42);
+        background: rgba(245, 222, 162, 0.1);
+        outline: none;
+      }
+
+      .service-qty-control span {
+        min-width: 22px;
+        color: #fff7d9;
+        text-align: center;
+        font: 800 13px var(--ui-font);
+      }
+
+      .cart-notification {
+        display: none !important;
       }
 
       .cart-notification.visible {
-        opacity: 1;
-        transform: translateY(0);
+        display: none !important;
       }
 
       .cart-drawer {
@@ -800,19 +840,17 @@
         right: 24px;
         width: min(420px, calc(100vw - 32px));
         max-height: calc(100vh - 48px);
-        background: linear-gradient(
-          145deg,
-          rgba(10, 16, 34, 0.86),
-          rgba(4, 8, 20, 0.78)
-        );
-        backdrop-filter: blur(22px) saturate(130%);
-        -webkit-backdrop-filter: blur(22px) saturate(130%);
-        border: 0;
+        background:
+          linear-gradient(145deg, rgba(255, 244, 214, 0.055), rgba(255, 244, 214, 0.018)),
+          rgba(8, 7, 6, 0.24);
+        backdrop-filter: blur(28px) saturate(118%) brightness(1.04);
+        -webkit-backdrop-filter: blur(28px) saturate(118%) brightness(1.04);
+        border: 1px solid rgba(241, 223, 176, 0.12);
         border-radius: 22px;
         box-shadow:
-          0 28px 90px rgba(0, 0, 0, 0.52),
-          0 0 30px rgba(203, 160, 72, 0.06),
-          inset 0 1px 0 rgba(255, 255, 255, 0.04);
+          0 28px 90px rgba(0, 0, 0, 0.28),
+          0 0 34px rgba(203, 160, 72, 0.045),
+          inset 0 1px 0 rgba(255, 255, 255, 0.08);
         overflow: auto;
       }
 
@@ -1137,45 +1175,68 @@
           scroll-behavior: auto !important;
           transition-duration: 0.01ms !important;
         }
+      }
+      .menu-back-btn,
       .cel-return-btn {
         pointer-events: auto;
         position: fixed;
-        top: 20px;
-        left: 20px;
-        z-index: 20;
+        top: calc(var(--safe-top) + 4px);
+        left: clamp(14px, 2vw, 24px);
+        z-index: 60;
         display: flex;
         align-items: center;
-        gap: 8px;
-        padding: 10px 20px;
-        border: 1px solid rgba(184, 137, 63, 0.4);
-        border-radius: 28px;
-        background: rgba(3, 8, 17, 0.65);
-        backdrop-filter: blur(12px);
+        justify-content: center;
+        width: 42px;
+        height: 36px;
+        padding: 0;
+        border: 1px solid rgba(241, 223, 176, 0.24);
+        border-radius: 999px;
+        background: rgba(3, 8, 17, 0.38);
+        backdrop-filter: blur(16px) saturate(120%);
+        -webkit-backdrop-filter: blur(16px) saturate(120%);
         color: var(--gold-3);
-        font: 500 13px var(--ui-font);
-        letter-spacing: 0.06em;
+        font: 600 11px var(--ui-font);
+        letter-spacing: 0.11em;
+        text-transform: uppercase;
+        box-shadow: 0 12px 34px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 244, 214, 0.08);
         cursor: pointer;
-        transition: all 0.3s ease;
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: manipulation;
+        transition: border-color 220ms ease, background 220ms ease, color 220ms ease, transform 220ms ease;
+      }
+      .menu-back-btn {
+        z-index: 12000;
+        display: none;
         opacity: 0;
-        transform: translateY(-8px);
-        animation: celReturnFadeIn 0.8s 1.5s ease forwards;
+        pointer-events: none;
       }
+      .menu-back-btn.visible {
+        display: flex;
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .menu-back-btn:hover,
       .cel-return-btn:hover {
-        background: rgba(184, 137, 63, 0.18);
-        border-color: rgba(184, 137, 63, 0.7);
-        transform: translateY(0) scale(1.02);
+        background: rgba(184, 137, 63, 0.14);
+        border-color: rgba(241, 223, 176, 0.48);
+        color: #fff4d6;
+        transform: translateX(-1px);
       }
+      .menu-back-btn:focus-visible,
+      .cel-return-btn:focus-visible {
+        outline: 1px solid rgba(241, 223, 176, 0.74);
+        outline-offset: 3px;
+      }
+      .menu-back-btn svg,
       .cel-return-btn svg {
         width: 16px;
         height: 16px;
-        transition: transform 0.3s ease;
+        transition: transform 220ms ease;
       }
+      .menu-back-btn:hover svg,
       .cel-return-btn:hover svg {
-        transform: translateX(-3px);
-      }
-      @keyframes celReturnFadeIn {
-        to { opacity: 1; transform: translateY(0); }
-      }
+        transform: translateX(-2px);
       }
 </style>
 </head>
@@ -1186,6 +1247,12 @@
     <div id="black-overlay"></div>
     <button class="btn-nav" id="btn-prev">&#10094;</button>
     <button class="btn-nav" id="btn-next">&#10095;</button>
+    <button class="menu-back-btn" id="btn-menu-back" type="button" aria-label="Gập sách lại" aria-hidden="true" tabindex="-1">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M19 12H6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path>
+        <path d="M12 6L6 12L12 18" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path>
+      </svg>
+    </button>
     <button id="btn-back-book">RETURN</button>
 
     <canvas id="scene" aria-hidden="true"></canvas>
@@ -1193,7 +1260,13 @@
   </div>
 
   <div id="lightbox">
-    <div id="lightbox-close">&times;</div>
+    <button id="lightbox-close" type="button" aria-label="Quay lại grid ảnh">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M19 12H6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+        <path d="M12 6L6 12L12 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+      </svg>
+      Back
+    </button>
     <img id="lightbox-img" alt="Zoomed Image" />
   </div>
 
@@ -1207,27 +1280,11 @@
 
       <div class="hud">
         <button class="cel-return-btn" id="cel-returnBtn" type="button" aria-label="Quay lại Menu">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
-          Quay lại Menu
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M19 12H6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path>
+            <path d="M12 6L6 12L12 18" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path>
+          </svg>
         </button>
-        <div class="scene-instruction" aria-hidden="true">
-          <div class="scene-instruction__lotus">Khám phá Ngân Hà</div>
-          <div class="scene-instruction__row">
-            <h1>Chọn một chòm sao<br>để bắt đầu hành trình</h1>
-          </div>
-          <div class="scene-instruction__diamond"></div>
-        </div>
-
-        <div class="topbar">
-          <button class="cart-button" id="cel-cartButton" type="button" aria-label="Giỏ hàng, 0 dịch vụ">
-            <svg aria-hidden="true" width="21" height="21" viewBox="0 0 24 24" fill="none">
-              <path d="M7 8h10l-.8 11H7.8L7 8Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
-              <path d="M9 8a3 3 0 0 1 6 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
-            </svg>
-            <span id="cel-cartBadge">0</span>
-          </button>
-        </div>
-
         <aside class="service-sheet" id="cel-serviceSheet" aria-live="polite">
           <div class="sheet-scroll">
             <p class="sheet-kicker" id="cel-sheetKicker">Danh mục</p>
@@ -1247,8 +1304,11 @@
           </header>
           <div id="cel-cartItems"></div>
           <footer>
-            <span>Tạm tính</span>
-            <strong id="cel-cartSubtotal">0 đ</strong>
+            <div class="cart-total-row">
+              <span>Tạm tính</span>
+              <strong id="cel-cartSubtotal">0 đ</strong>
+            </div>
+            <button class="cart-place-order" id="cel-placeOrderButton" type="button" disabled>Đặt lịch</button>
           </footer>
         </aside>
 
@@ -1287,10 +1347,170 @@
   <!-- FlipBook Dependencies -->
 
   <script type="module">
-    import { FlipMenu } from './FlipMenu.js?v=2.5';
+    import { FlipMenu } from './FlipMenu.js?v=3.9';
     
     const flipApp = document.getElementById('app');
     const celestialApp = document.getElementById('celestial-app');
+    let celestialEnginePromise = null;
+
+    const waitForStableViewport = ({ stableFrames = 10, timeout = 1800 } = {}) => new Promise((resolve) => {
+      let stableCount = 0;
+      let lastWidth = window.innerWidth;
+      let lastHeight = window.innerHeight;
+      const startedAt = performance.now();
+
+      const tick = () => {
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        const changed = Math.abs(width - lastWidth) > 1 || Math.abs(height - lastHeight) > 1;
+        lastWidth = width;
+        lastHeight = height;
+        stableCount = changed ? 0 : stableCount + 1;
+
+        if (stableCount >= stableFrames || performance.now() - startedAt >= timeout) {
+          resolve();
+          return;
+        }
+        requestAnimationFrame(tick);
+      };
+
+      requestAnimationFrame(tick);
+    });
+
+    async function initCelestialWhenViewportIsStable() {
+      if (!celestialEnginePromise) {
+        celestialEnginePromise = import('./CelestialEngine.js?v=3.4').then((module) => {
+          const engine = new module.CelestialEngine('#celestial-app');
+          window.nganHaCelestialEngine = engine;
+          return engine;
+        });
+      }
+
+      await waitForStableViewport();
+      const engine = await celestialEnginePromise;
+      engine.init();
+    }
+
+    function stopSceneEvent(event) {
+      event?.preventDefault?.();
+      event?.stopPropagation?.();
+      event?.stopImmediatePropagation?.();
+    }
+
+    let menuBackInProgress = false;
+    let flipMenuInstance = null;
+    const galaxyBackTimers = new Set();
+
+    function trackedGalaxyTimeout(delay) {
+      return new Promise((resolve) => {
+        const timer = window.setTimeout(() => {
+          galaxyBackTimers.delete(timer);
+          resolve();
+        }, delay);
+        galaxyBackTimers.add(timer);
+      });
+    }
+
+    function clearGalaxyBackTimers() {
+      galaxyBackTimers.forEach((timer) => window.clearTimeout(timer));
+      galaxyBackTimers.clear();
+    }
+
+    async function requestMenuBack(event) {
+      stopSceneEvent(event);
+      if (menuBackInProgress) return;
+
+      const celestialVisible = celestialApp && celestialApp.style.display !== 'none';
+      if (celestialVisible) {
+        try {
+          const engine = window.nganHaCelestialEngine || await celestialEnginePromise;
+          if (engine?.handleMenuBack?.()) return;
+        } catch (error) {
+          console.warn('Celestial internal back skipped:', error);
+        }
+      }
+
+      const flipMenu = flipMenuInstance || window.nganHaFlipMenu;
+      if (!flipMenu?.isBookOpen?.()) return;
+      if (flipMenu.getBookNavState?.() !== 'openBook') return;
+
+      menuBackInProgress = true;
+
+      try {
+        clearGalaxyBackTimers();
+        if (flipMenu?.closeBookToCover) {
+          await Promise.race([
+            flipMenu.closeBookToCover(),
+            trackedGalaxyTimeout(2300)
+          ]);
+        } else {
+          await trackedGalaxyTimeout(900);
+        }
+      } catch (error) {
+        console.warn('Book close animation skipped:', error);
+      } finally {
+        clearGalaxyBackTimers();
+        menuBackInProgress = false;
+      }
+
+      try { window.parent.postMessage({ type: 'flipmenu:book-returned' }, '*'); } catch(e) {}
+    }
+
+    async function requestGalaxyBack(event) {
+      stopSceneEvent(event);
+      if (menuBackInProgress) return;
+
+      try {
+        const engine = window.nganHaCelestialEngine || await celestialEnginePromise;
+        if (engine?.handleMenuBack?.()) return;
+      } catch (error) {
+        console.warn('Celestial internal galaxy back skipped:', error);
+      }
+
+      menuBackInProgress = true;
+
+      const flipMenu = flipMenuInstance || window.nganHaFlipMenu;
+      try {
+        clearGalaxyBackTimers();
+        flipMenu?.prepareSoftGalaxyReturn?.();
+
+        flipApp.style.display = 'block';
+        flipApp.style.pointerEvents = 'none';
+        flipApp.style.transition = 'none';
+        flipApp.style.opacity = '0';
+        flipApp.style.filter = 'saturate(0.96) brightness(1.02)';
+
+        celestialApp.style.pointerEvents = 'none';
+        celestialApp.style.transition = 'opacity 1050ms ease';
+
+        await new Promise((resolve) => requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            flipApp.style.transition = 'opacity 1050ms ease, filter 1050ms ease';
+            flipApp.style.opacity = '0.96';
+            flipApp.style.filter = 'saturate(1) brightness(1)';
+            celestialApp.style.opacity = '0';
+            resolve();
+          });
+        }));
+
+        await trackedGalaxyTimeout(1080);
+        celestialApp.style.display = 'none';
+        celestialApp.style.pointerEvents = 'none';
+        flipApp.style.opacity = '1';
+        flipApp.style.pointerEvents = 'auto';
+        flipMenu?.finishSoftGalaxyReturn?.();
+      } catch (error) {
+        console.warn('Soft galaxy back transition skipped:', error);
+      } finally {
+        clearGalaxyBackTimers();
+        menuBackInProgress = false;
+      }
+    }
+
+    const menuBackBtn = document.getElementById('btn-menu-back');
+    menuBackBtn?.addEventListener('pointerdown', stopSceneEvent);
+    menuBackBtn?.addEventListener('touchstart', stopSceneEvent, { passive: false });
+    menuBackBtn?.addEventListener('click', requestMenuBack);
     
     // Khởi tạo thư viện Menu 3D
     const myMenu = new FlipMenu('#scene', {
@@ -1318,11 +1538,8 @@
         // 3. Báo cho parent window (Next.js) phóng to iframe
         try { window.parent.postMessage({ type: 'flipmenu:galaxy-entered' }, '*'); } catch(e) {}
 
-        // 4. Khởi tạo / Gọi Celestial Engine
-        import('./CelestialEngine.js?v=2.5').then(module => {
-            const engine = new module.CelestialEngine('#celestial-app');
-            engine.init();
-            
+        // 4. Khởi tạo sau khi iframe fullscreen đã ổn định để layout không bị trôi.
+        initCelestialWhenViewportIsStable().then(() => {
             // Xoá sách khỏi render để nhẹ máy
             setTimeout(() => {
                 flipApp.style.display = 'none';
@@ -1330,35 +1547,22 @@
         }).catch(err => console.error("Lỗi tải Celestial:", err));
       }
     });
+    flipMenuInstance = myMenu;
+    window.nganHaFlipMenu = myMenu;
 
-    // Return button in celestial-app
+    // Back to the real menu, not the intermediate book fly-through state.
     const celReturnBtn = document.getElementById('cel-returnBtn');
     if (celReturnBtn) {
-      celReturnBtn.addEventListener('click', () => {
-        // Fade out celestial
-        celestialApp.style.transition = 'opacity 1s ease';
-        celestialApp.style.opacity = '0';
-        
-        // Notify parent to shrink iframe
-        try { window.parent.postMessage({ type: 'flipmenu:book-returned' }, '*'); } catch(e) {}
-
-        setTimeout(() => {
-          celestialApp.style.display = 'none';
-          // Restore book
-          flipApp.style.display = 'block';
-          flipApp.style.pointerEvents = 'auto';
-          setTimeout(() => {
-            flipApp.style.opacity = '1';
-          }, 50);
-        }, 1000);
-      });
+      celReturnBtn.addEventListener('pointerdown', stopSceneEvent);
+      celReturnBtn.addEventListener('touchstart', stopSceneEvent, { passive: false });
+      celReturnBtn.addEventListener('click', requestGalaxyBack);
     }
   </script>
 
   <!-- Fake Click Hand -->
-  <div class="fake-click-guide" id="fakeClickGuide" aria-hidden="true" style="position: fixed; pointer-events: none; z-index: 9999; display: none; color: #f0d29a; left: 0; top: 0;">
+  <div class="fake-click-guide" id="fakeClickGuide" aria-hidden="true">
     <div class="fake-click-ripple"></div>
-    <div class="fake-click-hand" style="width: 48px; height: 48px;">
+    <div class="fake-click-hand">
       <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
         <path d="M25 7C25 4.8 26.8 3 29 3C31.2 3 33 4.8 33 7V27 V18C33 15.8 34.8 14 37 14C39.2 14 41 15.8 41 18V29 V21C41 18.8 42.8 17 45 17C47.2 17 49 18.8 49 21V32 V26C49 23.8 50.8 22 53 22C55.2 22 57 23.8 57 26V38 C57 50 49 59 37 59H32 C24 59 18 55 14 48L7 36 C5.8 33.9 6.5 31.2 8.6 30 C10.5 28.9 12.9 29.4 14.2 31.1L25 43V7Z" fill="currentColor"/>
       </svg>

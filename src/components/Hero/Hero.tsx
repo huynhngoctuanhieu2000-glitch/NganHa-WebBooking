@@ -79,6 +79,7 @@ const useCountdown = () => {
 // Video configurations
 const HOMEPAGE_VIDEOS = [
   { id: '1', url: '/videos/video1.mp4', poster: 'https://i.ibb.co/fs2MBD4/hero-spa-bg.jpg' },
+  { id: '0720', url: '/videos/0720.mp4', poster: 'https://i.ibb.co/fs2MBD4/hero-spa-bg.jpg' },
 ];
 
 const Hero = () => {
@@ -133,6 +134,9 @@ const Hero = () => {
     videoRefs.current.forEach((video, idx) => {
       if (video) {
         if (idx === activeVideoIndex) {
+          if (video.ended || (video.duration && video.currentTime >= video.duration - 0.2)) {
+            video.currentTime = 0;
+          }
           video.play().catch(() => {});
         } else {
           video.pause();
@@ -229,8 +233,8 @@ const Hero = () => {
                   poster={video.poster}
                   autoPlay={isActive}
                   muted
-                  loop
                   playsInline
+                  onEnded={handleNextVideo}
                   style={{
                     width: '100%',
                     height: '100%',
@@ -293,7 +297,7 @@ const Hero = () => {
           <a href="#services" className="hero-cta-btn hero-cta-primary hero-cta--pill">
             {HERO_TEXT.cta1}
           </a>
-          <a href="/en/new-user/select-menu" className="hero-cta-btn hero-cta-secondary hero-cta--pill">
+          <a href="/en/new-user/standard/checkout" className="hero-cta-btn hero-cta-secondary hero-cta--pill">
             {HERO_TEXT.cta2}
           </a>
         </motion.div>

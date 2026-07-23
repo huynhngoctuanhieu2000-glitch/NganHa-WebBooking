@@ -32,7 +32,7 @@ export default function CheckoutHeader({ title, backLabel = "Menu", onBack }: Ch
                 </h2>
                 {/* Logo Placeholder */}
                 <img
-                    src="/assets/logos/spavang.png"
+                    src="/assets/logos/logo-gold.webp"
                     alt="Ngan Ha Spa Logo"
                     className="w-12 h-12 object-contain opacity-90"
                     onError={(e) => { e.currentTarget.src = '/assets/logos/spaden.png' }}
