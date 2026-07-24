@@ -14,14 +14,15 @@ const HEADER_TRANSITION_DURATION = 0.3;
 const MOBILE_MENU_DURATION = 0.25;
 
 // Navigation items matching Canva design
-const NAV_ITEMS = [
-  { label: 'Home', href: '/' },
-  { label: 'Service', href: '#services' },
-  { label: 'Shop', href: '#shop' },
-  { label: 'Service Area', href: '#branches' },
-  { label: 'Blogs', href: '/blog.html', target: '_blank' },
-  { label: 'Academy', href: '#academy', isComingSoon: true },
-  { label: 'Spa home', href: '#hero', isComingSoon: true },
+// These will be translated dynamically below
+const NAV_ITEMS_CONFIG = [
+  { id: 'home', href: '/' },
+  { id: 'service', href: '#services' },
+  { id: 'shop', href: '#shop' },
+  { id: 'service_area', href: '#branches' },
+  { id: 'blogs', href: '/blog.html', target: '_blank' },
+  { id: 'academy', href: '#academy', isComingSoon: true },
+  { id: 'spa_home', href: '#hero', isComingSoon: true },
 ];
 
 const CART_COPY = {
@@ -58,7 +59,8 @@ const Header = () => {
     isLangDropdownOpen,
     toggleLangDropdown,
     handleSelectLanguage,
-    langDropdownRef
+    langDropdownRef,
+    t
   } = useHeaderLogic();
 
   const cartSubtotal = useMemo(
@@ -133,7 +135,9 @@ const Header = () => {
 
             {/* Desktop Navigation Centered */}
             <nav className="header-nav-desktop">
-              {NAV_ITEMS.map((item) => (
+              {NAV_ITEMS_CONFIG.map((item) => {
+                const label = t('header_menu', item.id) || item.id;
+                return (
                 <a 
                   key={item.href} 
                   href={item.href} 
@@ -142,14 +146,14 @@ const Header = () => {
                 >
                   {item.isComingSoon ? (
                     <span className="nav-item-coming-soon">
-                      <span className="nav-text-primary">{item.label}</span>
+                      <span className="nav-text-primary">{label}</span>
                       <span className="nav-text-secondary">Coming Soon</span>
                     </span>
                   ) : (
-                    item.label
+                    label
                   )}
                 </a>
-              ))}
+              )})}
             </nav>
 
             {/* Right Section: Languages, Login, Cart */}
@@ -232,7 +236,9 @@ const Header = () => {
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: MOBILE_MENU_DURATION }}
             >
-              {NAV_ITEMS.map((item) => (
+              {NAV_ITEMS_CONFIG.map((item) => {
+                const label = t('header_menu', item.id) || item.id;
+                return (
                 <div key={item.href} className="mobile-nav-link-wrapper">
                   <a
                     href={item.href}
@@ -240,13 +246,13 @@ const Header = () => {
                     className={`mobile-nav-link ${item.isComingSoon ? 'dimmed' : ''}`}
                     onClick={toggleMobileMenu}
                   >
-                    {item.label}
+                    {label}
                   </a>
                   {item.isComingSoon && (
                     <span className="coming-soon-badge">Coming Soon</span>
                   )}
                 </div>
-              ))}
+              )})}
             </motion.nav>
           )}
         </AnimatePresence>

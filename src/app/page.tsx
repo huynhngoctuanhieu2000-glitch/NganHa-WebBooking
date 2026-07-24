@@ -6,36 +6,7 @@ import AboutStory from '@/components/AboutStory/AboutStory';
 import ServiceBook from '@/components/ServiceBook/ServiceBook';
 
 const HomePage = () => {
-  useLayoutEffect(() => {
-    if (window.location.hash) return;
-
-    const originalScrollRestoration = window.history.scrollRestoration;
-    window.history.scrollRestoration = 'manual';
-
-    window.scrollTo(0, 0);
-
-    return () => {
-      window.history.scrollRestoration = originalScrollRestoration;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (window.location.hash) return;
-
-    const scrollToHero = () => {
-      document.documentElement.scrollTop = 0;
-      document.body.scrollTop = 0;
-      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-    };
-
-    scrollToHero();
-    requestAnimationFrame(scrollToHero);
-    const timers = [60, 180, 420, 900].map((delay) => window.setTimeout(scrollToHero, delay));
-
-    return () => {
-      timers.forEach((timer) => window.clearTimeout(timer));
-    };
-  }, []);
+  // Bỏ toàn bộ logic khóa cuộn để trình duyệt tự do xử lý lăn chuột
 
   return (
     <main>
@@ -64,7 +35,7 @@ const HomePage = () => {
             <p className="section-services__hint-text">
               Bạn có thể nhấp vào nút dưới đây để tiếp tục.
             </p>
-            <a href="/en/new-user/standard/checkout" className="section-services__cta">
+            <a href="/vi/new-user/standard/checkout" className="section-services__cta">
               Đi tới bước đặt lịch
             </a>
           </div>

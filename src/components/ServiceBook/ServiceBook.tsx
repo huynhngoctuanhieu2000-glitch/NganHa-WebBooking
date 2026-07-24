@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { CartItem, Service } from '@/components/Menu/types';
 import { appendBookingCartItem, removeOneBookingCartItem } from '@/lib/bookingCartStorage';
 import {
@@ -11,10 +11,10 @@ import {
   useFlipbookBridge,
   type FlipbookSourceRect,
 } from '@/lib/flipbook';
+import { useTranslation } from '@/components/TranslationProvider';
 
 // 🔧 UI CONFIGURATION
 const HEADER_HEIGHT_PX = 80;
-const CHECKOUT_URL = '/en/new-user/standard/checkout';
 
 const isServicePayload = (value: unknown): value is Service => {
   if (!value || typeof value !== 'object') return false;
@@ -29,17 +29,23 @@ const ServiceBook = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const router = useRouter();
+  const { t, currentLang: lang } = useTranslation();
+
+  const CHECKOUT_URL = `/${lang}/new-user/standard/checkout`;
+  const SELECT_MENU_URL = `/${lang}/new-user/select-menu`;
 
   const dispatchCartUpdate = useCallback((cart: CartItem[]) => {
     window.dispatchEvent(new CustomEvent('nganha:cart-updated', { detail: { count: cart.length } }));
   }, []);
 
   const showCartToast = useCallback((service: Service, count: number) => {
+    const title = t('service_book', 'service_added') || (lang === 'vi' ? 'Đã thêm dịch vụ' : 'Service Added');
+    const unit = t('service_book', 'items') || (lang === 'vi' ? 'dịch vụ' : 'items');
     showFlipbookToast({
-      title: 'Đã thêm dịch vụ',
-      subtitle: `${getServiceTitle(service)} · ${count} dịch vụ`,
+      title,
+      subtitle: `${getServiceTitle(service)} · ${count} ${unit}`,
     });
-  }, []);
+  }, [lang, t]);
 
   const animateFlowerToCart = useCallback((sourceRect?: FlipbookSourceRect) => {
     animateFlipbookFlyerToTarget({
@@ -60,7 +66,7 @@ const ServiceBook = () => {
     iframeRef,
     headerHeight: HEADER_HEIGHT_PX,
     isServicePayload,
-    onMenuBack: () => router.push('/en/new-user/select-menu'),
+    onMenuBack: () => router.push(SELECT_MENU_URL),
     onAddService: ({ service, sourceRect }) => {
       const nextCart = addServiceToCart(service);
       animateFlowerToCart(sourceRect);
@@ -79,7 +85,7 @@ const ServiceBook = () => {
 
   return (
     <FlipbookFrame
-      src="/flipmenu/index.html"
+      src={`/flipmenu/index.html?lang=${lang}`}
       title="Ngan Ha Spa 3D Menu"
       isFullscreen={isFullscreen}
       containerRef={containerRef}

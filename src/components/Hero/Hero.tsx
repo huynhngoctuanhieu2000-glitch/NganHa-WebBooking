@@ -4,6 +4,8 @@
 import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { MapPin, Clock, ExternalLink, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useTranslation } from '@/components/TranslationProvider';
+import { useSystemSettings } from '@/components/SystemSettingsProvider';
 import { BRANCH_LIST } from '@/data/branches';
 import {
   heroStagger, fadeInUp, fadeInDown, heroTitle, scaleIn, branchEntrance,
@@ -76,28 +78,54 @@ const useCountdown = () => {
 // HERO COMPONENT
 // ═══════════════════════════════════════════
 
-// Video configurations
-const HOMEPAGE_VIDEOS = [
+const DEFAULT_HOMEPAGE_VIDEOS = [
   { id: '1', url: '/videos/video1.mp4', poster: 'https://i.ibb.co/fs2MBD4/hero-spa-bg.jpg' },
   { id: '0720', url: '/videos/0720.mp4', poster: 'https://i.ibb.co/fs2MBD4/hero-spa-bg.jpg' },
 ];
 
 const Hero = () => {
+  const { t, currentLang } = useTranslation();
+  const { systemSettings, getLocalizedText } = useSystemSettings();
   const countdown = useCountdown();
   const [activeVideoIndex, setActiveVideoIndex] = useState(0);
   const [loadedIndices, setLoadedIndices] = useState<number[]>([0]);
+  const [homepageVideos, setHomepageVideos] = useState<any[]>(DEFAULT_HOMEPAGE_VIDEOS);
+
+  // Mảng hiển thị branch
+  const displayBranches = BRANCH_LIST.map((branch, index) => {
+    if (index === 0) {
+      return {
+        ...branch,
+        address: systemSettings?.address ? getLocalizedText(systemSettings.address, currentLang, branch.address) : branch.address,
+        googleMaps: systemSettings?.googleMaps || branch.googleMaps,
+        hours: systemSettings?.hours || branch.hours,
+      };
+    }
+    return branch;
+  });
   
+  useEffect(() => {
+    fetch('/api/hero-videos')
+      .then(res => res.json())
+      .then(json => {
+        if (json.success && json.data?.length > 0) {
+          setHomepageVideos(json.data.sort((a: any, b: any) => a.sort_order - b.sort_order));
+        }
+      })
+      .catch(err => console.error('Error fetching hero videos:', err));
+  }, []);
+
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
   const lastScrollTime = useRef(0);
 
   const handleNextVideo = useCallback(() => {
-    setActiveVideoIndex((prev) => (prev + 1) % HOMEPAGE_VIDEOS.length);
+    setActiveVideoIndex((prev) => (prev + 1) % homepageVideos.length);
   }, []);
 
   const handlePrevVideo = useCallback(() => {
-    setActiveVideoIndex((prev) => (prev - 1 + HOMEPAGE_VIDEOS.length) % HOMEPAGE_VIDEOS.length);
+    setActiveVideoIndex((prev) => (prev - 1 + homepageVideos.length) % homepageVideos.length);
   }, []);
 
   // Swipe detection
@@ -208,7 +236,7 @@ const Hero = () => {
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        {HOMEPAGE_VIDEOS.map((video, idx) => {
+        {homepageVideos.map((video, idx) => {
           const isActive = idx === activeVideoIndex;
           const isLoaded = loadedIndices.includes(idx);
           return (
@@ -281,7 +309,7 @@ const Hero = () => {
 
         {/* Countdown */}
         <motion.div className="hero-countdown" variants={fadeInUp}>
-          <div className="hero-countdown__label">{HERO_TEXT.countdown.title}</div>
+          <div className="hero-countdown__label">{t('hero_section', 'ending_soon') || HERO_TEXT.countdown.title}</div>
           <div className="hero-countdown__boxes">
             {Object.entries(countdown).map(([unit, value]) => (
               <div key={unit} className="hero-countdown__unit">
@@ -295,15 +323,15 @@ const Hero = () => {
         {/* CTA Buttons */}
         <motion.div className="hero-ctas" variants={fadeInUp}>
           <a href="#services" className="hero-cta-btn hero-cta-primary hero-cta--pill">
-            {HERO_TEXT.cta1}
+            {t('hero_section', 'explore') || HERO_TEXT.cta1}
           </a>
-          <a href="/en/new-user/standard/checkout" className="hero-cta-btn hero-cta-secondary hero-cta--pill">
-            {HERO_TEXT.cta2}
+          <a href={`/${currentLang}/new-user/standard/checkout`} className="hero-cta-btn hero-cta-secondary hero-cta--pill">
+            {t('hero_section', 'book_now') || HERO_TEXT.cta2}
           </a>
         </motion.div>
 
         {/* Chevrons Navigation for Desktop */}
-        {HOMEPAGE_VIDEOS.length > 1 && (
+        {homepageVideos.length > 1 && (
           <div className="hero-nav-controls" style={{ zIndex: 10 }}>
             <button
               onClick={handlePrevVideo}
@@ -323,13 +351,13 @@ const Hero = () => {
         )}
 
         {/* Pagination Dots & Text */}
-        {HOMEPAGE_VIDEOS.length > 1 && (
+        {homepageVideos.length > 1 && (
           <div className="hero-pagination" style={{ zIndex: 10 }}>
             <span className="hero-pagination-number">
-              {String(activeVideoIndex + 1).padStart(2, '0')} / {String(HOMEPAGE_VIDEOS.length).padStart(2, '0')}
+              {String(activeVideoIndex + 1).padStart(2, '0')} / {String(homepageVideos.length).padStart(2, '0')}
             </span>
             <div className="hero-pagination-dots">
-              {HOMEPAGE_VIDEOS.map((_, idx) => (
+              {homepageVideos.map((_, idx) => (
                 <button
                   key={idx}
                   className={`hero-pagination-dot ${idx === activeVideoIndex ? 'active' : ''}`}
@@ -355,7 +383,7 @@ const Hero = () => {
         initial="hidden"
         animate="visible"
       >
-        {BRANCH_LIST.map((branch) => (
+        {displayBranches.map((branch) => (
           <a
             key={branch.id}
             href={branch.googleMaps}
