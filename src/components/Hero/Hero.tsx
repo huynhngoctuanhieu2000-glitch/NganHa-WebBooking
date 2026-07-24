@@ -7,6 +7,7 @@ import { MapPin, Clock, ExternalLink, ChevronDown, ChevronLeft, ChevronRight } f
 import { useTranslation } from '@/components/TranslationProvider';
 import { useSystemSettings } from '@/components/SystemSettingsProvider';
 import { BRANCH_LIST } from '@/data/branches';
+import { Locale } from '@/lib/constants';
 import {
   heroStagger, fadeInUp, fadeInDown, heroTitle, scaleIn, branchEntrance,
 } from './Hero.animation';
@@ -96,7 +97,7 @@ const Hero = () => {
     if (index === 0) {
       return {
         ...branch,
-        address: systemSettings?.address ? getLocalizedText(systemSettings.address, currentLang, branch.address) : branch.address,
+        address: systemSettings?.address ? getLocalizedText(systemSettings.address, currentLang as Locale, branch.address) : branch.address,
         googleMaps: systemSettings?.googleMaps || branch.googleMaps,
         hours: systemSettings?.hours || branch.hours,
       };

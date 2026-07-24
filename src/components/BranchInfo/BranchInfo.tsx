@@ -6,6 +6,7 @@ import { MapPin, Clock, Navigation } from 'lucide-react';
 import { BRANCH_LIST } from '@/data/branches';
 import { useSystemSettings } from '@/components/SystemSettingsProvider';
 import { useTranslation } from '@/components/TranslationProvider';
+import { Locale } from '@/lib/constants';
 
 const BranchInfo = () => {
   const { systemSettings, getLocalizedText } = useSystemSettings();
@@ -16,7 +17,7 @@ const BranchInfo = () => {
     if (index === 0) {
       return {
         ...branch,
-        address: systemSettings?.address ? getLocalizedText(systemSettings.address, currentLang, branch.address) : branch.address,
+        address: systemSettings?.address ? getLocalizedText(systemSettings.address, currentLang as Locale, branch.address) : branch.address,
         googleMaps: systemSettings?.googleMaps || branch.googleMaps,
         hours: systemSettings?.hours || branch.hours,
       };

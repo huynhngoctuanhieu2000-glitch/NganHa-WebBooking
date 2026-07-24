@@ -11,6 +11,7 @@ import {
   introVariants,
   cardVariants,
 } from './AboutStory.animation';
+import { Locale } from '@/lib/constants';
 
 // 🔧 UI CONFIGURATION
 const SECTION_MAX_WIDTH = '1400px';
@@ -80,7 +81,7 @@ const AboutStory = () => {
           <motion.div className="about-editorial-text" variants={introVariants}>
             <h3 className="about-heading-gold">
               {aboutStoryContent?.section1?.title 
-                ? getLocalizedText(aboutStoryContent.section1.title, currentLang) 
+                ? getLocalizedText(aboutStoryContent.section1.title, currentLang as Locale) 
                 : (t('about_story', 'heading_1') || 'Vị Trí Vàng và Kết Nối')}
             </h3>
 
@@ -89,7 +90,7 @@ const AboutStory = () => {
                 aboutStoryContent.section1.items.map((item, idx) => (
                   <div key={idx} className="about-bullet">
                     <span className="about-bullet-dot"></span>
-                    <p dangerouslySetInnerHTML={{ __html: getLocalizedText(item, currentLang) }} />
+                    <p dangerouslySetInnerHTML={{ __html: getLocalizedText(item, currentLang as Locale) }} />
                   </div>
                 ))
               ) : (
@@ -131,7 +132,7 @@ const AboutStory = () => {
           <motion.div className="about-editorial-text" variants={cardVariants}>
             <h3 className="about-heading-gold">
               {aboutStoryContent?.section2?.title
-                ? getLocalizedText(aboutStoryContent.section2.title, currentLang)
+                ? getLocalizedText(aboutStoryContent.section2.title, currentLang as Locale)
                 : (t('about_story', 'heading_2') || 'Không khí và phong cách')}
             </h3>
 
@@ -140,7 +141,7 @@ const AboutStory = () => {
                 aboutStoryContent.section2.items.map((item, idx) => (
                   <div key={idx} className="about-bullet">
                     <span className={`about-bullet-dot ${idx === 0 ? 'about-bullet-dot--morning' : idx === 1 ? 'about-bullet-dot--evening' : ''}`}></span>
-                    <p dangerouslySetInnerHTML={{ __html: getLocalizedText(item, currentLang) }} />
+                    <p dangerouslySetInnerHTML={{ __html: getLocalizedText(item, currentLang as Locale) }} />
                   </div>
                 ))
               ) : (
@@ -159,14 +160,14 @@ const AboutStory = () => {
 
             <h3 className="about-heading-gold" style={{ marginTop: '28px' }}>
               {aboutStoryContent?.section3?.title
-                ? getLocalizedText(aboutStoryContent.section3.title, currentLang)
+                ? getLocalizedText(aboutStoryContent.section3.title, currentLang as Locale)
                 : (t('about_story', 'heading_3') || 'Đặc Sản Địa Phương')}
             </h3>
             <div className="about-bullet-group">
               {aboutStoryContent?.section3?.detail ? (
                 <div className="about-bullet">
                   <span className="about-bullet-dot"></span>
-                  <p dangerouslySetInnerHTML={{ __html: getLocalizedText(aboutStoryContent.section3.detail, currentLang) }} />
+                  <p dangerouslySetInnerHTML={{ __html: getLocalizedText(aboutStoryContent.section3.detail, currentLang as Locale) }} />
                 </div>
               ) : (
                 <div 
@@ -220,7 +221,7 @@ const AboutStory = () => {
                 <p className="about-filmstrip-caption">
                   {typeof img.caption === 'string' 
                     ? img.caption 
-                    : getLocalizedText(img.caption, currentLang)}
+                    : getLocalizedText(img.caption, currentLang as Locale)}
                 </p>
                 <div className="about-filmstrip-holes about-filmstrip-holes--bottom">
                   {Array.from({ length: 6 }).map((_, i) => (
